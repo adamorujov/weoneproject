@@ -6,7 +6,6 @@ urlpatterns = [
     path("user/", views.UserRetrieveAPIView.as_view()),
     path("settings/", views.SiteSettingsListAPIView.as_view()),
     path("banner-list/", views.BannerListAPIView.as_view()),
-    path("settings/", views.SiteSettingsListAPIView.as_view()),
     path("category-list/", views.ProductCategoryListAPIView.as_view()),
     path("brand-list/", views.BrandListAPIView.as_view()),
     path("product-list/", views.ProductListAPIView.as_view()),
