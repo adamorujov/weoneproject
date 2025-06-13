@@ -11,7 +11,7 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ("username", "first_name", "last_name", "address", "password", "phone_number", "status")
+        fields = ("username", "first_name", "last_name", "address", "password", "phone_number", "status", "is_staff", "is_superuser")
 
     def validate(self, data):
         validate_password(data["password"])
@@ -25,9 +25,16 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
             address = validated_data["address"],
             password = validated_data["password"],
             phone_number = validated_data["phone_number"],
-            status = validated_data["status"]
+            status = validated_data["status"],
+            is_staff = validated_data["is_staff"],
+            is_superuser = validated_data["is_superuser"]
         )
         return user
+    
+class CustomUserRetrieveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ("id", "username", "is_staff", "is_superuser")
     
 class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -96,3 +103,8 @@ class BasketItemCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = BasketItem
         fields = "__all__"
+
+class BasketCleanSerializer(serializers.Serializer):
+    item_ids = serializers.ListField(
+        child = serializers.IntegerField(), allow_empty=False
+    )

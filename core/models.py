@@ -103,8 +103,8 @@ class SocialMedia(models.Model):
     link = models.URLField("Link", max_length=256)
 
     class Meta:
-        verbose_name = "müraciət"
-        verbose_name_plural = "Müraciətlər"
+        verbose_name = "sosial media"
+        verbose_name_plural = "Sosial Media Hesabları"
         ordering = ("-id",)
 
     def __str__(self):

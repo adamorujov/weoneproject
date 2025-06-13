@@ -1,20 +1,28 @@
-from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Product, Application, SocialMedia, Advantage,
     Activity, Service, Mission, BasketItem
 )
 from core.api.serializers import (
-    CustomUserCreateSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer,
+    CustomUserCreateSerializer, CustomUserRetrieveSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer,
     BrandSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
-    ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer
+    ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketCleanSerializer
 )
 
 class UserCreateAPIView(CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserCreateSerializer
     permission_classes = (IsAdminUser,)
+
+class UserRetrieveAPIView(RetrieveAPIView):
+    def get_object(self):
+        return self.request.user
+    serializer_class = CustomUserRetrieveSerializer
 
 class SiteSettingsListAPIView(ListAPIView):
     queryset = SiteSettings.objects.all()
@@ -75,7 +83,27 @@ class UserBasketItemListAPIView(ListAPIView):
             user = self.request.user
         )
     serializer_class = BasketItemSerializer
+    permission_classes = (IsAuthenticated,)
 
 class BasketItemCreateAPIView(CreateAPIView):
     queryset = BasketItem.objects.all()
     serializer_class = BasketItemSerializer
+    permission_classes = (IsAuthenticated,)
+
+class BasketCleanAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    def post(self, request):
+        serializer = BasketCleanSerializer(data=request.data)
+
+        if serializer.is_valid():
+            item_ids = serializer.validated_data['item_ids']
+            count, _ = BasketItem.objects.filter(
+                id__in = item_ids
+            ).delete()
+
+            response_data = {
+                "message": f"{count} səbət elementi silindi."
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
