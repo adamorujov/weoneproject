@@ -3,7 +3,7 @@ from django.contrib import admin
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Product, Application, SocialMedia, Advantage,
-    Activity, Service, Mission, BasketItem
+    Activity, Service, Mission, BasketItem, Article
 )
 
 admin.site.register(CustomUser)
@@ -12,6 +12,7 @@ admin.site.register(Banner)
 admin.site.register(ProductCategory)
 admin.site.register(Brand)
 admin.site.register(Product)
+admin.site.register(Article)
 admin.site.register(Application)
 admin.site.register(SocialMedia)
 admin.site.register(Advantage)

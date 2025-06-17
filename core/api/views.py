@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -11,7 +11,7 @@ from core.models import (
 from core.api.serializers import (
     CustomUserCreateSerializer, CustomUserRetrieveSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer,
     BrandSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
-    ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketCleanSerializer
+    ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer
 )
 
 class UserCreateAPIView(CreateAPIView):
@@ -87,8 +87,14 @@ class UserBasketItemListAPIView(ListAPIView):
 
 class BasketItemCreateAPIView(CreateAPIView):
     queryset = BasketItem.objects.all()
-    serializer_class = BasketItemSerializer
+    serializer_class = BasketItemCreateSerializer
     permission_classes = (IsAuthenticated,)
+
+class BasketItemRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = BasketItem.objects.all()
+    serializer_class = BasketItemCreateSerializer
+    permission_classes = (IsAuthenticated,)
+    lookup_field = "id"
 
 class BasketCleanAPIView(APIView):
     permission_classes = (IsAuthenticated,)

@@ -6,9 +6,9 @@ class CustomUser(AbstractUser):
         ("S", "Satış qiyməti"),
         ("E", "Endirimli qiymət")
     )
-    address = models.TextField("Ünvan")
-    phone_number = models.CharField("Telefon nömrəsi", max_length=20)
-    status = models.CharField("Ödəniş statusu", max_length=1, choices=PAYMENT_STATUS)
+    address = models.TextField("Ünvan", blank=True, null=True)
+    phone_number = models.CharField("Telefon nömrəsi", max_length=20, blank=True, null=True)
+    status = models.CharField("Ödəniş statusu", max_length=1, choices=PAYMENT_STATUS, blank=True, null=True)
 
 class SiteSettings(models.Model):
     logo = models.ImageField("Loqo", upload_to="site_imgs/", blank=True, null=True)
@@ -80,6 +80,19 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Article(models.Model):
+    name = models.CharField("Artikl", max_length=50, unique=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="articles")
+
+    class Meta:
+        verbose_name = "artikl"
+        verbose_name_plural = "Artikllar"
+        ordering = ("-id",)
+
+    def __str__(self):
+        return self.name
+
 
 
 class Application(models.Model):

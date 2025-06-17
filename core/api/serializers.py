@@ -2,7 +2,7 @@ from rest_framework import serializers
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Product, Application, SocialMedia, Advantage,
-    Activity, Service, Mission, BasketItem
+    Activity, Service, Mission, BasketItem, Article
 )
 from django.contrib.auth.password_validation import validate_password
 
@@ -56,9 +56,16 @@ class BrandSerializer(serializers.ModelSerializer):
         model = Brand
         fields = "__all__"
 
+class ArticleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Article
+        fields = "__all__"
+
 class ProductSerializer(serializers.ModelSerializer):
     category = ProductCategorySerializer()
     brand = BrandSerializer()
+    articles = ArticleSerializer(many=True)
+
     class Meta:
         model = Product
         fields = "__all__"

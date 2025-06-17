@@ -17,6 +17,7 @@ urlpatterns = [
     path("service-list/", views.ServiceListAPIView.as_view()),
     path("mission-list/", views.MissionListAPIView.as_view()),
     path("user-basketitem-list/", views.UserBasketItemListAPIView.as_view()),
-    path("basketitem-create/", views.ProductListAPIView.as_view()),
+    path("basketitem-create/", views.BasketItemCreateAPIView.as_view()),
+    path("basketitem-update-delete/<int:id>/", views.BasketItemRetrieveUpdateDestroyAPIView.as_view()),
     path("basketitem-clean/", views.BasketCleanAPIView.as_view()),
 ]
