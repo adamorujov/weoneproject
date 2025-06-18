@@ -90,6 +90,34 @@ class BasketItemCreateAPIView(CreateAPIView):
     serializer_class = BasketItemCreateSerializer
     permission_classes = (IsAuthenticated,)
 
+    def perform_create(self, serializer):
+        user = serializer.validated_data['user']
+        product = serializer.validated_data['product']
+        quantity = serializer.validated_data.get('quantity', 1)
+
+        # Try to get existing BasketItem
+        basket_item, created = BasketItem.objects.get_or_create(
+            user=user,
+            product=product,
+            defaults={'quantity': quantity}
+        )
+
+        if not created:
+            basket_item.quantity += quantity
+            basket_item.save()
+
+        self.instance = basket_item
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        # Return the updated BasketItem
+        updated_serializer = self.get_serializer(self.instance)
+        return Response(updated_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 class BasketItemRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = BasketItem.objects.all()
     serializer_class = BasketItemCreateSerializer

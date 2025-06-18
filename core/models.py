@@ -23,6 +23,10 @@ class SiteSettings(models.Model):
 
     about_services = models.TextField("Xidmətlərimiz", blank=True, null=True)
 
+    contact_title = models.TextField("Əlaqə başlıq", blank=True, null=True)
+    contact_content = models.TextField("Əlaqə kontent", blank=True, null=True)
+    contact_image = models.ImageField("Əlaqə şəkil", upload_to="site_imgs/", blank=True, null=True)
+
     class Meta:
         verbose_name = "parametr"
         verbose_name_plural = "Parametrlər"
@@ -181,8 +185,8 @@ class BasketItem(models.Model):
 
     class Meta:
         verbose_name = "səbət elementi"
-        verbose_name = "Səbət elementləri"
+        verbose_name_plural = "Səbət elementləri"
         ordering = ("-id",)
 
     def __str__(self):
-        return self.user.first_name + " " + self.user.last_name + " | " + self.product.name
+        return self.user.username + " | " + self.product.name

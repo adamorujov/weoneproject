@@ -1,18 +1,47 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Product, Application, SocialMedia, Advantage,
     Activity, Service, Mission, BasketItem, Article
 )
+from django.utils.translation import gettext_lazy as _
 
-admin.site.register(CustomUser)
+@admin.register(CustomUser)
+class CustomUserAdmin(UserAdmin):
+    fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        (_("Personal info"), {"fields": ("first_name", "last_name", "email")}),
+        (
+            _("Permissions"),
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                ),
+            },
+        ),
+        ("Əlavə məlumatlar", {"fields": ("address", "phone_number", "status")}),
+        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
+    )
+
 admin.site.register(SiteSettings)
 admin.site.register(Banner)
 admin.site.register(ProductCategory)
 admin.site.register(Brand)
-admin.site.register(Product)
-admin.site.register(Article)
+
+class ArticleAdmin(admin.TabularInline):
+    model = Article
+    extra = 1
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    inlines = [ArticleAdmin]
+
 admin.site.register(Application)
 admin.site.register(SocialMedia)
 admin.site.register(Advantage)
