@@ -20,4 +20,7 @@ urlpatterns = [
     path("basketitem-create/", views.BasketItemCreateAPIView.as_view()),
     path("basketitem-update-delete/<int:id>/", views.BasketItemRetrieveUpdateDestroyAPIView.as_view()),
     path("basketitem-clean/", views.BasketCleanAPIView.as_view()),
+
+    path("product-create/", views.ProductCreateAPIView.as_view()),
+    path("product-retrieve-update/<int:id>/", views.ProductRetrieveUpdateAPIView.as_view()),
 ]

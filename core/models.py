@@ -9,6 +9,7 @@ class CustomUser(AbstractUser):
     address = models.TextField("Ünvan", blank=True, null=True)
     phone_number = models.CharField("Telefon nömrəsi", max_length=20, blank=True, null=True)
     status = models.CharField("Ödəniş statusu", max_length=1, choices=PAYMENT_STATUS, blank=True, null=True)
+    website = models.CharField("Vebsayt", max_length=256, blank=True, null=True)
 
 class SiteSettings(models.Model):
     logo = models.ImageField("Loqo", upload_to="site_imgs/", blank=True, null=True)
@@ -72,10 +73,15 @@ class Brand(models.Model):
     
 class Product(models.Model):
     name = models.CharField("Ad", max_length=256)
-    image = models.ImageField("Şəkil", upload_to="product_imgs/")
-    price = models.FloatField("Qiymət", default=0)
+    image = models.ImageField("Şəkil", upload_to="product_imgs/", blank=True, null=True)
+    cost_price = models.FloatField("Maya dəyəri", default=0)
+    purchase_price = models.FloatField("Alış qiyməti", default=0)
+    price = models.FloatField("Satış qiyməti", default=0)
+    discount_price = models.FloatField("Endirimli qiyməti", blank=True, null=True)
     category = models.ForeignKey(ProductCategory, verbose_name="Kateqoriya", on_delete=models.SET_NULL, related_name="category_products", blank=True, null=True)
     brand = models.ForeignKey(Brand, verbose_name="Marka", on_delete=models.SET_NULL, related_name="brand_products", blank=True, null=True)
+    amount = models.IntegerField("Miqdar", default=0)
+    date = models.DateField("Gəliş tarixi")
 
     class Meta:
         verbose_name = "məhsul"

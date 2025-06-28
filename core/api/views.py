@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -6,11 +6,11 @@ from rest_framework import status
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Product, Application, SocialMedia, Advantage,
-    Activity, Service, Mission, BasketItem
+    Activity, Service, Mission, BasketItem, Article
 )
 from core.api.serializers import (
-    CustomUserCreateSerializer, CustomUserRetrieveSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer,
-    BrandSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
+    CustomUserCreateSerializer, CustomUserRetrieveSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer, ProductCreateSerializer,
+    ProductUpdateSerializer, BrandSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
     ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer
 )
 
@@ -52,6 +52,44 @@ class CategoryProductListAPIView(ListAPIView):
             category = category
         )
     serializer_class = ProductSerializer
+
+class ProductCreateAPIView(CreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        product_data = {
+            "name": request.data.get("name"),
+            "image": request.data.get("image"),
+            "category": request.data.get("category"),
+            "brand": request.data.get("brand"),
+            "date": request.data.get("date")
+        }
+
+        articles_data = {
+            "articles": request.data.get("articles")
+        }
+
+        serializer = self.get_serializer(data=product_data)
+
+        if serializer.is_valid():
+            serializer.save()
+            product = Product.objects.get(name=product_data["name"])
+            for article_name in articles_data["articles"]:
+                Article.objects.create(
+                    name = article_name,
+                    product = product
+                )
+            response_data = {
+                "message": "Məhsul əlavə edildi."
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ProductRetrieveUpdateAPIView(RetrieveUpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductUpdateSerializer
+    lookup_field = "id"
 
 class ApplicationCreateAPIView(CreateAPIView):
     queryset = Application.objects.all()
