@@ -4,11 +4,12 @@ from django.contrib.auth.models import AbstractUser
 class CustomUser(AbstractUser):
     PAYMENT_STATUS = (
         ("S", "Satış qiyməti"),
-        ("E", "Endirimli qiymət")
+        ("E", "Endirimli qiymət"),
+        ("SE", "Satış və endirimli qiymət")
     )
     address = models.TextField("Ünvan", blank=True, null=True)
     phone_number = models.CharField("Telefon nömrəsi", max_length=20, blank=True, null=True)
-    status = models.CharField("Ödəniş statusu", max_length=1, choices=PAYMENT_STATUS, blank=True, null=True)
+    status = models.CharField("Ödəniş statusu", max_length=2, choices=PAYMENT_STATUS, blank=True, null=True)
     website = models.CharField("Vebsayt", max_length=256, blank=True, null=True)
 
 class SiteSettings(models.Model):
