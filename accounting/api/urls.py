@@ -13,3 +13,11 @@ urlpatterns = [
     path('productaction-list/', views.ProductActionListAPIView.as_view()),
     path('customeraction-list/', views.CustomerActionListAPIView.as_view()),
 ]
+
+"""
+1. Stok elave et
+2. Eyni anda bir nece satis
+3. productionaction-retrieve
+4. customeraction-retrieve
+
+"""

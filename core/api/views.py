@@ -9,7 +9,7 @@ from core.models import (
     Activity, Service, Mission, BasketItem, Article
 )
 from core.api.serializers import (
-    CustomUserCreateSerializer, CustomUserRetrieveSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer, ProductCreateSerializer,
+    CustomUserCreateSerializer, CustomUserSerializer, CustomUserSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer, ProductCreateSerializer,
     ProductUpdateSerializer, BrandSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
     ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer
 )
@@ -19,10 +19,15 @@ class UserCreateAPIView(CreateAPIView):
     serializer_class = CustomUserCreateSerializer
     permission_classes = (IsAdminUser,)
 
-class UserRetrieveAPIView(RetrieveAPIView):
+class UserListAPIView(ListAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = (IsAdminUser,)
+
+class UserRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return self.request.user
-    serializer_class = CustomUserRetrieveSerializer
+    serializer_class = CustomUserSerializer
 
 class SiteSettingsListAPIView(ListAPIView):
     queryset = SiteSettings.objects.all()

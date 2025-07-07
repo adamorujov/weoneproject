@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from accounting.models import Purchase, Sale, Payment, ProductAction, CustomerAction
-from core.api.serializers import ProductSerializer, CustomUserRetrieveSerializer
+from core.api.serializers import ProductSerializer, CustomUserSerializer
 
 class PurchaseCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,13 +13,13 @@ class PurchaseSerializer(serializers.ModelSerializer):
         model = Purchase
         fields = "__all__"
 
-class AddToStockSerializer(serializers.ModelSerializer):
+class AddToStockSerializer(serializers.Serializer):
     item_ids = serializers.ListField(
         child = serializers.IntegerField(), allow_empty=False
     )
 
 class SaleSerializer(serializers.ModelSerializer):
-    customer = CustomUserRetrieveSerializer()
+    customer = CustomUserSerializer()
     product = ProductSerializer()
     class Meta:
         model = Sale
@@ -31,7 +31,7 @@ class SaleCreateSerializer(serializers.ModelSerializer):
         fields = "__all__"
     
 class PaymentSerializer(serializers.ModelSerializer):
-    customer = CustomUserRetrieveSerializer()
+    customer = CustomUserSerializer()
     class Meta:
         model = Payment
         fields = "__all__"
@@ -42,14 +42,14 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class ProductActionSerializer(serializers.ModelSerializer):
-    customer = CustomUserRetrieveSerializer()
+    customer = CustomUserSerializer()
     product = ProductSerializer()
     class Meta:
         model = ProductAction
         fields = "__all__"
 
 class CustomerActionSerializer(serializers.ModelSerializer):
-    customer = CustomUserRetrieveSerializer()
+    customer = CustomUserSerializer()
     product = ProductSerializer()
     class Meta:
         model = CustomerAction

@@ -73,10 +73,16 @@ class Brand(models.Model):
         return self.name
     
 class Product(models.Model):
-    name = models.CharField("Ad", max_length=256)
+    CURRENCIES = (
+        ('M', 'Manat'),
+        ('D', 'Dollar'),
+        ('R', 'Rubl')
+    )
+    name = models.CharField("Ad", max_length=256, unique=True)
     image = models.ImageField("Şəkil", upload_to="product_imgs/", blank=True, null=True)
     cost_price = models.FloatField("Maya dəyəri", default=0)
     purchase_price = models.FloatField("Alış qiyməti", default=0)
+    currency = models.CharField("Valyuta", max_length=1, default='M')
     price = models.FloatField("Satış qiyməti", default=0)
     discount_price = models.FloatField("Endirimli qiyməti", blank=True, null=True)
     category = models.ForeignKey(ProductCategory, verbose_name="Kateqoriya", on_delete=models.SET_NULL, related_name="category_products", blank=True, null=True)
@@ -103,8 +109,6 @@ class Article(models.Model):
 
     def __str__(self):
         return self.name
-
-
 
 class Application(models.Model):
     name = models.CharField("Ad", max_length=50)

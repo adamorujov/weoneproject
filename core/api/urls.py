@@ -3,7 +3,8 @@ from core.api import views
 
 urlpatterns = [
     path("user-create/", views.UserCreateAPIView.as_view()),
-    path("user/", views.UserRetrieveAPIView.as_view()),
+    path("user-list/", views.UserListAPIView.as_view()),
+    path("user-retrieve-update-delete/", views.UserRetrieveUpdateDestroyAPIView.as_view()),
     path("settings/", views.SiteSettingsListAPIView.as_view()),
     path("banner-list/", views.BannerListAPIView.as_view()),
     path("category-list/", views.ProductCategoryListAPIView.as_view()),

@@ -30,11 +30,11 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
             is_superuser = validated_data["is_superuser"]
         )
         return user
-    
-class CustomUserRetrieveSerializer(serializers.ModelSerializer):
+
+class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ("id", "username", "is_staff", "is_superuser")
+        exclude = ("password",)
     
 class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
