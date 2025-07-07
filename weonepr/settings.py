@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-&$eds9q*826mv(gihrxjse1e%jmo(-vii890*wc7ju+8u$)@3=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -88,11 +88,12 @@ DATABASES = {
 
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'weonegroup$weonegroup$default',
-#         'USER': 'weonegroup',
-#         'PASSWORD': 'weonepr2025!',
-#         'HOST': 'weonegroup.mysql.pythonanywhere-services.com',
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'weonegro_db',
+#         'USER': 'weonegro_weonegro',
+#         'PASSWORD': '4Nn^c6E~MyV05x',
+#         'HOST': 'localhost',
+#         'PORT': '5432'
 #     }
 # }
 
