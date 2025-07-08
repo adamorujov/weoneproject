@@ -17,5 +17,9 @@ urlpatterns = [
     path('returnback-create/', views.ReturnBackCreateAPIView.as_view()),
     path('expense-list/', views.ExpenseListAPIView.as_view()),
     path('expense-create/', views.ExpenseCreateAPIView.as_view()),
-    path('invoice-list/<int:id>/', views.InvoiceListAPIView.as_view())
+    path('invoice-list/<int:id>/', views.InvoiceListAPIView.as_view()),
+    path('dashboard/', views.DashbordAPIView.as_view()),
+    path('saledynamics/<str:filter_data>/', views.SaleDynamicsAPIView.as_view()),
+    path('mostindebtedcustomers/', views.MostInDebtedCustomerAPIView.as_view()),
+    path('stockoutproducts-list/', views.StockOutProductsListAPIView.as_view()),
 ]

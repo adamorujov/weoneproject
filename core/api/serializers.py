@@ -4,6 +4,7 @@ from core.models import (
     Brand, Product, Application, SocialMedia, Advantage,
     Activity, Service, Mission, BasketItem, Article
 )
+from accounting.models import ReturnBack
 from django.contrib.auth.password_validation import validate_password
 
 class CustomUserCreateSerializer(serializers.ModelSerializer):
@@ -32,9 +33,32 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
         return user
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    total_amount = serializers.SerializerMethodField()
+    total_paid_amount = serializers.SerializerMethodField()
+    customer_debt_amount = serializers.SerializerMethodField()
+    our_debt_amount = serializers.SerializerMethodField()
+
     class Meta:
         model = CustomUser
         exclude = ("password", "groups", "user_permissions")
+
+    def get_total_amount(self, obj):
+        total_amount = sum([sale.price for sale in obj.customer_sales.all()])
+        return total_amount
+    
+    def get_total_paid_amount(self, obj):
+        total_paid_amount = sum([payment.amount for payment in obj.payments.all()])
+        return total_paid_amount
+    
+    def get_customer_debt_amount(self, obj):
+        return self.get_total_amount(obj) - self.get_total_paid_amount(obj)
+    
+    def get_our_debt_amount(self, obj):
+        customer_returnbacks = ReturnBack.objects.filter(
+            sale__customer = obj
+        )
+        total_our_debt_amount = sum([returnback.amount for returnback in customer_returnbacks])
+        return total_our_debt_amount
     
 class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:

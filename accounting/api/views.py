@@ -10,6 +10,7 @@ from accounting.api.serializers import (
     ExpenseSerializer
 )
 from core.models import Product, CustomUser
+from core.api.serializers import ProductSerializer
 from django.shortcuts import get_object_or_404
 import datetime
 
@@ -265,3 +266,81 @@ class InvoiceListAPIView(ListAPIView):
         return Sale.objects.filter(customer=customer)
     serializer_class = SaleSerializer
 
+class DashbordAPIView(APIView):
+    def get(self, request):
+        sold_product_number = sum([sale.amount for sale in Sale.objects.all()])
+        customer_number = len(CustomUser.objects.filter(is_staff=False))
+        total_sale_amount = sum([sale.price for sale in Sale.objects.all()])
+        total_income = sum([payment.amount for payment in Payment.objects.all()])
+        dashboard_data = {
+            "sold_product_number": sold_product_number,
+            "customer_number": customer_number,
+            "total_sale_amount": total_sale_amount,
+            "total_income": total_income
+        }
+        return Response(dashboard_data, status=status.HTTP_200_OK)
+    
+class SaleDynamicsAPIView(APIView):
+    def get(self, request, filter_data):
+        # filter_data = self.kwargs.get("my_filter_data")
+        if filter_data == "A":
+            months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun", "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"]
+            total_sale_amounts = []
+            for i in range(len(months)):
+                year = datetime.datetime.now().year
+                total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
+                    datetime__date__month = i + 1,
+                    datetime__date__year = year
+                )])
+                total_sale_amounts.append(total_sale_amount)
+            response_data = {
+                month: amount for (month, amount) in zip(months, total_sale_amounts)
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+        elif filter_data == "I":
+            all_sale_years = [sale.datetime.year for sale in Sale.objects.all()]
+            all_sale_years = list(set(all_sale_years))
+            all_sale_years.sort()
+            total_sale_amounts = []
+            for year in all_sale_years:
+                total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
+                    datetime__year = year
+                )])
+                total_sale_amounts.append(total_sale_amount)
+            response_data = {
+                year: amount for (year, amount) in zip(all_sale_years, total_sale_amounts)
+            }
+            return Response(response_data, status = status.HTTP_200_OK)
+        else:
+            response_data = {
+                "errors": "Göndərilən məlumat doğru deyil."
+            }
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        
+class MostInDebtedCustomerAPIView(APIView):
+    def get(self, request):
+        customers = CustomUser.objects.all()
+        customer_debts = []
+        for customer in customers:
+            customer_debt = sum([sale.price for sale in customer.customer_sales.all()]) - sum([payment.amount for payment in customer.payments.all()])
+            customer_debts.append(customer_debt)
+        
+        indebted_customers = list(zip(customers, customer_debts))
+        indebted_customers.sort(reverse=True, key=lambda x: x[1])
+        most_indebted_customers = indebted_customers[:5]
+        customers_data = []
+        for customer in most_indebted_customers:
+            customer_data = {
+                "name": customer[0].first_name + " " + customer[0].last_name,
+                "debt": customer[1],
+                "phone_number": customer[0].phone_number
+            }
+            customers_data.append(customer_data)
+        response_data = {"most_indebted_customers": customers_data}
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+class StockOutProductsListAPIView(ListAPIView):
+    def get_queryset(self):
+        return Product.objects.filter(amount__lte=10)
+    serializer_class = ProductSerializer
+            

@@ -82,7 +82,7 @@ class CustomerAction(models.Model):
         return self.customer.username
     
 class ReturnBack(models.Model):
-    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name="returnback")
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name="returnbacks")
     date = models.DateField()
     reason = models.TextField(blank=True, null=True)
     amount = models.IntegerField()
