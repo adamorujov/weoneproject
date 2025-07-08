@@ -80,6 +80,33 @@ class CustomerAction(models.Model):
 
     def __str__(self):
         return self.customer.username
+    
+class ReturnBack(models.Model):
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name="returnback")
+    date = models.DateField()
+    reason = models.TextField(blank=True, null=True)
+    amount = models.IntegerField()
+
+    class Meta:
+        verbose_name = "Geri qaytarma"
+        verbose_name_plural = "Geri qaytarılan məhsullar"
+
+    def __str__(self):
+        return self.sale.product.name
+    
+class Expense(models.Model):
+    name = models.CharField(max_length=200)
+    amount = models.FloatField()
+    date = models.DateField()
+
+    class Meta:
+        verbose_name = "Xərc"
+        verbose_name_plural = "Xərclər"
+
+    def __str__(self):
+        return self.name
+    
+
 
 
 

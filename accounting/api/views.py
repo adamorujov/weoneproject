@@ -2,11 +2,12 @@ from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from accounting.models import Purchase, Sale, Payment, ProductAction, CustomerAction
+from accounting.models import Purchase, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
 from accounting.api.serializers import (
     PurchaseCreateSerializer, PurchaseSerializer, AddToStockSerializer, SaleSerializer, 
     SaleCreateSerializer, PaymentSerializer, PaymentCreateSerializer, ProductActionSerializer,
-    CustomerActionSerializer, BulkSaleSerializer
+    CustomerActionSerializer, BulkSaleSerializer, ReturnBackSerializer, ReturnBackCreateSerializer,
+    ExpenseSerializer
 )
 from core.models import Product, CustomUser
 from django.shortcuts import get_object_or_404
@@ -224,3 +225,43 @@ class CustomerActionListAPIView(ListAPIView):
             customer = customer
         )
     serializer_class = CustomerActionSerializer
+
+class ReturnBackListAPIView(ListAPIView):
+    queryset = ReturnBack.objects.all()
+    serializer_class = ReturnBackSerializer
+
+class ReturnBackCreateAPIView(CreateAPIView):
+    queryset = ReturnBack.objects.all()
+    serializer_class = ReturnBackCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            sale_id = request.data.get("sale")
+            amount = request.data.get("amount")
+            sale = get_object_or_404(Sale, id=sale_id)
+            sale_amount = sale.amount - int(amount)
+            sale.amount = sale_amount
+            sale.save()
+            response_data = {
+                "message": f"{amount} ədəd '{sale.product.name}' məhsulu geri qaytarıldı."
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ExpenseListAPIView(ListAPIView):
+    queryset = Expense.objects.all()
+    serializer_class = ExpenseSerializer
+
+class ExpenseCreateAPIView(CreateAPIView):
+    queryset = Expense.objects.all()
+    serializer_class = ExpenseSerializer
+
+class InvoiceListAPIView(ListAPIView):
+    def get_queryset(self):
+        customer_id = self.kwargs.get("id")
+        customer = get_object_or_404(CustomUser, id=customer_id)
+        return Sale.objects.filter(customer=customer)
+    serializer_class = SaleSerializer
+

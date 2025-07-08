@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from accounting.models import Purchase, Sale, Payment, ProductAction, CustomerAction
+from accounting.models import Purchase, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
 from core.api.serializers import ProductSerializer, CustomUserSerializer
 
 class PurchaseCreateSerializer(serializers.ModelSerializer):
@@ -63,3 +63,18 @@ class BulkSaleSerializer(serializers.Serializer):
     amounts = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
     datetimes = serializers.ListField(child=serializers.DateTimeField(), allow_empty=False)
 
+class ReturnBackSerializer(serializers.ModelSerializer):
+    sale = SaleSerializer()
+    class Meta:
+        model = ReturnBack
+        fields = "__all__"
+
+class ReturnBackCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReturnBack
+        fields = "__all__"
+
+class ExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Expense
+        fields = "__all__"

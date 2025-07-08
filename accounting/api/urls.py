@@ -13,4 +13,9 @@ urlpatterns = [
     path('payment-create/', views.PaymentCreateAPIView.as_view()),
     path('productaction-list/<int:id>/', views.ProductActionListAPIView.as_view()),
     path('customeraction-list/<int:id>/', views.CustomerActionListAPIView.as_view()),
+    path('returnback-list/', views.ReturnBackListAPIView.as_view()),
+    path('returnback-create/', views.ReturnBackCreateAPIView.as_view()),
+    path('expense-list/', views.ExpenseListAPIView.as_view()),
+    path('expense-create/', views.ExpenseCreateAPIView.as_view()),
+    path('invoice-list/<int:id>/', views.InvoiceListAPIView.as_view())
 ]
