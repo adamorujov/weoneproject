@@ -34,7 +34,7 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        exclude = ("password",)
+        exclude = ("password", "groups", "user_permissions")
     
 class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:

@@ -13,6 +13,7 @@ from core.api.serializers import (
     ProductUpdateSerializer, BrandSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
     ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer
 )
+import json
 
 class UserCreateAPIView(CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -74,13 +75,18 @@ class ProductCreateAPIView(CreateAPIView):
         articles_data = {
             "articles": request.data.get("articles")
         }
-
+        if isinstance(articles_data["articles"], str):
+            articles = articles_data["articles"].replace('\'', '"')
+            articles = json.loads(articles)
+        else:
+            articles = articles_data["articles"]
+            
         serializer = self.get_serializer(data=product_data)
 
         if serializer.is_valid():
             serializer.save()
             product = Product.objects.get(name=product_data["name"])
-            for article_name in articles_data["articles"]:
+            for article_name in articles:
                 Article.objects.create(
                     name = article_name,
                     product = product

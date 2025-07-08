@@ -8,16 +8,9 @@ urlpatterns = [
     path('addtostock/', views.AddToStockAPIView.as_view()),
     path('sale-list/', views.SaleListAPIView.as_view()),
     path('sale-create/', views.SaleCreateAPIView.as_view()),
+    path('bulk-sale/', views.BulkSaleAPIView.as_view()),
     path('payment-list/', views.PaymentListAPIView.as_view()),
     path('payment-create/', views.PaymentCreateAPIView.as_view()),
-    path('productaction-list/', views.ProductActionListAPIView.as_view()),
-    path('customeraction-list/', views.CustomerActionListAPIView.as_view()),
+    path('productaction-list/<int:id>/', views.ProductActionListAPIView.as_view()),
+    path('customeraction-list/<int:id>/', views.CustomerActionListAPIView.as_view()),
 ]
-
-"""
-1. Stok elave et
-2. Eyni anda bir nece satis
-3. productionaction-retrieve
-4. customeraction-retrieve
-
-"""

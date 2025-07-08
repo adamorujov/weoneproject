@@ -54,3 +54,12 @@ class CustomerActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerAction
         fields = "__all__"
+
+
+class BulkSaleSerializer(serializers.Serializer):
+    customer = serializers.IntegerField()
+    products = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
+    prices = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
+    amounts = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
+    datetimes = serializers.ListField(child=serializers.DateTimeField(), allow_empty=False)
+
