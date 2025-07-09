@@ -10,7 +10,7 @@ from core.models import (
 )
 from core.api.serializers import (
     CustomUserCreateSerializer, CustomUserSerializer, CustomUserSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer, ProductCreateSerializer,
-    ProductUpdateSerializer, BrandSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
+    ProductUpdateSerializer, ArticleSerializer, BrandSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
     ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer
 )
 import json
@@ -80,7 +80,7 @@ class ProductCreateAPIView(CreateAPIView):
             articles = json.loads(articles)
         else:
             articles = articles_data["articles"]
-            
+
         serializer = self.get_serializer(data=product_data)
 
         if serializer.is_valid():
@@ -97,9 +97,14 @@ class ProductCreateAPIView(CreateAPIView):
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class ProductRetrieveUpdateAPIView(RetrieveUpdateAPIView):
+class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductUpdateSerializer
+    lookup_field = "id"
+
+class ArticleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
     lookup_field = "id"
 
 class ApplicationCreateAPIView(CreateAPIView):

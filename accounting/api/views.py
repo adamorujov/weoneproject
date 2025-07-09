@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -57,6 +57,28 @@ class PurchaseCreateAPIView(CreateAPIView):
                 "message": "Məhsul alındı."
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Purchase.objects.all()
+    serializer_class = PurchaseCreateSerializer
+    lookup_field = "id" 
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            previous_instance_amount = instance.amount
+            serializer.save()
+            instance.product.amount = instance.product.amount - previous_instance_amount + instance.amount
+            instance.product.save()
+            # productaction = instance.product_actions.all()
+            # productaction.product = instance.product
+            # productaction.date = instance.datetime.date()
+            # productaction.incoming_product_number = instance.amount
+            # productaction.save()
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PurchaseListAPIView(ListAPIView):
@@ -128,6 +150,23 @@ class SaleCreateAPIView(CreateAPIView):
             response_data = {"message": "Satış edildi."}
             return Response(response_data, status=status.HTTP_201_CREATED)
        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Sale.objects.all()
+    serializer_class = SaleCreateSerializer
+    lookup_field = "id"
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            previous_instance_amount = instance.amount
+            serializer.save()
+            instance.product.amount = instance.product.amount + previous_instance_amount - instance.amount
+            instance.product.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     
 class BulkSaleAPIView(APIView):
     def post(self, request):
@@ -208,6 +247,11 @@ class PaymentCreateAPIView(CreateAPIView):
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Payment.objects.all()
+    serializer_class = PaymentCreateSerializer
+    lookup_field = "id"
 
 class ProductActionListAPIView(ListAPIView):
     def get_queryset(self):
@@ -245,11 +289,29 @@ class ReturnBackCreateAPIView(CreateAPIView):
             sale_amount = sale.amount - int(amount)
             sale.amount = sale_amount
             sale.save()
+            ProductAction.objects.create(
+                product = sale.product,
+                customer = sale.customer,
+                date = request.data.get("date"),
+                return_product_number = amount
+            )
+            CustomerAction.objects.create(
+                customer = sale.customer,
+                product = sale.product,
+                date = request.data.get("date"),
+                product_price = sale.price,
+                return_amount = sale.price
+            )
             response_data = {
                 "message": f"{amount} ədəd '{sale.product.name}' məhsulu geri qaytarıldı."
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class ReturnBackRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = ReturnBack.objects.all()
+    serializer_class = ReturnBackCreateSerializer
+    lookup_field = "id" 
 
 class ExpenseListAPIView(ListAPIView):
     queryset = Expense.objects.all()
@@ -258,6 +320,11 @@ class ExpenseListAPIView(ListAPIView):
 class ExpenseCreateAPIView(CreateAPIView):
     queryset = Expense.objects.all()
     serializer_class = ExpenseSerializer
+
+class ExpenseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Expense.objects.all()
+    serializer_class = ExpenseSerializer
+    lookup_field = "id"
 
 class InvoiceListAPIView(ListAPIView):
     def get_queryset(self):

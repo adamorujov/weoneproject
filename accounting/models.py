@@ -55,6 +55,7 @@ class ProductAction(models.Model):
     incoming_product_number = models.IntegerField("Gələn məhsul sayı", blank=True, null=True)
     sold_product_number = models.IntegerField("Satılan məhsul sayı", blank=True, null=True)
     remaining_product_number = models.IntegerField("Qalan məhsul sayı", blank=True, null=True)
+    return_product_number = models.IntegerField("Qaytarılan məhsul sayı", blank=True, null=True)
 
     class Meta:
         ordering = ("-id",)
@@ -72,6 +73,7 @@ class CustomerAction(models.Model):
     payment_amount = models.FloatField("Ödənilən məbləğ", blank=True, null=True)
     total_amount = models.FloatField("Ümumi gəlir", blank=True, null=True)
     remaining_amount = models.FloatField("Qalan məbləğ", blank=True, null=True)
+    return_amount = models.FloatField("Qaytarılan məbləğ", blank=True, null=True)
 
     class Meta:
         ordering = ("-id",)
