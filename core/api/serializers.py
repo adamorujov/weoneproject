@@ -154,4 +154,4 @@ class BasketCleanSerializer(serializers.Serializer):
 class OrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ("amount",)
+        fields = "__all__"

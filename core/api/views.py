@@ -210,6 +210,7 @@ class OrderCreateAPIView(CreateAPIView):
         serializer = self.get_serializer(data=order_data)
         if serializer.is_valid():
             serializer.save()
+            print(serializer.data)
             order_id = serializer.data["id"]
             order = get_object_or_404(Order, id=order_id)
             orderitems_data = {
