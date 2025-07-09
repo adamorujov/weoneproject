@@ -204,7 +204,7 @@ class OrderCreateAPIView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         order_data = {
-            "user": request.data.get("user"),
+            "user": request.user.id,
             "amount": request.data.get("amount")
         }
         serializer = self.get_serializer(data=order_data)
@@ -236,6 +236,7 @@ class OrderCreateAPIView(CreateAPIView):
                     product = product,
                     quantity = quantities[i]
                 )
+            BasketItem.objects.filter(product_id__in=products).delete()
             response_data = {
                 "message": f"'{order.user}' {len(products)} məhsul sifariş etdi."
             }
