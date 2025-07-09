@@ -2,7 +2,7 @@ from rest_framework import serializers
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Product, Application, SocialMedia, Advantage,
-    Activity, Service, Mission, BasketItem, Article
+    Activity, Service, Mission, BasketItem, Article, Order, OrderItem
 )
 from accounting.models import ReturnBack
 from django.contrib.auth.password_validation import validate_password
@@ -150,3 +150,8 @@ class BasketCleanSerializer(serializers.Serializer):
     item_ids = serializers.ListField(
         child = serializers.IntegerField(), allow_empty=False
     )
+
+class OrderCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = "__all__"

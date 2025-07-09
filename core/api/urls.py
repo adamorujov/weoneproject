@@ -25,4 +25,5 @@ urlpatterns = [
     path("product-create/", views.ProductCreateAPIView.as_view()),
     path("product-retrieve-update-delete/<int:id>/", views.ProductRetrieveUpdateDestroyAPIView.as_view()),
     path("article-retrieve-update-delete/<int:id>/", views.ArticleRetrieveUpdateDestroyAPIView.as_view()),
+    path("order-create/", views.OrderCreateAPIView.as_view())
 ]

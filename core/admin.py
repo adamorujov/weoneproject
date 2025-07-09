@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Product, Application, SocialMedia, Advantage,
-    Activity, Service, Mission, BasketItem, Article
+    Activity, Service, Mission, BasketItem, Article, Order, OrderItem
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -49,3 +49,11 @@ admin.site.register(Activity)
 admin.site.register(Service)
 admin.site.register(Mission)
 admin.site.register(BasketItem)
+
+class OrderItemAdmin(admin.TabularInline):
+    model = OrderItem
+    extra = 1
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    inlines = [OrderItemAdmin]

@@ -183,7 +183,7 @@ class Mission(models.Model):
     class Meta:
         ordering = ("-id",)
         verbose_name = "missiya və baxış"
-        verbose_name = "Missiyalar və Baxışlar"
+        verbose_name_plural = "Missiyalar və Baxışlar"
 
     def __str__(self):
         return self.title
@@ -201,3 +201,28 @@ class BasketItem(models.Model):
 
     def __str__(self):
         return self.user.username + " | " + self.product.name
+
+class Order(models.Model):
+    user = models.ForeignKey(CustomUser, verbose_name="İstifadəçi", on_delete=models.CASCADE, related_name="orders")
+    amount = models.FloatField("Ümumi məbləğ")
+
+    class Meta:
+        verbose_name = "sifariş"
+        verbose_name_plural = "Sifarişlər"
+        ordering = ("-id",)
+
+    def __str__(self):
+        return self.user.username
+    
+class OrderItem(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="orderitems")
+    quantity = models.IntegerField(default=1)
+
+    class Meta:
+        verbose_name = "sifariş elementi"
+        verbose_name_plural = "Sifariş elementləri"
+        ordering = ("-id",)
+
+    def __str__(self):
+        return self.product.name
+    

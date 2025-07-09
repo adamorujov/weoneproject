@@ -6,13 +6,15 @@ from rest_framework import status
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Product, Application, SocialMedia, Advantage,
-    Activity, Service, Mission, BasketItem, Article
+    Activity, Service, Mission, BasketItem, Article, Order, OrderItem
 )
 from core.api.serializers import (
     CustomUserCreateSerializer, CustomUserSerializer, CustomUserSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer, ProductCreateSerializer,
     ProductUpdateSerializer, ArticleSerializer, BrandSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
-    ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer
+    ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer,
+    OrderCreateSerializer
 )
+from django.shortcuts import get_object_or_404
 import json
 
 class UserCreateAPIView(CreateAPIView):
@@ -195,3 +197,46 @@ class BasketCleanAPIView(APIView):
 
             return Response(response_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class OrderCreateAPIView(CreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        order_data = {
+            "user": request.data.get("user"),
+            "amount": request.data.get("amount")
+        }
+        serializer = self.get_serializer(data=order_data)
+        if serializer.is_valid():
+            serializer.save()
+            orderitems_data = {
+                "products": request.data.get("products"),
+                "quantities": request.data.get("quantities")
+            }
+
+            if isinstance(orderitems_data["products"], str):
+                products = orderitems_data["products"].replace('\'', '"')
+                products = json.loads(products)
+            else:
+                products = orderitems_data["products"]
+
+            if isinstance(orderitems_data["quantities"], str):
+                quantities = orderitems_data["quantities"].replace('\'', '"')
+                quantities = json.loads(quantities)
+            else:
+                quantities = orderitems_data["quantities"]
+            
+            for i in range(len(products)):
+                product = get_object_or_404(Product, id=products[i])
+                OrderItem.objects.create(
+                    product = product,
+                    quantity = quantities[i]
+                )
+            user = get_object_or_404(CustomUser, id=int(order_data["user"]))
+            response_data = {
+                "message": f"'{user}' {len(products)} məhsul sifariş etdi."
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
