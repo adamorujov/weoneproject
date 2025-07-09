@@ -210,6 +210,8 @@ class OrderCreateAPIView(CreateAPIView):
         serializer = self.get_serializer(data=order_data)
         if serializer.is_valid():
             serializer.save()
+            order_id = serializer.data["id"]
+            order = get_object_or_404(Order, id=order_id)
             orderitems_data = {
                 "products": request.data.get("products"),
                 "quantities": request.data.get("quantities")
@@ -230,12 +232,12 @@ class OrderCreateAPIView(CreateAPIView):
             for i in range(len(products)):
                 product = get_object_or_404(Product, id=products[i])
                 OrderItem.objects.create(
+                    order = order,
                     product = product,
                     quantity = quantities[i]
                 )
-            user = get_object_or_404(CustomUser, id=int(order_data["user"]))
             response_data = {
-                "message": f"'{user}' {len(products)} məhsul sifariş etdi."
+                "message": f"'{order.user}' {len(products)} məhsul sifariş etdi."
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
