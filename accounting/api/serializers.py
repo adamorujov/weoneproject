@@ -25,6 +25,7 @@ class StockSerializer(serializers.ModelSerializer):
         fields = "__all__" 
 
 class SaleSerializer(serializers.ModelSerializer):
+    seller = CustomUserSerializer()
     customer = CustomUserSerializer()
     product = ProductSerializer()
     class Meta:
@@ -61,8 +62,8 @@ class CustomerActionSerializer(serializers.ModelSerializer):
         model = CustomerAction
         fields = "__all__"
 
-
 class BulkSaleSerializer(serializers.Serializer):
+    seller = serializers.IntegerField()
     customer = serializers.IntegerField()
     products = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
     prices = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)

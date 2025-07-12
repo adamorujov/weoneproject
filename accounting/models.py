@@ -37,6 +37,7 @@ class Sale(models.Model):
         ('G', 'Gözləyir'),
         ('S', 'Satılıb')
     )
+    seller = models.ForeignKey(CustomUser, verbose_name="Satıcı", on_delete=models.CASCADE, related_name="seller_sales")
     customer = models.ForeignKey(CustomUser, verbose_name="Müştəri", on_delete=models.CASCADE, related_name="customer_sales")
     product = models.ForeignKey(Product, verbose_name="Məhsul", on_delete=models.CASCADE, related_name="product_sales")
     amount = models.IntegerField("Miqdar", default=0)

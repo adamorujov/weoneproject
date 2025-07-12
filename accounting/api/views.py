@@ -47,6 +47,14 @@ class PurchaseCreateAPIView(CreateAPIView):
             product.amount = product.amount + int(purchase_data["amount"])
             product.save()
 
+            status = serializer.data.get("status")
+            if status == "A":
+                stock, created = Stock.objects.get_or_create(
+                    product = product
+                )
+                stock.amount = stock.amount + int(purchase_data["amount"])
+                stock.save()
+
             dt_data = purchase_data["date"].split("-")
             ProductAction.objects.create(
                product = product,
@@ -121,6 +129,7 @@ class SaleCreateAPIView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
        sale_data = {
+           "seller": request.data.get("seller"),
            "product": request.data.get("product"),
            "customer": request.data.get("customer"),
            "amount": request.data.get("amount"),
@@ -133,8 +142,9 @@ class SaleCreateAPIView(CreateAPIView):
             product = Product.objects.get(id=sale_data["product"])
             product.amount = product.amount - int(sale_data["amount"])
             product.save()
-            product.stock.amount = product.stock.amount - int(sale_data["amount"])
-            product.stock.save()
+            if hasattr(product, "stock"):
+                product.stock.amount = product.stock.amount - int(sale_data["amount"])
+                product.stock.save()
             customer = CustomUser.objects.get(id=sale_data["customer"])
             dt = sale_data["datetime"].split("T")[0]
             dt_data = dt.split("-")
@@ -177,18 +187,20 @@ class BulkSaleAPIView(APIView):
     def post(self, request):
         serializer = BulkSaleSerializer(data=request.data)
         if serializer.is_valid():
+            seller_id = serializer.validated_data["seller"]
             customer_id = serializer.validated_data["customer"]
             products_id = serializer.validated_data["products"]
             prices = serializer.validated_data["prices"]
             amounts = serializer.validated_data["amounts"]
             datetimes = serializer.validated_data["datetimes"]
 
+            seller = CustomUser.objects.get(id=seller_id)
             customer = CustomUser.objects.get(id=customer_id)
             products = Product.objects.filter(id__in=products_id)
-            print(products)
 
             for i in range(len(products)):
                 Sale.objects.create(
+                    seller = seller,
                     customer = customer,
                     product = products[i],
                     amount = amounts[i],
@@ -197,6 +209,9 @@ class BulkSaleAPIView(APIView):
                 )
                 products[i].amount = products[i].amount - amounts[i]
                 products[i].save()
+                if hasattr(products[i], "stock"):
+                    products[i].stock.amount = products[i].stock.amount - amounts[i]
+                    products[i].stock.save()
                 ProductAction.objects.create(
                     product = products[i],
                     customer = customer,
