@@ -2,9 +2,9 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDe
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from accounting.models import Purchase, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
+from accounting.models import Purchase, Stock, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
 from accounting.api.serializers import (
-    PurchaseCreateSerializer, PurchaseSerializer, AddToStockSerializer, SaleSerializer, 
+    PurchaseCreateSerializer, PurchaseSerializer, AddToStockSerializer, StockSerializer, SaleSerializer, 
     SaleCreateSerializer, PaymentSerializer, PaymentCreateSerializer, ProductActionSerializer,
     CustomerActionSerializer, BulkSaleSerializer, ReturnBackSerializer, ReturnBackCreateSerializer,
     ExpenseSerializer
@@ -86,11 +86,8 @@ class PurchaseListAPIView(ListAPIView):
     serializer_class = PurchaseSerializer
 
 class StockListAPIView(ListAPIView):
-    def get_queryset(self):
-        return Purchase.objects.filter(
-            status = 'A'
-        )
-    serializer_class = PurchaseSerializer
+    queryset = Stock.objects.all()
+    serializer_class = StockSerializer
 
 class AddToStockAPIView(APIView):
     def post(self, request):
@@ -99,9 +96,14 @@ class AddToStockAPIView(APIView):
         if serializer.is_valid():
             item_ids = serializer.validated_data["item_ids"]
             items = Purchase.objects.filter(id__in=item_ids)
-            items.update(in_stock=True)
-            items.update(status='A')
-
+            for item in items:
+                stock, created = Stock.objects.get_or_create(
+                    product = item.product
+                )
+                stock.amount = stock.amount + item.amount
+                stock.save()
+                item.status = "A"
+                item.save()
             response_data = {
                 "message": f"{len(items)} məhsul anbara əlavə edildi."
             }
@@ -130,6 +132,8 @@ class SaleCreateAPIView(CreateAPIView):
             product = Product.objects.get(id=sale_data["product"])
             product.amount = product.amount - int(sale_data["amount"])
             product.save()
+            product.stock.amount = product.stock.amount - int(sale_data["amount"])
+            product.stock.save()
             customer = CustomUser.objects.get(id=sale_data["customer"])
             dt = sale_data["datetime"].split("T")[0]
             dt_data = dt.split("-")

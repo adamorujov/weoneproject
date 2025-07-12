@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from accounting.models import Purchase, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
+from accounting.models import Purchase, Stock, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
 from core.api.serializers import ProductSerializer, CustomUserSerializer
 
 class PurchaseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Purchase
-        fields = ("product", "amount", "status", "date")
+        fields = ("supplier", "product", "amount", "status", "date")
 
 class PurchaseSerializer(serializers.ModelSerializer):
     product = ProductSerializer()
@@ -17,6 +17,12 @@ class AddToStockSerializer(serializers.Serializer):
     item_ids = serializers.ListField(
         child = serializers.IntegerField(), allow_empty=False
     )
+
+class StockSerializer(serializers.ModelSerializer):
+    product = ProductSerializer()
+    class Meta:
+        model = Stock
+        fields = "__all__" 
 
 class SaleSerializer(serializers.ModelSerializer):
     customer = CustomUserSerializer()

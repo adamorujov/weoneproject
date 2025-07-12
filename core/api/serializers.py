@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
-    Brand, Product, Application, SocialMedia, Advantage,
+    Brand, Store, Product, Application, SocialMedia, Advantage,
     Activity, Service, Mission, BasketItem, Article, Order, OrderItem
 )
 from accounting.models import ReturnBack
@@ -12,7 +12,7 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ("username", "first_name", "last_name", "address", "password", "phone_number", "status", "is_staff", "is_superuser")
+        fields = ("username", "first_name", "last_name", "address", "password", "phone_number", "status", "is_staff", "is_superuser", "is_supplier")
 
     def validate(self, data):
         validate_password(data["password"])
@@ -80,6 +80,11 @@ class BrandSerializer(serializers.ModelSerializer):
         model = Brand
         fields = "__all__"
 
+class StoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Store
+        fields = "__all__"
+
 class ArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
@@ -88,6 +93,7 @@ class ArticleSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     category = ProductCategorySerializer()
     brand = BrandSerializer()
+    store = StoreSerializer()
     articles = ArticleSerializer(many=True)
 
     class Meta:
@@ -97,13 +103,12 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ("name", "image", "category", "brand", "date")
+        fields = ("name", "about", "image", "category", "brand", "store", "date")
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = "__all__"
-
 
 class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:

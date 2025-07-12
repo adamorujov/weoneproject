@@ -6,11 +6,11 @@ class Purchase(models.Model):
         ('G', 'Gözləyir'),
         ('A', 'Anbarda')
     )
+    supplier = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="supplier_purchases")
     product = models.ForeignKey(Product, verbose_name="Məhsul", on_delete=models.CASCADE, related_name="purchases")
     amount = models.IntegerField("Miqdar", default=0)
     date = models.DateField("Alış tarixi")
     status = models.CharField("Status", choices=STATUS, max_length=1, default='G')
-    in_stock = models.BooleanField("Anbarda", default=False)
 
     class Meta:
         ordering = ("-id",)
@@ -20,12 +20,29 @@ class Purchase(models.Model):
     def __str__(self):
         return self.product.name
     
+class Stock(models.Model):
+    product = models.OneToOneField(Product, verbose_name="Məhsul", on_delete=models.CASCADE, related_name="stock")
+    amount = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ("-id",)
+        verbose_name = "Stok"
+        verbose_name_plural = "Anbar"
+
+    def __str__(self):
+        return self.product.name
+
 class Sale(models.Model):
+    STATUS = (
+        ('G', 'Gözləyir'),
+        ('S', 'Satılıb')
+    )
     customer = models.ForeignKey(CustomUser, verbose_name="Müştəri", on_delete=models.CASCADE, related_name="customer_sales")
     product = models.ForeignKey(Product, verbose_name="Məhsul", on_delete=models.CASCADE, related_name="product_sales")
     amount = models.IntegerField("Miqdar", default=0)
     datetime = models.DateTimeField("Tarix və vaxt")
     price = models.FloatField("Satış qiyməti")
+    status = models.CharField("Status", choices=STATUS, max_length=1, default='G')
 
     class Meta:
         ordering = ("-id",)

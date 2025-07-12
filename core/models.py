@@ -1,16 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from tinymce.models import HTMLField
 
 class CustomUser(AbstractUser):
     PAYMENT_STATUS = (
         ("S", "Satış qiyməti"),
         ("E", "Endirimli qiymət"),
-        ("SE", "Satış və endirimli qiymət")
     )
     address = models.TextField("Ünvan", blank=True, null=True)
     phone_number = models.CharField("Telefon nömrəsi", max_length=20, blank=True, null=True)
     status = models.CharField("Ödəniş statusu", max_length=2, choices=PAYMENT_STATUS, blank=True, null=True)
     website = models.CharField("Vebsayt", max_length=256, blank=True, null=True)
+    is_supplier = models.BooleanField("Tədarükçü statusu", default=False)
 
 class SiteSettings(models.Model):
     logo = models.ImageField("Loqo", upload_to="site_imgs/", blank=True, null=True)
@@ -72,6 +73,17 @@ class Brand(models.Model):
     def __str__(self):
         return self.name
     
+class Store(models.Model):
+    name = models.CharField("Ad", max_length=100)
+    
+    class Meta:
+        verbose_name = "brend"
+        verbose_name_plural = "Brendlər"
+        ordering = ("-id",)
+
+    def __str__(self):
+        return self.name
+    
 class Product(models.Model):
     CURRENCIES = (
         ('M', 'Manat'),
@@ -79,6 +91,7 @@ class Product(models.Model):
         ('R', 'Rubl')
     )
     name = models.CharField("Ad", max_length=256, unique=True)
+    about = HTMLField("Haqqında", blank=True, null=True)
     image = models.ImageField("Şəkil", upload_to="product_imgs/", blank=True, null=True)
     cost_price = models.FloatField("Maya dəyəri", default=0)
     purchase_price = models.FloatField("Alış qiyməti", default=0)
@@ -87,6 +100,7 @@ class Product(models.Model):
     discount_price = models.FloatField("Endirimli qiyməti", blank=True, null=True)
     category = models.ForeignKey(ProductCategory, verbose_name="Kateqoriya", on_delete=models.SET_NULL, related_name="category_products", blank=True, null=True)
     brand = models.ForeignKey(Brand, verbose_name="Marka", on_delete=models.SET_NULL, related_name="brand_products", blank=True, null=True)
+    store = models.ForeignKey(Store, verbose_name="Brend", on_delete=models.SET_NULL, related_name="store_products", blank=True, null=True)
     amount = models.IntegerField("Miqdar", default=0)
     date = models.DateField("Gəliş tarixi")
 
@@ -205,6 +219,7 @@ class BasketItem(models.Model):
 class Order(models.Model):
     user = models.ForeignKey(CustomUser, verbose_name="İstifadəçi", on_delete=models.CASCADE, related_name="orders")
     amount = models.FloatField("Ümumi məbləğ")
+    date = models.DateField(auto_now_add=True)
 
     class Meta:
         verbose_name = "sifariş"

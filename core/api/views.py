@@ -5,12 +5,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
-    Brand, Product, Application, SocialMedia, Advantage,
+    Brand, Store, Product, Application, SocialMedia, Advantage,
     Activity, Service, Mission, BasketItem, Article, Order, OrderItem
 )
 from core.api.serializers import (
     CustomUserCreateSerializer, CustomUserSerializer, CustomUserSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer, ProductCreateSerializer,
-    ProductUpdateSerializer, ArticleSerializer, BrandSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
+    ProductUpdateSerializer, ArticleSerializer, BrandSerializer, StoreSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
     ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer,
     OrderCreateSerializer
 )
@@ -32,6 +32,11 @@ class UserRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         return self.request.user
     serializer_class = CustomUserSerializer
 
+class SupplierListAPIView(ListAPIView):
+    def get_queryset(self):
+        return CustomUser.objects.filter(is_supplier=True)
+    serializer_class = CustomUserSerializer
+
 class SiteSettingsListAPIView(ListAPIView):
     queryset = SiteSettings.objects.all()
     serializer_class = SiteSettingsSerializer
@@ -47,6 +52,10 @@ class ProductCategoryListAPIView(ListAPIView):
 class BrandListAPIView(ListAPIView):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
+
+class StoreListAPIView(ListAPIView):
+    queryset = Store.objects.all()
+    serializer_class = StoreSerializer
 
 class ProductListAPIView(ListAPIView):
     queryset = Product.objects.all()
@@ -68,9 +77,11 @@ class ProductCreateAPIView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         product_data = {
             "name": request.data.get("name"),
+            "about": request.data.get("about"),
             "image": request.data.get("image"),
             "category": request.data.get("category"),
             "brand": request.data.get("brand"),
+            "store": request.data.get("store"),
             "date": request.data.get("date")
         }
 
@@ -210,7 +221,6 @@ class OrderCreateAPIView(CreateAPIView):
         serializer = self.get_serializer(data=order_data)
         if serializer.is_valid():
             serializer.save()
-            print(serializer.data)
             order_id = serializer.data["id"]
             order = get_object_or_404(Order, id=order_id)
             orderitems_data = {
