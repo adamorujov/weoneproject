@@ -28,7 +28,8 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
             phone_number = validated_data["phone_number"],
             status = validated_data["status"],
             is_staff = validated_data["is_staff"],
-            is_superuser = validated_data["is_superuser"]
+            is_superuser = validated_data["is_superuser"],
+            is_supplier = validated_data["is_supplier"]
         )
         return user
 
