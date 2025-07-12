@@ -20,6 +20,7 @@ class PurchaseCreateAPIView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         purchase_data = {
+            "supplier": request.data.get("supplier"),
             "product": request.data.get("product"),
             "amount": request.data.get("amount"),
             "date": request.data.get("date"),
