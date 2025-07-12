@@ -82,7 +82,6 @@ class ProductCreateAPIView(CreateAPIView):
             "category": request.data.get("category"),
             "brand": request.data.get("brand"),
             "store": request.data.get("store"),
-            "date": request.data.get("date")
         }
 
         articles_data = {

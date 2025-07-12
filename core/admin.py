@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
-    Brand, Product, Application, SocialMedia, Advantage,
+    Brand, Store, Product, Application, SocialMedia, Advantage,
     Activity, Service, Mission, BasketItem, Article, Order, OrderItem
 )
 from django.utils.translation import gettext_lazy as _
@@ -33,6 +33,7 @@ admin.site.register(SiteSettings)
 admin.site.register(Banner)
 admin.site.register(ProductCategory)
 admin.site.register(Brand)
+admin.site.register(Store)
 
 class ArticleAdmin(admin.TabularInline):
     model = Article
