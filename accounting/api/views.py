@@ -2,6 +2,7 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDe
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from accounting.models import Purchase, Stock, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
 from accounting.api.serializers import (
     PurchaseCreateSerializer, PurchaseSerializer, AddToStockSerializer, StockSerializer, SaleSerializer, 
@@ -356,11 +357,19 @@ class InvoiceListAPIView(ListAPIView):
     serializer_class = SaleSerializer
 
 class DashbordAPIView(APIView):
-    def get(self, request):
-        sold_product_number = sum([sale.amount for sale in Sale.objects.all()])
-        customer_number = len(CustomUser.objects.filter(is_staff=False))
-        total_sale_amount = sum([sale.price for sale in Sale.objects.all()])
-        total_income = sum([payment.amount for payment in Payment.objects.all()])
+    def get(self, request, seller_id):
+        user = get_object_or_404(CustomUser, id=seller_id)
+        if user.is_superuser:
+            sold_product_number = sum([sale.amount for sale in Sale.objects.all()])
+            customer_number = len(CustomUser.objects.filter(is_staff=False))
+            total_sale_amount = sum([sale.price for sale in Sale.objects.all()])
+            total_income = sum([payment.amount for payment in Payment.objects.all()])
+        else:
+            sold_product_number = sum([sale.amount for sale in Sale.objects.filter(seller=request.user)])
+            customer_number = len(CustomUser.objects.filter(customer_sales__seller=request.user))
+            total_sale_amount = sum([sale.price for sale in Sale.objects.filter(seller=request.user)])
+            # total_income = sum([payment.amount for payment in Payment.objects.filter(customer__customer_sales__seller=request.user)])
+            total_income = None
         dashboard_data = {
             "sold_product_number": sold_product_number,
             "customer_number": customer_number,
@@ -368,34 +377,58 @@ class DashbordAPIView(APIView):
             "total_income": total_income
         }
         return Response(dashboard_data, status=status.HTTP_200_OK)
+    permission_classes = (IsAdminUser,)
     
 class SaleDynamicsAPIView(APIView):
-    def get(self, request, filter_data):
+    def get(self, request, seller_id, filter_data):
         # filter_data = self.kwargs.get("my_filter_data")
+        user = get_object_or_404(CustomUser, id=seller_id)
         if filter_data == "A":
             months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun", "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"]
             total_sale_amounts = []
-            for i in range(len(months)):
-                year = datetime.datetime.now().year
-                total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
-                    datetime__date__month = i + 1,
-                    datetime__date__year = year
-                )])
-                total_sale_amounts.append(total_sale_amount)
+            if user.is_superuser:
+                for i in range(len(months)):
+                    year = datetime.datetime.now().year
+                    total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
+                        datetime__date__month = i + 1,
+                        datetime__date__year = year
+                    )])
+                    total_sale_amounts.append(total_sale_amount)
+            else:
+                for i in range(len(months)):
+                    year = datetime.datetime.now().year
+                    total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
+                        seller = user,
+                        datetime__date__month = i + 1,
+                        datetime__date__year = year
+                    )])
+                    total_sale_amounts.append(total_sale_amount)
             response_data = {
                 month: amount for (month, amount) in zip(months, total_sale_amounts)
             }
             return Response(response_data, status=status.HTTP_200_OK)
         elif filter_data == "I":
-            all_sale_years = [sale.datetime.year for sale in Sale.objects.all()]
-            all_sale_years = list(set(all_sale_years))
-            all_sale_years.sort()
-            total_sale_amounts = []
-            for year in all_sale_years:
-                total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
-                    datetime__year = year
-                )])
-                total_sale_amounts.append(total_sale_amount)
+            if user.is_superuser:
+                all_sale_years = [sale.datetime.year for sale in Sale.objects.all()]
+                all_sale_years = list(set(all_sale_years))
+                all_sale_years.sort()
+                total_sale_amounts = []
+                for year in all_sale_years:
+                    total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
+                        datetime__year = year
+                    )])
+                    total_sale_amounts.append(total_sale_amount)
+            else:
+                all_sale_years = [sale.datetime.year for sale in Sale.objects.filter(seller=user)]
+                all_sale_years = list(set(all_sale_years))
+                all_sale_years.sort()
+                total_sale_amounts = []
+                for year in all_sale_years:
+                    total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
+                        seller = user,
+                        datetime__year = year
+                    )])
+                    total_sale_amounts.append(total_sale_amount)
             response_data = {
                 year: amount for (year, amount) in zip(all_sale_years, total_sale_amounts)
             }
