@@ -356,25 +356,54 @@ class InvoiceListAPIView(ListAPIView):
         return Sale.objects.filter(customer=customer)
     serializer_class = SaleSerializer
 
-class DashbordAPIView(APIView):
-    def get(self, request, seller_id):
+class DashboardAPIView(APIView):
+    def get(self, request, seller_id, month, year):
         user = get_object_or_404(CustomUser, id=seller_id)
-        if user.is_superuser:
-            sold_product_number = sum([sale.amount for sale in Sale.objects.all()])
-            customer_number = len(CustomUser.objects.filter(is_staff=False))
-            total_sale_amount = sum([sale.price for sale in Sale.objects.all()])
-            total_income = sum([payment.amount for payment in Payment.objects.all()])
+        months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun", "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr", "All"]
+        try:
+            m = months.index(month) + 1
+        except ValueError:
+            return Response({"message": "Daxil edilən məlumat yalnışdır."}, status=status.HTTP_400_BAD_REQUEST)
+        if m < 13:
+            sales = Sale.objects.filter(
+                datetime__month = m, datetime__year = year
+            )
+            payments = Payment.objects.filter(
+                datetime__month = m, datetime__year = year
+            )
+            expenses = Expense.objects.filter(
+                date__month = m, date__year = year
+            )
         else:
-            sold_product_number = sum([sale.amount for sale in Sale.objects.filter(seller=request.user)])
-            customer_number = len(CustomUser.objects.filter(customer_sales__seller=request.user))
-            total_sale_amount = sum([sale.price for sale in Sale.objects.filter(seller=request.user)])
+            sales = Sale.objects.filter(
+                datetime__year = year
+            )
+            payments = Payment.objects.filter(
+                datetime_year = year
+            )
+            expenses = Expense.objects.filter(
+                date__year = year
+            )
+        if user.is_superuser:
+            sold_product_number = sum([sale.amount for sale in sales])
+            customer_number = sales.values('customer').distinct().count()
+            total_sale_amount = sum([sale.price for sale in sales])
+            total_income = sum([payment.amount for payment in payments])
+            total_outcome = sum([expense.amount for expense in expenses])
+        else:
+            sales = sales.filter(seller=user)
+            sold_product_number = sum([sale.amount for sale in sales])
+            customer_number = sales.values('customer').distinct().count()
+            total_sale_amount = sum([sale.price for sale in sales])
             # total_income = sum([payment.amount for payment in Payment.objects.filter(customer__customer_sales__seller=request.user)])
             total_income = None
+            total_outcome = None
         dashboard_data = {
             "sold_product_number": sold_product_number,
             "customer_number": customer_number,
             "total_sale_amount": total_sale_amount,
-            "total_income": total_income
+            "total_income": total_income,
+            "total_outcome": total_outcome
         }
         return Response(dashboard_data, status=status.HTTP_200_OK)
     permission_classes = (IsAdminUser,)
