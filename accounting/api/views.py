@@ -196,32 +196,32 @@ class BulkSaleAPIView(APIView):
 
             seller = CustomUser.objects.get(id=seller_id)
             customer = CustomUser.objects.get(id=customer_id)
-            products = Product.objects.filter(id__in=products_id)
 
-            for i in range(len(products)):
+            for i in range(len(products_id)):
+                product = get_object_or_404(Product, id=products_id[i])
                 Sale.objects.create(
                     seller = seller,
                     customer = customer,
-                    product = products[i],
+                    product = product,
                     amount = amounts[i],
                     datetime = datetimes[i],
                     price = prices[i]
                 )
-                products[i].amount = products[i].amount - amounts[i]
-                products[i].save()
-                if hasattr(products[i], "stock"):
-                    products[i].stock.amount = products[i].stock.amount - amounts[i]
-                    products[i].stock.save()
+                product.amount = product.amount - amounts[i]
+                product.save()
+                if hasattr(product, "stock"):
+                    product.stock.amount = product.stock.amount - amounts[i]
+                    product.stock.save()
                 ProductAction.objects.create(
-                    product = products[i],
+                    product = product,
                     customer = customer,
                     date = datetimes[i].date(), 
                     sold_product_number = amounts[i],
-                    remaining_product_number = products[i].amount
+                    remaining_product_number = product.amount
                 )
                 CustomerAction.objects.create(
                     customer = customer,
-                    product = products[i],
+                    product = product,
                     date = datetimes[i].date(), 
                     product_price = prices[i]
                 )
