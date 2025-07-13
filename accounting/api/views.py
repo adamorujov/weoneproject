@@ -47,8 +47,8 @@ class PurchaseCreateAPIView(CreateAPIView):
             product.amount = product.amount + int(purchase_data["amount"])
             product.save()
 
-            status = serializer.data.get("status")
-            if status == "A":
+            stock_status = serializer.data.get("status")
+            if stock_status == "A":
                 stock, created = Stock.objects.get_or_create(
                     product = product
                 )
