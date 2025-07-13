@@ -129,13 +129,14 @@ class SaleCreateAPIView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
        sale_data = {
-           "seller": request.data.get("seller"),
+           "seller": request.user.id,
            "product": request.data.get("product"),
            "customer": request.data.get("customer"),
            "amount": request.data.get("amount"),
            "datetime": request.data.get("datetime"),
-           "price": request.data.get("price")
-       }
+           "price": request.data.get("price"),
+           "status": request.data.get("status")
+        }
        serializer = self.get_serializer(data=sale_data)
        if serializer.is_valid():
             serializer.save()
@@ -187,14 +188,14 @@ class BulkSaleAPIView(APIView):
     def post(self, request):
         serializer = BulkSaleSerializer(data=request.data)
         if serializer.is_valid():
-            seller_id = serializer.validated_data["seller"]
             customer_id = serializer.validated_data["customer"]
             products_id = serializer.validated_data["products"]
             prices = serializer.validated_data["prices"]
             amounts = serializer.validated_data["amounts"]
             datetimes = serializer.validated_data["datetimes"]
+            statuses = serializer.validated_data["statuses"]
 
-            seller = CustomUser.objects.get(id=seller_id)
+            seller = request.user
             customer = CustomUser.objects.get(id=customer_id)
 
             for i in range(len(products_id)):
@@ -205,7 +206,8 @@ class BulkSaleAPIView(APIView):
                     product = product,
                     amount = amounts[i],
                     datetime = datetimes[i],
-                    price = prices[i]
+                    price = prices[i],
+                    status = statuses[i]
                 )
                 product.amount = product.amount - amounts[i]
                 product.save()
@@ -229,7 +231,7 @@ class BulkSaleAPIView(APIView):
                 "message": f"Seçilmiş məhsullar '{customer}' müştəriyə satıldı."
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
-        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class PaymentListAPIView(ListAPIView):
     queryset = Payment.objects.all()

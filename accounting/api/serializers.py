@@ -63,12 +63,12 @@ class CustomerActionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class BulkSaleSerializer(serializers.Serializer):
-    seller = serializers.IntegerField()
     customer = serializers.IntegerField()
     products = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
     prices = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
     amounts = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
     datetimes = serializers.ListField(child=serializers.DateTimeField(), allow_empty=False)
+    statuses = serializers.ListField(child=serializers.CharField(), allow_empty=False)
 
 class ReturnBackSerializer(serializers.ModelSerializer):
     sale = SaleSerializer()
