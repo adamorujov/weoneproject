@@ -28,9 +28,9 @@ class UserListAPIView(ListAPIView):
     permission_classes = (IsAdminUser,)
 
 class UserRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
-    def get_object(self):
-        return self.request.user
+    queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
+    lookup_field = "id"
 
 class SupplierListAPIView(ListAPIView):
     def get_queryset(self):
