@@ -362,8 +362,8 @@ class DashboardAPIView(APIView):
         months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun", "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr", "All"]
         try:
             m = months.index(month) + 1
-        except ValueError:
-            return Response({"message": "Daxil edilən məlumat yalnışdır."}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError as e:
+            return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
         if m < 13:
             sales = Sale.objects.filter(
                 datetime__month = m, datetime__year = year
