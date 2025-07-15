@@ -379,7 +379,7 @@ class DashboardAPIView(APIView):
                 datetime__year = year
             )
             payments = Payment.objects.filter(
-                datetime_year = year
+                datetime__year = year
             )
             expenses = Expense.objects.filter(
                 date__year = year
