@@ -359,7 +359,7 @@ class InvoiceListAPIView(ListAPIView):
 class DashboardAPIView(APIView):
     def get(self, request, seller_id, month, year):
         user = get_object_or_404(CustomUser, id=seller_id)
-        months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun", "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr", "All"]
+        months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr", "All"]
         try:
             m = months.index(month) + 1
         except ValueError as e:
