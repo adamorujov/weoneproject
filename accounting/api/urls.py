@@ -21,7 +21,7 @@ urlpatterns = [
     path('returnback-retrieve-update-delete/<int:id>/', views.PurchaseRetrieveUpdateDestroyAPIView.as_view()),
     path('expense-list/', views.ExpenseListAPIView.as_view()),
     path('expense-create/', views.ExpenseCreateAPIView.as_view()),
-    path('expense-retrieve-update-delete/<int:id>/', views.PurchaseRetrieveUpdateDestroyAPIView.as_view()),
+    path('expense-retrieve-update-delete/<int:id>/', views.ExpenseRetrieveUpdateDestroyAPIView.as_view()),
     path('invoice-list/<int:id>/', views.InvoiceListAPIView.as_view()),
     path('dashboard/<int:seller_id>/<str:month>/<int:year>/', views.DashboardAPIView.as_view()),
     path('saledynamics/<int:seller_id>/<str:filter_data>/', views.SaleDynamicsAPIView.as_view()),
