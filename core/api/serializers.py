@@ -52,18 +52,14 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return total_paid_amount
     
     def get_customer_debt_amount(self, obj):
-        total_customer_debt_amount = self.get_total_amount(obj) - self.get_total_paid_amount(obj)
-        return total_customer_debt_amount
+        total_customer_debt_amount = self.get_total_amount(obj) - self.get_total_paid_amount(obj) - self.calculate_our_debt_amount(obj)
+        return total_customer_debt_amount if total_customer_debt_amount > 0 else 0
     
-    # def calculate_our_debt_amount(self, obj):
-    #     customer_returnbacks = ReturnBack.objects.filter(
-    #         sale__customer = obj
-    #     )
-    #     total_our_debt_amount = sum([returnback.amount for returnback in customer_returnbacks])
-    #     return total_our_debt_amount
+    def calculate_our_debt_amount(self, obj):
+        return sum([purchase.product.purchase_price for purchase in obj.supplier_purchases.all()])
     
     def get_our_debt_amount(self, obj):
-        return self.calculate_our_debt_amount() if self.get_customer_debt_amount(obj) == 0 else 0
+        return self.calculate_our_debt_amount(obj) if self.get_customer_debt_amount(obj) == 0 else 0
     
 class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
