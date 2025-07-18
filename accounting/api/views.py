@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from accounting.models import Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
 from accounting.api.serializers import (
-    PurchaseCreateSerializer, PurchaseSerializer, AddToStockSerializer, StockSerializer, SaleSerializer, SaleListSerializer,
-    SaleCreateSerializer, PaymentSerializer, PaymentCreateSerializer, ProductActionSerializer,
+    PurchaseCreateSerializer, PurchaseSerializer, AddToStockSerializer, StockSerializer, StockUpdateSerializer, SaleSerializer, SaleListSerializer,
+    SaleListRetrieveSerializer, SaleCreateSerializer, PaymentSerializer, PaymentCreateSerializer, ProductActionSerializer,
     CustomerActionSerializer, BulkSaleSerializer, ReturnBackSerializer, ReturnBackCreateSerializer,
     ExpenseSerializer
 )
@@ -44,7 +44,7 @@ class PurchaseCreateAPIView(CreateAPIView):
             product.purchase_price = product_data["purchase_price"]
             product.price = product_data["price"]
             product.discount_price = product_data["discount_price"]
-            product.currency = product_data["currency"]
+            product.currency = product_data["currency"] if product_data["currency"] else product.currency
             product.amount = product.amount + int(purchase_data["amount"])
             product.save()
 
@@ -64,7 +64,7 @@ class PurchaseCreateAPIView(CreateAPIView):
             )
 
             response_data = {
-                "message": "Məhsul alındı."
+                "message": f"{int(purchase_data["amount"])} Məhsul alındı: {product.name}"
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -113,7 +113,12 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 )
                 stock.amount = stock.amount - previous_instance_amount
                 stock.save()
-
+            elif previous_instance_status == "A" and instance.status == "A":
+                stock = Stock.objects.get(
+                    product = instance.product
+                )
+                stock.amount = stock.amount - previous_instance_amount + instance.amount
+                stock.save()
             # pr_serializer = ProductUpdateSerializer(instance.product, data=product_data, partial=True)
             # print(type(instance.product))
             # print(pr_serializer.is_valid())
@@ -160,6 +165,11 @@ class AddToStockAPIView(APIView):
             return Response(response_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+class StockRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Stock.objects.all()
+    serializer_class = StockUpdateSerializer
+    lookup_field = "id"
+    
 class SaleListAPIView(ListAPIView):
     queryset = Sale.objects.all()
     serializer_class = SaleSerializer
@@ -167,6 +177,11 @@ class SaleListAPIView(ListAPIView):
 class SaleListListAPIView(ListAPIView):
     queryset = SaleList.objects.all()
     serializer_class = SaleListSerializer
+
+class SaleListRetrieveAPIView(ListAPIView):
+    queryset = SaleList.objects.all()
+    serializer_class = SaleListRetrieveSerializer
+    lookup_field = "id"
 
 class SaleCreateAPIView(CreateAPIView):
     queryset = Sale.objects.all()
@@ -222,9 +237,27 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
             previous_instance_amount = instance.amount
+            previous_instance_status = instance.status
             serializer.save()
-            instance.product.amount = instance.product.amount + previous_instance_amount - instance.amount
-            instance.product.save()
+
+            if previous_instance_status == "G" and instance.status == "S":
+                instance.product.amount = instance.product.amount - instance.amount
+                instance.product.save()
+                if hasattr(instance.product, "stock"):
+                    instance.product.stock.amount = instance.product.stock.amount - instance.amount
+                    instance.product.stock.save()
+            elif previous_instance_status == "S" and instance.status == "G":
+                instance.product.amount = instance.product.amount + instance.amount
+                instance.product.save()
+                if hasattr(instance.product, "stock"):
+                    instance.product.stock.amount = instance.product.stock.amount + instance.amount
+                    instance.product.stock.save()
+            elif previous_instance_status == "S" and instance.status == "S":
+                instance.product.amount = instance.product.amount + previous_instance_amount - instance.amount
+                instance.product.save()
+                if hasattr(instance.product, "stock"):
+                    instance.product.stock.amount = instance.product.stock.amount + previous_instance_amount - instance.amount
+                    instance.product.stock.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -246,7 +279,7 @@ class BulkSaleAPIView(APIView):
 
             for i in range(len(products_id)):
                 product = get_object_or_404(Product, id=products_id[i])
-                Sale.objects.create(
+                sale = Sale.objects.create(
                     seller = seller,
                     customer = customer,
                     salelist = salelist,
@@ -256,11 +289,12 @@ class BulkSaleAPIView(APIView):
                     price = prices[i],
                     status = statuses[i]
                 )
-                product.amount = product.amount - amounts[i]
-                product.save()
-                if hasattr(product, "stock"):
-                    product.stock.amount = product.stock.amount - amounts[i]
-                    product.stock.save()
+                if sale.status == "S":
+                    product.amount = product.amount - amounts[i]
+                    product.save()
+                    if hasattr(product, "stock"):
+                        product.stock.amount = product.stock.amount - amounts[i]
+                        product.stock.save()
                 ProductAction.objects.create(
                     product = product,
                     customer = customer,
@@ -351,19 +385,19 @@ class ReturnBackCreateAPIView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            sale_id = request.data.get("sale")
+            instance = serializer.save()
             amount = request.data.get("amount")
-            rb_status = request.data.get("status") # returnback status
-            sale = get_object_or_404(Sale, id=sale_id)
+            rb_status = instance.status # returnback status
+            sale = instance.sale
             sale_amount = sale.amount - int(amount)
             sale.amount = sale_amount
             sale.save()
             if rb_status == "I":
-                sale.product.amount = sale.product.amount + sale.amount
-                sale.product.stock.amount = sale.product.stock.amount + sale.amount
+                sale.product.amount = sale.product.amount + instance.amount
                 sale.product.save()
-                sale.product.stock.save()
+                if hasattr(sale.product, "stock"):
+                    sale.product.stock.amount = sale.product.stock.amount + instance.amount
+                    sale.product.stock.save()
             ProductAction.objects.create(
                 product = sale.product,
                 customer = sale.customer,
@@ -387,6 +421,37 @@ class ReturnBackRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = ReturnBack.objects.all()
     serializer_class = ReturnBackCreateSerializer
     lookup_field = "id" 
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            previous_instance_amount = instance.amount
+            previous_instance_status = instance.status
+            serializer.save()
+            instance.sale.amount = instance.sale.amount + previous_instance_amount - instance.amount
+            instance.sale.save()
+            if previous_instance_status == "Y" and instance.status == "I":
+                instance.sale.product.amount = instance.sale.product.amount + instance.amount
+                instance.sale.product.save()
+                if hasattr(instance.sale.product, "stock"):
+                    instance.sale.product.stock.amount = instance.sale.product.stock.amount + instance.amount
+                    instance.sale.product.stock.save()
+            elif previous_instance_status == "I" and instance.status == "Y":
+                instance.sale.product.amount = instance.sale.product.amount - instance.amount
+                instance.sale.product.save()
+                if hasattr(instance.sale.product, "stock"):
+                    instance.sale.product.stock.amount = instance.sale.product.stock.amount - instance.amount
+                    instance.sale.product.stock.save()
+            elif previous_instance_status == "I" and instance.status == "I":
+                instance.sale.product.amount = instance.sale.product.amount - previous_instance_amount + instance.amount
+                instance.sale.product.save()
+                if hasattr(instance.sale.product, "stock"):
+                    instance.sale.product.stock.amount = instance.sale.product.stock.amount - previous_instance_amount + instance.amount
+                    instance.sale.product.stock.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ExpenseListAPIView(ListAPIView):
     queryset = Expense.objects.all()
@@ -418,7 +483,7 @@ class DashboardAPIView(APIView):
             return Response({"message": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
         if m < 13:
             sales = Sale.objects.filter(
-                datetime__month = m, datetime__year = year
+                datetime__month = m, datetime__year = year, status = "S"
             )
             payments = Payment.objects.filter(
                 datetime__month = m, datetime__year = year
@@ -431,7 +496,7 @@ class DashboardAPIView(APIView):
             )
         else:
             sales = Sale.objects.filter(
-                datetime__year = year
+                datetime__year = year, status = "S"
             )
             payments = Payment.objects.filter(
                 datetime__year = year
@@ -445,7 +510,7 @@ class DashboardAPIView(APIView):
         if user.is_superuser:
             sold_product_number = sum([sale.amount for sale in sales])
             customer_number = sales.values('customer').distinct().count()
-            total_sale_amount = sum([sale.price for sale in sales])
+            total_sale_amount = sum([sale.price * sale.amount for sale in sales])
             total_income = sum([payment.amount for payment in payments])
             total_outcome = sum([expense.amount for expense in expenses])
             total_returnback = sum([returnback.amount * returnback.sale.price for returnback in returnbacks])
@@ -457,6 +522,7 @@ class DashboardAPIView(APIView):
             # total_income = sum([payment.amount for payment in Payment.objects.filter(customer__customer_sales__seller=request.user)])
             total_income = None
             total_outcome = None
+            total_returnback = None
         dashboard_data = {
             "sold_product_number": sold_product_number,
             "customer_number": customer_number,

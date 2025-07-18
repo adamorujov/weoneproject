@@ -187,21 +187,17 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             serializer.save()
 
             if articles and article_ids and len(articles) == len(article_ids):
-                product_articles = Article.objects.filter(id__in=article_ids)
-                if len(product_articles) != len(article_ids):
-                    return Response({"error": "Some Article IDs not found"}, status=400)
                 for i in range(len(articles)):
-                    product_articles[i].name = articles[i]
-                    product_articles[i].save()
+                    product_article = Article.objects.get(id=article_ids[i])
+                    product_article.name = articles[i]
+                    product_article.save()
 
             if titles and contents and about_ids and len(titles) == len(contents) == len(about_ids):
-                product_abouts = ProductAbout.objects.filter(id__in=about_ids)
-                if len(product_abouts) != len(about_ids):
-                    return Response({"error": "Some About IDs not found"}, status=400)
-                for i in range(len(product_abouts)):
-                    product_abouts[i].title = titles[i]
-                    product_abouts[i].content = contents[i]
-                    product_abouts[i].save()
+                for i in range(len(titles)):
+                    product_about = ProductAbout.objects.get(id=about_ids[i])
+                    product_about.title = titles[i]
+                    product_about.content = contents[i]
+                    product_about.save()
 
             return Response(serializer.data, status=status.HTTP_200_OK)
 

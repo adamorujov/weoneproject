@@ -25,7 +25,7 @@ class CustomUserAdmin(UserAdmin):
                 ),
             },
         ),
-        ("Əlavə məlumatlar", {"fields": ("address", "phone_number", "status")}),
+        ("Əlavə məlumatlar", {"fields": ("address", "phone_number", "status", "is_supplier")}),
         (_("Important dates"), {"fields": ("last_login", "date_joined")}),
     )
 

@@ -24,6 +24,11 @@ class StockSerializer(serializers.ModelSerializer):
         model = Stock
         fields = "__all__" 
 
+class StockUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stock
+        fields = "__all__" 
+
 class SaleListSerializer(serializers.ModelSerializer):
     customer = serializers.SerializerMethodField()
     seller = serializers.SerializerMethodField()
@@ -55,6 +60,12 @@ class SaleSerializer(serializers.ModelSerializer):
     product = ProductSerializer()
     class Meta:
         model = Sale
+        fields = "__all__"
+
+class SaleListRetrieveSerializer(serializers.ModelSerializer):
+    salelist_sales = SaleSerializer(many=True)
+    class Meta:
+        model = SaleList
         fields = "__all__"
 
 class SaleCreateSerializer(serializers.ModelSerializer):

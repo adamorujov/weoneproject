@@ -39,7 +39,7 @@ class SaleList(models.Model):
         verbose_name_plural = "Satış siyahıları"
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 class Sale(models.Model):
     STATUS = (
