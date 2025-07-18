@@ -31,6 +31,15 @@ class Stock(models.Model):
 
     def __str__(self):
         return self.product.name
+    
+class SaleList(models.Model):
+    class Meta:
+        ordering = ("-id",)
+        verbose_name = "Satış siyahısı"
+        verbose_name_plural = "Satış siyahıları"
+
+    def __str__(self):
+        return self.id
 
 class Sale(models.Model):
     STATUS = (
@@ -39,6 +48,7 @@ class Sale(models.Model):
     )
     seller = models.ForeignKey(CustomUser, verbose_name="Satıcı", on_delete=models.CASCADE, related_name="seller_sales")
     customer = models.ForeignKey(CustomUser, verbose_name="Müştəri", on_delete=models.CASCADE, related_name="customer_sales")
+    salelist = models.ForeignKey(SaleList, verbose_name="Siyahı", on_delete=models.CASCADE, related_name="salelist_sales", blank=True, null=True)
     product = models.ForeignKey(Product, verbose_name="Məhsul", on_delete=models.CASCADE, related_name="product_sales")
     amount = models.IntegerField("Miqdar", default=0)
     datetime = models.DateTimeField("Tarix və vaxt")
@@ -102,10 +112,15 @@ class CustomerAction(models.Model):
         return self.customer.username
     
 class ReturnBack(models.Model):
+    STATUS = (
+        ('Y', 'Yararsız'),
+        ('I', 'Işlək')
+    )
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name="returnbacks")
     date = models.DateField()
     reason = models.TextField(blank=True, null=True)
     amount = models.IntegerField()
+    status = models.CharField(choices=STATUS, max_length=1, default="I")
 
     class Meta:
         verbose_name = "Geri qaytarma"

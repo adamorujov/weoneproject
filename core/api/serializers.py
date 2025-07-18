@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
-    Brand, Store, Product, Application, SocialMedia, Advantage,
+    Brand, Store, Product, ProductAbout, Application, SocialMedia, Advantage,
     Activity, Service, Mission, BasketItem, Article, Order, OrderItem
 )
 from accounting.models import ReturnBack
@@ -52,14 +52,18 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return total_paid_amount
     
     def get_customer_debt_amount(self, obj):
-        return self.get_total_amount(obj) - self.get_total_paid_amount(obj)
+        total_customer_debt_amount = self.get_total_amount(obj) - self.get_total_paid_amount(obj)
+        return total_customer_debt_amount
+    
+    # def calculate_our_debt_amount(self, obj):
+    #     customer_returnbacks = ReturnBack.objects.filter(
+    #         sale__customer = obj
+    #     )
+    #     total_our_debt_amount = sum([returnback.amount for returnback in customer_returnbacks])
+    #     return total_our_debt_amount
     
     def get_our_debt_amount(self, obj):
-        customer_returnbacks = ReturnBack.objects.filter(
-            sale__customer = obj
-        )
-        total_our_debt_amount = sum([returnback.amount for returnback in customer_returnbacks])
-        return total_our_debt_amount
+        return self.calculate_our_debt_amount() if self.get_customer_debt_amount(obj) == 0 else 0
     
 class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -91,11 +95,17 @@ class ArticleSerializer(serializers.ModelSerializer):
         model = Article
         fields = "__all__"
 
+class ProductAboutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductAbout
+        fields = "__all__"
+
 class ProductSerializer(serializers.ModelSerializer):
     category = ProductCategorySerializer()
     brand = BrandSerializer()
     store = StoreSerializer()
     articles = ArticleSerializer(many=True)
+    product_abouts = ProductAboutSerializer(many=True)
 
     class Meta:
         model = Product
@@ -104,7 +114,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ("name", "about", "image", "category", "brand", "store")
+        fields = ("name", "image", "category", "brand", "store")
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
     class Meta:

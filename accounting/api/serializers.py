@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from accounting.models import Purchase, Stock, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
+from accounting.models import Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
 from core.api.serializers import ProductSerializer, CustomUserSerializer
 
 class PurchaseCreateSerializer(serializers.ModelSerializer):
@@ -23,6 +23,31 @@ class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
         fields = "__all__" 
+
+class SaleListSerializer(serializers.ModelSerializer):
+    customer = serializers.SerializerMethodField()
+    seller = serializers.SerializerMethodField()
+    total_amount = serializers.SerializerMethodField()
+    sale_datetime = serializers.SerializerMethodField()
+    sale_status = serializers.SerializerMethodField()
+    class Meta:
+        model = SaleList
+        fields = "__all__"
+
+    def get_customer(self, obj):
+        return obj.salelist_sales.first().customer.username
+    
+    def get_seller(self, obj):
+        return obj.salelist_sales.first().seller.username
+    
+    def get_total_amount(self, obj):
+        return sum([sale.price for sale in obj.salelist_sales.all()])
+    
+    def get_sale_datetime(self, obj):
+        return obj.salelist_sales.first().datetime
+    
+    def get_sale_status(self, obj):
+        return obj.salelist_sales.first().status
 
 class SaleSerializer(serializers.ModelSerializer):
     seller = CustomUserSerializer()

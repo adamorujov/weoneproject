@@ -3,15 +3,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from accounting.models import Purchase, Stock, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
+from accounting.models import Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
 from accounting.api.serializers import (
-    PurchaseCreateSerializer, PurchaseSerializer, AddToStockSerializer, StockSerializer, SaleSerializer, 
+    PurchaseCreateSerializer, PurchaseSerializer, AddToStockSerializer, StockSerializer, SaleSerializer, SaleListSerializer,
     SaleCreateSerializer, PaymentSerializer, PaymentCreateSerializer, ProductActionSerializer,
     CustomerActionSerializer, BulkSaleSerializer, ReturnBackSerializer, ReturnBackCreateSerializer,
     ExpenseSerializer
 )
 from core.models import Product, CustomUser
-from core.api.serializers import ProductSerializer
+from core.api.serializers import ProductSerializer, ProductUpdateSerializer, CustomUserSerializer
 from django.shortcuts import get_object_or_404
 import datetime
 
@@ -76,12 +76,52 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        # purchase_data = {
+        #     "supplier": request.data.get("supplier"),
+        #     "product": request.data.get("product"),
+        #     "amount": request.data.get("amount"),
+        #     "date": request.data.get("date"),
+        #     "status": request.data.get("status")
+        # }
+
+        # product_data = {
+        #     "cost_price": request.data.get("cost_price"),
+        #     "purchase_price": request.data.get("purchase_price"),
+        #     "price": request.data.get("price"),
+        #     "discount_price": request.data.get("discount_price"),
+        #     "currency": request.data.get("currency")
+        # }
+
         serializer = self.get_serializer(instance, data=request.data, partial=True)
+        # print(type(instance))
         if serializer.is_valid():
             previous_instance_amount = instance.amount
+            previous_instance_status = instance.status
             serializer.save()
             instance.product.amount = instance.product.amount - previous_instance_amount + instance.amount
             instance.product.save()
+
+            if previous_instance_status == "G" and instance.status == "A":
+                stock, created = Stock.objects.get_or_create(
+                    product = instance.product
+                )
+                stock.amount = stock.amount + instance.amount
+                stock.save()
+            elif previous_instance_status == "A" and instance.status == "G":
+                stock = Stock.objects.get(
+                    product = instance.product
+                )
+                stock.amount = stock.amount - previous_instance_amount
+                stock.save()
+
+            # pr_serializer = ProductUpdateSerializer(instance.product, data=product_data, partial=True)
+            # print(type(instance.product))
+            # print(pr_serializer.is_valid())
+            # if pr_serializer.is_valid():
+            #     print(pr_serializer.data)
+            #     pr_serializer.save()
+            # else:
+            #     return Response(pr_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             # productaction = instance.product_actions.all()
             # productaction.product = instance.product
             # productaction.date = instance.datetime.date()
@@ -123,6 +163,10 @@ class AddToStockAPIView(APIView):
 class SaleListAPIView(ListAPIView):
     queryset = Sale.objects.all()
     serializer_class = SaleSerializer
+
+class SaleListListAPIView(ListAPIView):
+    queryset = SaleList.objects.all()
+    serializer_class = SaleListSerializer
 
 class SaleCreateAPIView(CreateAPIView):
     queryset = Sale.objects.all()
@@ -198,12 +242,14 @@ class BulkSaleAPIView(APIView):
 
             seller = request.user
             customer = CustomUser.objects.get(id=customer_id)
+            salelist = SaleList.objects.create()
 
             for i in range(len(products_id)):
                 product = get_object_or_404(Product, id=products_id[i])
                 Sale.objects.create(
                     seller = seller,
                     customer = customer,
+                    salelist = salelist,
                     product = product,
                     amount = amounts[i],
                     datetime = datetimes[i],
@@ -308,10 +354,16 @@ class ReturnBackCreateAPIView(CreateAPIView):
             serializer.save()
             sale_id = request.data.get("sale")
             amount = request.data.get("amount")
+            rb_status = request.data.get("status") # returnback status
             sale = get_object_or_404(Sale, id=sale_id)
             sale_amount = sale.amount - int(amount)
             sale.amount = sale_amount
             sale.save()
+            if rb_status == "I":
+                sale.product.amount = sale.product.amount + sale.amount
+                sale.product.stock.amount = sale.product.stock.amount + sale.amount
+                sale.product.save()
+                sale.product.stock.save()
             ProductAction.objects.create(
                 product = sale.product,
                 customer = sale.customer,
@@ -374,6 +426,9 @@ class DashboardAPIView(APIView):
             expenses = Expense.objects.filter(
                 date__month = m, date__year = year
             )
+            returnbacks = ReturnBack.objects.filter(
+                date__month = m, date__year = year
+            )
         else:
             sales = Sale.objects.filter(
                 datetime__year = year
@@ -384,12 +439,16 @@ class DashboardAPIView(APIView):
             expenses = Expense.objects.filter(
                 date__year = year
             )
+            returnbacks = ReturnBack.objects.filter(
+                date__year = year
+            )
         if user.is_superuser:
             sold_product_number = sum([sale.amount for sale in sales])
             customer_number = sales.values('customer').distinct().count()
             total_sale_amount = sum([sale.price for sale in sales])
             total_income = sum([payment.amount for payment in payments])
             total_outcome = sum([expense.amount for expense in expenses])
+            total_returnback = sum([returnback.amount * returnback.sale.price for returnback in returnbacks])
         else:
             sales = sales.filter(seller=user)
             sold_product_number = sum([sale.amount for sale in sales])
@@ -403,7 +462,8 @@ class DashboardAPIView(APIView):
             "customer_number": customer_number,
             "total_sale_amount": total_sale_amount,
             "total_income": total_income,
-            "total_outcome": total_outcome
+            "total_outcome": total_outcome,
+            "total_returnback": total_returnback
         }
         return Response(dashboard_data, status=status.HTTP_200_OK)
     permission_classes = (IsAdminUser,)

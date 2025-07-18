@@ -91,7 +91,6 @@ class Product(models.Model):
         ('R', 'Rubl')
     )
     name = models.CharField("Ad", max_length=256, unique=True)
-    about = HTMLField("Haqqında", blank=True, null=True)
     image = models.ImageField("Şəkil", upload_to="product_imgs/", blank=True, null=True)
     cost_price = models.FloatField("Maya dəyəri", default=0)
     purchase_price = models.FloatField("Alış qiyməti", default=0)
@@ -110,6 +109,20 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+    
+class ProductAbout(models.Model):
+    product = models.ForeignKey(Product, verbose_name="Məhsul", on_delete=models.CASCADE, related_name="product_abouts")
+    title = models.CharField("Başlıq", max_length=200)
+    content = HTMLField("Məzmun")
+
+    class Meta:
+        verbose_name = "Məhsul məlumatı"
+        verbose_name_plural = "Məhsul məlumatları"
+        ordering = ("-id",)
+
+    def __str__(self):
+        return self.product.name + " | " + self.title
+    
     
 class Article(models.Model):
     name = models.CharField("Artikl", max_length=50, unique=True)

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
-    Brand, Store, Product, Application, SocialMedia, Advantage,
+    Brand, Store, Product, ProductAbout, Application, SocialMedia, Advantage,
     Activity, Service, Mission, BasketItem, Article, Order, OrderItem
 )
 from core.api.serializers import (
@@ -82,7 +82,6 @@ class ProductCreateAPIView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         product_data = {
             "name": request.data.get("name"),
-            "about": request.data.get("about"),
             "image": request.data.get("image"),
             "category": request.data.get("category"),
             "brand": request.data.get("brand"),
@@ -92,11 +91,24 @@ class ProductCreateAPIView(CreateAPIView):
         articles_data = {
             "articles": request.data.get("articles")
         }
+        abouts_data = {
+            "titles": request.data.get("titles"),
+            "contents": request.data.get("contents")
+        }
         if isinstance(articles_data["articles"], str):
             articles = articles_data["articles"].replace('\'', '"')
             articles = json.loads(articles)
         else:
             articles = articles_data["articles"]
+
+        if isinstance(abouts_data["titles"], str) and isinstance(abouts_data["contents"], str):
+            titles = abouts_data["titles"].replace('\'', '"')
+            titles = json.loads(titles)
+            contents = abouts_data["contents"].replace('\'', '"')
+            contents = json.loads(contents)
+        else:
+            titles = abouts_data["titles"]
+            contents = abouts_data["contents"]
 
         serializer = self.get_serializer(data=product_data)
 
@@ -107,6 +119,12 @@ class ProductCreateAPIView(CreateAPIView):
                 Article.objects.create(
                     name = article_name,
                     product = product
+                )
+            for i in range(len(titles)):
+                ProductAbout.objects.create(
+                    product = product,
+                    title = titles[i],
+                    content = contents[i]
                 )
             response_data = {
                 "message": "Məhsul əlavə edildi."
@@ -123,6 +141,72 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductUpdateSerializer
     lookup_field = "id"
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        articles = request.data.pop("articles", None)
+        article_ids = request.data.pop("article_ids", None)
+
+        titles = request.data.pop("titles", None)
+        contents = request.data.pop("contents", None)
+        about_ids = request.data.pop("about_ids", None)
+
+        if isinstance(articles, str):
+            try:
+                articles = json.loads(articles)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in 'articles'"}, status=400)
+
+        if isinstance(article_ids, str):
+            try:
+                ids = json.loads(article_ids)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in 'article_ids'"}, status=400)
+            
+        if isinstance(titles, str):
+            try:
+                articles = json.loads(titles)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in 'titles'"}, status=400)
+            
+        if isinstance(contents, str):
+            try:
+                articles = json.loads(contents)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in 'contents'"}, status=400)
+            
+        if isinstance(about_ids, str):
+            try:
+                articles = json.loads(about_ids)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in 'about_ids'"}, status=400)
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+
+            if articles and article_ids and len(articles) == len(article_ids):
+                product_articles = Article.objects.filter(id__in=article_ids)
+                if len(product_articles) != len(article_ids):
+                    return Response({"error": "Some Article IDs not found"}, status=400)
+                for i in range(len(articles)):
+                    product_articles[i].name = articles[i]
+                    product_articles[i].save()
+
+            if titles and contents and about_ids and len(titles) == len(contents) == len(about_ids):
+                product_abouts = ProductAbout.objects.filter(id__in=about_ids)
+                if len(product_abouts) != len(about_ids):
+                    return Response({"error": "Some About IDs not found"}, status=400)
+                for i in range(len(product_abouts)):
+                    product_abouts[i].title = titles[i]
+                    product_abouts[i].content = contents[i]
+                    product_abouts[i].save()
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
 
 class ArticleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Article.objects.all()
