@@ -164,7 +164,7 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
         if isinstance(article_ids, str):
             try:
-                ids = json.loads(article_ids)
+                article_ids = json.loads(article_ids)
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'article_ids'"}, status=400)
             
