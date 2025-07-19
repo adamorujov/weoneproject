@@ -16,6 +16,7 @@ from core.api.serializers import (
 )
 from django.shortcuts import get_object_or_404
 import json
+from django.db import IntegrityError
 
 class UserCreateAPIView(CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -115,17 +116,19 @@ class ProductCreateAPIView(CreateAPIView):
         if serializer.is_valid():
             serializer.save()
             product = Product.objects.get(name=product_data["name"])
-            for article_name in articles:
-                Article.objects.create(
-                    name = article_name,
-                    product = product
-                )
-            for i in range(len(titles)):
-                ProductAbout.objects.create(
-                    product = product,
-                    title = titles[i],
-                    content = contents[i]
-                )
+            if articles:
+                for article_name in articles:
+                    Article.objects.create(
+                        name = article_name,
+                        product = product
+                    )
+            if titles and contents:
+                for i in range(len(titles)):
+                    ProductAbout.objects.create(
+                        product = product,
+                        title = titles[i],
+                        content = contents[i]
+                    )
             response_data = {
                 "message": "Məhsul əlavə edildi."
             }
@@ -144,13 +147,14 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        data = request.data.copy()
 
-        articles = request.data.pop("articles", None)
-        article_ids = request.data.pop("article_ids", None)
+        articles = data.pop("articles", None)
+        article_ids = data.pop("article_ids", None)
 
-        titles = request.data.pop("titles", None)
-        contents = request.data.pop("contents", None)
-        about_ids = request.data.pop("about_ids", None)
+        titles = data.pop("titles", None)
+        contents = data.pop("contents", None)
+        about_ids = data.pop("about_ids", None)
 
         if isinstance(articles, str):
             try:
@@ -182,33 +186,42 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'about_ids'"}, status=400)
 
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer = self.get_serializer(instance, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
 
-            if articles and article_ids:
-                for i in range(len(article_ids)):
-                    product_article = Article.objects.get(id=article_ids[i])
-                    product_article.name = articles[i]
-                    product_article.save()
-                for j in range(i+1, len(articles)):
-                    Article.objects.create(
-                        name = articles[j],
-                        product = instance
-                    ) 
-
-            if titles and contents and about_ids and len(titles) == len(contents):
-                for i in range(len(about_ids)):
-                    product_about = ProductAbout.objects.get(id=about_ids[i])
-                    product_about.title = titles[i]
-                    product_about.content = contents[i]
-                    product_about.save()
-                for j in range(i+1, len(titles)):
-                    ProductAbout.objects.create(
-                        product = instance,
-                        title = titles[j],
-                        content = contents[j]
-                    )
+            article_ids = article_ids if article_ids else []
+            articles = articles if articles else []
+            if articles:
+                if article_ids:
+                    for i in range(len(article_ids)):
+                        product_article = Article.objects.get(id=article_ids[i])
+                        product_article.name = articles[i]
+                        product_article.save()
+                if len(articles) > len(article_ids):
+                    # 0 1 2   0 1 2 3 4 5
+                    for i in range(len(article_ids), len(articles)):
+                        Article.objects.create(
+                            name = articles[i],
+                            product = instance
+                        )
+            about_ids = about_ids if about_ids else []
+            contents = contents if contents else []
+            titles = titles if titles else []
+            if titles and contents and len(titles) == len(contents):
+                if about_ids:
+                    for i in range(len(about_ids)):
+                        product_about = ProductAbout.objects.get(id=about_ids[i])
+                        product_about.title = titles[i]
+                        product_about.content = contents[i]
+                        product_about.save()
+                if len(titles) > len(about_ids):
+                    for i in range(len(about_ids), len(titles)):
+                        ProductAbout.objects.create(
+                            product = instance,
+                            title = titles[i],
+                            content = contents[i]
+                        )
 
             return Response(serializer.data, status=status.HTTP_200_OK)
 
