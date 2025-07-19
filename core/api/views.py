@@ -135,6 +135,25 @@ class ProductCreateAPIView(CreateAPIView):
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+from rest_framework.exceptions import ValidationError
+    
+def normalize_id_list(value):
+    if not value:
+        return value
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError:
+            return None
+
+    if isinstance(value, list) and len(value) == 1 and isinstance(value[0], list):
+        value = value[0]
+
+    if not all(isinstance(v, int) for v in value):
+        raise ValueError("All ids must be integers.")
+
+    return value
+    
 class ProductRetrieveAPIView(RetrieveAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -161,12 +180,6 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 articles = json.loads(articles)
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'articles'"}, status=400)
-
-        if isinstance(article_ids, str):
-            try:
-                article_ids = json.loads(article_ids)
-            except json.JSONDecodeError:
-                return Response({"error": "Invalid JSON in 'article_ids'"}, status=400)
             
         if isinstance(titles, str):
             try:
@@ -180,11 +193,8 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'contents'"}, status=400)
             
-        if isinstance(about_ids, str):
-            try:
-                about_ids = json.loads(about_ids)
-            except json.JSONDecodeError:
-                return Response({"error": "Invalid JSON in 'about_ids'"}, status=400)
+        article_ids = normalize_id_list(article_ids)
+        about_ids = normalize_id_list(about_ids)
 
         serializer = self.get_serializer(instance, data=data, partial=True)
         if serializer.is_valid():
