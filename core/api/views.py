@@ -166,19 +166,19 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             
         if isinstance(titles, str):
             try:
-                articles = json.loads(titles)
+                titles = json.loads(titles)
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'titles'"}, status=400)
             
         if isinstance(contents, str):
             try:
-                articles = json.loads(contents)
+                contents = json.loads(contents)
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'contents'"}, status=400)
             
         if isinstance(about_ids, str):
             try:
-                articles = json.loads(about_ids)
+                about_ids = json.loads(about_ids)
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'about_ids'"}, status=400)
 
@@ -186,18 +186,29 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         if serializer.is_valid():
             serializer.save()
 
-            if articles and article_ids and len(articles) == len(article_ids):
-                for i in range(len(articles)):
+            if articles and article_ids:
+                for i in range(len(article_ids)):
                     product_article = Article.objects.get(id=article_ids[i])
                     product_article.name = articles[i]
                     product_article.save()
+                for j in range(i+1, len(articles)):
+                    Article.objects.create(
+                        name = articles[j],
+                        product = instance
+                    ) 
 
-            if titles and contents and about_ids and len(titles) == len(contents) == len(about_ids):
-                for i in range(len(titles)):
+            if titles and contents and about_ids and len(titles) == len(contents):
+                for i in range(len(about_ids)):
                     product_about = ProductAbout.objects.get(id=about_ids[i])
                     product_about.title = titles[i]
                     product_about.content = contents[i]
                     product_about.save()
+                for j in range(i+1, len(titles)):
+                    ProductAbout.objects.create(
+                        product = instance,
+                        title = titles[j],
+                        content = contents[j]
+                    )
 
             return Response(serializer.data, status=status.HTTP_200_OK)
 
