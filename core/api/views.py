@@ -135,25 +135,6 @@ class ProductCreateAPIView(CreateAPIView):
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-from rest_framework.exceptions import ValidationError
-    
-def normalize_id_list(value):
-    if not value:
-        return value
-    if isinstance(value, str):
-        try:
-            value = json.loads(value)
-        except json.JSONDecodeError:
-            return None
-
-    if isinstance(value, list) and len(value) == 1 and isinstance(value[0], list):
-        value = value[0]
-
-    # if not all(isinstance(v, int) for v in value):
-    
-
-    return value
-    
 class ProductRetrieveAPIView(RetrieveAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -172,9 +153,6 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         articles = str(articles) if articles else articles
         article_ids = data.pop("article_ids", None)
         article_ids = str(article_ids) if article_ids else article_ids
-        print(type(article_ids))
-        print(articles)
-
         titles = data.pop("titles", None)
         titles = str(titles) if titles else titles
         contents = data.pop("contents", None)
@@ -186,11 +164,8 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             try:
                 articles = articles.replace('"', '\\"')
                 articles = articles.replace('\'', '"')
-                print(articles)
                 articles = json.loads(articles)
-                print(articles)
                 articles = json.loads(articles[0])
-                print(articles)
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'articles'"}, status=400)
             
@@ -214,13 +189,9 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             
         if isinstance(article_ids, str):
             try:
-                print(article_ids)
                 article_ids = article_ids.replace('\'', '"')
-                print(article_ids)
                 article_ids = json.loads(article_ids)
-                print(article_ids)
                 article_ids = json.loads(article_ids[0])
-                print(article_ids)
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'article_ids'"}, status=400)
             
@@ -231,21 +202,16 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 about_ids = json.loads(about_ids[0])
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'about_ids'"}, status=400)
-            
-        # article_ids = normalize_id_list(article_ids)
-        # about_ids = normalize_id_list(about_ids)
 
         serializer = self.get_serializer(instance, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
 
             article_ids = article_ids if article_ids else []
-            print(article_ids)
             articles = articles if articles else []
             if articles:
                 if article_ids:
                     for i in range(len(article_ids)):
-                        print(f"ID: {type(article_ids[i])}")
                         product_article = Article.objects.get(id=article_ids[i])
                         product_article.name = articles[i]
                         product_article.save()
