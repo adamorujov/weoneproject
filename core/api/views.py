@@ -169,103 +169,95 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         data = request.data.copy()
 
         articles = data.pop("articles", None)
-        article_ids = data.pop("article_ids", None)
-        print(article_ids)
+        article_ids = str(data.pop("article_ids", None))
+        print(type(article_ids))
 
         titles = data.pop("titles", None)
         contents = data.pop("contents", None)
         about_ids = data.pop("about_ids", None)
 
-        response_data = {
-            "articles": articles,
-            "article_ids": article_ids,
-            "titles": titles,
-            "contents": contents,
-            "about_ids": about_ids
-        }
-
-        return Response(response_data, status=status.HTTP_200_OK)
-
-        # if isinstance(articles, str):
-        #     try:
-        #         articles = json.loads(articles)
-        #     except json.JSONDecodeError:
-        #         return Response({"error": "Invalid JSON in 'articles'"}, status=400)
+        if isinstance(articles, str):
+            try:
+                articles = json.loads(articles)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in 'articles'"}, status=400)
             
-        # if isinstance(titles, str):
-        #     try:
-        #         titles = json.loads(titles)
-        #     except json.JSONDecodeError:
-        #         return Response({"error": "Invalid JSON in 'titles'"}, status=400)
+        if isinstance(titles, str):
+            try:
+                titles = json.loads(titles)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in 'titles'"}, status=400)
             
-        # if isinstance(contents, str):
-        #     try:
-        #         contents = json.loads(contents)
-        #     except json.JSONDecodeError:
-        #         return Response({"error": "Invalid JSON in 'contents'"}, status=400)
+        if isinstance(contents, str):
+            try:
+                contents = json.loads(contents)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in 'contents'"}, status=400)
             
-        # if isinstance(article_ids, str):
-        #     try:
-        #         article_ids = article_ids.replace('\'', '"')
-        #         print(article_ids)
-        #         article_ids = json.loads(article_ids)
-        #         print(type(article_ids))
-        #         print(type(article_ids))
-        #     except json.JSONDecodeError:
-        #         return Response({"error": "Invalid JSON in 'article_ids'"}, status=400)
+        if isinstance(article_ids, str):
+            try:
+                print(article_ids)
+                article_ids = article_ids.replace('\'', '"')
+                print(article_ids)
+                article_ids = json.loads(article_ids)
+                print(article_ids)
+                article_ids = json.loads(article_ids[0])
+                print(article_ids)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in 'article_ids'"}, status=400)
             
-        # if isinstance(about_ids, str):
-        #     try:
-        #         about_ids = about_ids.replace('\'', '"')
-        #         about_ids = json.loads(about_ids)
-        #     except json.JSONDecodeError:
-        #         return Response({"error": "Invalid JSON in 'about_ids'"}, status=400)
+        if isinstance(about_ids, str):
+            try:
+                about_ids = about_ids.replace('\'', '"')
+                about_ids = json.loads(about_ids)
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON in 'about_ids'"}, status=400)
             
-        # # article_ids = normalize_id_list(article_ids)
-        # # about_ids = normalize_id_list(about_ids)
+        # article_ids = normalize_id_list(article_ids)
+        # about_ids = normalize_id_list(about_ids)
 
-        # serializer = self.get_serializer(instance, data=data, partial=True)
-        # if serializer.is_valid():
-        #     serializer.save()
+        serializer = self.get_serializer(instance, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
 
-        #     article_ids = article_ids if article_ids else []
-        #     print(article_ids)
-        #     articles = articles if articles else []
-        #     if articles:
-        #         if article_ids:
-        #             for i in range(len(article_ids)):
-        #                 print(article_ids[i])
-        #                 product_article = Article.objects.get(id=article_ids[i])
-        #                 product_article.name = articles[i]
-        #                 product_article.save()
-        #         if len(articles) > len(article_ids):
-        #             # 0 1 2   0 1 2 3 4 5
-        #             for i in range(len(article_ids), len(articles)):
-        #                 Article.objects.create(
-        #                     name = articles[i],
-        #                     product = instance
-        #                 )
-        #     about_ids = about_ids if about_ids else []
-        #     contents = contents if contents else []
-        #     titles = titles if titles else []
-        #     if titles and contents and len(titles) == len(contents):
-        #         if about_ids:
-        #             for i in range(len(about_ids)):
-        #                 product_about = ProductAbout.objects.get(id=about_ids[i])
-        #                 product_about.title = titles[i]
-        #                 product_about.content = contents[i]
-        #                 product_about.save()
-        #         if len(titles) > len(about_ids):
-        #             for i in range(len(about_ids), len(titles)):
-        #                 ProductAbout.objects.create(
-        #                     product = instance,
-        #                     title = titles[i],
-        #                     content = contents[i]
-        #                 )
+            article_ids = article_ids if article_ids else []
+            print(article_ids)
+            articles = articles if articles else []
+            if articles:
+                if article_ids:
+                    for i in range(len(article_ids)):
+                        print(f"ID: {type(article_ids[i])}")
+                        product_article = Article.objects.get(id=article_ids[i])
+                        product_article.name = articles[i]
+                        product_article.save()
+                if len(articles) > len(article_ids):
+                    # 0 1 2   0 1 2 3 4 5
+                    for i in range(len(article_ids), len(articles)):
+                        Article.objects.create(
+                            name = articles[i],
+                            product = instance
+                        )
+            about_ids = about_ids if about_ids else []
+            contents = contents if contents else []
+            titles = titles if titles else []
+            if titles and contents and len(titles) == len(contents):
+                if about_ids:
+                    for i in range(len(about_ids)):
+                        product_about = ProductAbout.objects.get(id=about_ids[i])
+                        product_about.title = titles[i]
+                        product_about.content = contents[i]
+                        product_about.save()
+                if len(titles) > len(about_ids):
+                    for i in range(len(about_ids), len(titles)):
+                        ProductAbout.objects.create(
+                            product = instance,
+                            title = titles[i],
+                            content = contents[i]
+                        )
 
-        #     return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
 
 class ArticleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
