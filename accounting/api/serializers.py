@@ -40,19 +40,19 @@ class SaleListSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_customer(self, obj):
-        return obj.salelist_sales.first().customer.username
+        return obj.salelist_sales.first().customer.username if obj.salelist_sales.exists() else None
     
     def get_seller(self, obj):
-        return obj.salelist_sales.first().seller.username
+        return obj.salelist_sales.first().seller.username if obj.salelist_sales.exists() else None
     
     def get_total_amount(self, obj):
         return sum([sale.price for sale in obj.salelist_sales.all()])
     
     def get_sale_datetime(self, obj):
-        return obj.salelist_sales.first().datetime
+        return obj.salelist_sales.first().datetime if obj.salelist_sales.exists() else None
     
     def get_sale_status(self, obj):
-        return obj.salelist_sales.first().status
+        return obj.salelist_sales.first().status if obj.salelist_sales.exists() else None
 
 class SaleSerializer(serializers.ModelSerializer):
     seller = CustomUserSerializer()
