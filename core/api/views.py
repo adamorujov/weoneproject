@@ -203,7 +203,7 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         if isinstance(about_ids, str):
             try:
                 about_ids = about_ids.replace('\'', '"')
-                contents = json.loads(about_ids)
+                about_ids = json.loads(about_ids)
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'about_ids'"}, status=400)
             
