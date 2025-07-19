@@ -168,14 +168,19 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         data = request.data.copy()
 
-        articles = str(data.pop("articles", None))
-        article_ids = str(data.pop("article_ids", None))
+        articles = data.pop("articles", None)
+        articles = str(articles) if articles else articles
+        article_ids = data.pop("article_ids", None)
+        article_ids = str(article_ids) if article_ids else article_ids
         print(type(article_ids))
         print(articles)
 
         titles = data.pop("titles", None)
+        titles = str(titles) if titles else titles
         contents = data.pop("contents", None)
+        contents = str(contents) if contents else titles
         about_ids = data.pop("about_ids", None)
+        about_ids = str(about_ids) if about_ids else about_ids
 
         if isinstance(articles, str):
             try:
@@ -191,13 +196,19 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             
         if isinstance(titles, str):
             try:
+                titles = titles.replace('"', '\\"')
+                titles = titles.replace('\'', '"')
                 titles = json.loads(titles)
+                titles = json.loads(titles[0])
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'titles'"}, status=400)
             
         if isinstance(contents, str):
             try:
+                contents = contents.replace('"', '\\"')
+                contents = contents.replace('\'', '"')
                 contents = json.loads(contents)
+                contents = json.loads(contents[0])
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'contents'"}, status=400)
             
@@ -217,6 +228,7 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             try:
                 about_ids = about_ids.replace('\'', '"')
                 about_ids = json.loads(about_ids)
+                about_ids = json.loads(about_ids[0])
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'about_ids'"}, status=400)
             
