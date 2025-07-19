@@ -170,6 +170,7 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
         articles = data.pop("articles", None)
         article_ids = data.pop("article_ids", None)
+        print(article_ids)
 
         titles = data.pop("titles", None)
         contents = data.pop("contents", None)
@@ -196,7 +197,11 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         if isinstance(article_ids, str):
             try:
                 article_ids = article_ids.replace('\'', '"')
+                print(article_ids)
                 article_ids = json.loads(article_ids)
+                print(type(article_ids))
+                article_ids = json.loads(article_ids)
+                print(type(article_ids))
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'article_ids'"}, status=400)
             
