@@ -200,7 +200,6 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 print(article_ids)
                 article_ids = json.loads(article_ids)
                 print(type(article_ids))
-                article_ids = json.loads(article_ids)
                 print(type(article_ids))
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON in 'article_ids'"}, status=400)
@@ -220,10 +219,12 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             serializer.save()
 
             article_ids = article_ids if article_ids else []
+            print(article_ids)
             articles = articles if articles else []
             if articles:
                 if article_ids:
                     for i in range(len(article_ids)):
+                        print(article_ids[i])
                         product_article = Article.objects.get(id=article_ids[i])
                         product_article.name = articles[i]
                         product_article.save()
