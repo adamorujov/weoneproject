@@ -162,17 +162,6 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         about_ids = data.pop("about_ids", None)
         about_ids = str(about_ids) if about_ids else about_ids
 
-        D = {
-            "articles": articles,
-            "article_ids": article_ids,
-            "titles": titles,
-            "contents": contents,
-            "about_ids": about_ids
-        }
-        print(request)
-        print(JSONParser().parse(request))
-
-
         if isinstance(articles, str):
             try:
                 articles = articles.replace('"', '\\"')
