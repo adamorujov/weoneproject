@@ -46,7 +46,7 @@ class SaleListSerializer(serializers.ModelSerializer):
         return obj.salelist_sales.first().seller.username if obj.salelist_sales.exists() else None
     
     def get_total_amount(self, obj):
-        return sum([sale.price for sale in obj.salelist_sales.all()])
+        return sum([sale.price * sale.amount for sale in obj.salelist_sales.all()])
     
     def get_sale_datetime(self, obj):
         return obj.salelist_sales.first().datetime if obj.salelist_sales.exists() else None
