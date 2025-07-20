@@ -603,7 +603,7 @@ class MostInDebtedCustomerAPIView(APIView):
         customers = CustomUser.objects.all()
         customer_debts = []
         for customer in customers:
-            customer_debt = sum([sale.price for sale in customer.customer_sales.all()]) - sum([payment.amount for payment in customer.payments.all()])
+            customer_debt = sum([sale.price * sale.amount for sale in customer.customer_sales.all()]) - sum([payment.amount for payment in customer.payments.all()])
             customer_debts.append(customer_debt)
         
         indebted_customers = list(zip(customers, customer_debts))
