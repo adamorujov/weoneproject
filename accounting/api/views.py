@@ -544,18 +544,20 @@ class SaleDynamicsAPIView(APIView):
             if user.is_superuser:
                 for i in range(len(months)):
                     year = datetime.datetime.now().year
-                    total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
+                    total_sale_amount = sum([sale.price * sale.amount for sale in Sale.objects.filter(
                         datetime__date__month = i + 1,
-                        datetime__date__year = year
+                        datetime__date__year = year,
+                        status = "S"
                     )])
                     total_sale_amounts.append(total_sale_amount)
             else:
                 for i in range(len(months)):
                     year = datetime.datetime.now().year
-                    total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
+                    total_sale_amount = sum([sale.price * sale.amount for sale in Sale.objects.filter(
                         seller = user,
                         datetime__date__month = i + 1,
-                        datetime__date__year = year
+                        datetime__date__year = year,
+                        status = "S"
                     )])
                     total_sale_amounts.append(total_sale_amount)
             response_data = {
@@ -569,8 +571,9 @@ class SaleDynamicsAPIView(APIView):
                 all_sale_years.sort()
                 total_sale_amounts = []
                 for year in all_sale_years:
-                    total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
-                        datetime__year = year
+                    total_sale_amount = sum([sale.price * sale.amount for sale in Sale.objects.filter(
+                        datetime__year = year,
+                        status = "S"
                     )])
                     total_sale_amounts.append(total_sale_amount)
             else:
@@ -579,9 +582,10 @@ class SaleDynamicsAPIView(APIView):
                 all_sale_years.sort()
                 total_sale_amounts = []
                 for year in all_sale_years:
-                    total_sale_amount = sum([sale.price for sale in Sale.objects.filter(
+                    total_sale_amount = sum([sale.price * sale.amount for sale in Sale.objects.filter(
                         seller = user,
-                        datetime__year = year
+                        datetime__year = year,
+                        status = "S"
                     )])
                     total_sale_amounts.append(total_sale_amount)
             response_data = {
