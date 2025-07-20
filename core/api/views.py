@@ -140,6 +140,8 @@ class ProductRetrieveAPIView(RetrieveAPIView):
     serializer_class = ProductSerializer
     lookup_field = "id"
 
+from core.api.serializers import ProductArticleSerializer
+from rest_framework.parsers import JSONParser
 class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductUpdateSerializer
@@ -159,6 +161,17 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         contents = str(contents) if contents else titles
         about_ids = data.pop("about_ids", None)
         about_ids = str(about_ids) if about_ids else about_ids
+
+        D = {
+            "articles": articles,
+            "article_ids": article_ids,
+            "titles": titles,
+            "contents": contents,
+            "about_ids": about_ids
+        }
+        print(request)
+        print(JSONParser().parse(request))
+
 
         if isinstance(articles, str):
             try:

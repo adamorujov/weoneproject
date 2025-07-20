@@ -171,3 +171,10 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = "__all__"
+
+class ProductArticleSerializer(serializers.Serializer):
+    article_ids = serializers.ListField(child=serializers.IntegerField(), allow_empty=True)
+    articles = serializers.ListField(child=serializers.CharField(), allow_empty=True)
+    about_ids = serializers.ListField(child=serializers.IntegerField(), allow_empty=True)
+    titles = serializers.ListField(child=serializers.CharField(), allow_empty=True)
+    contents = serializers.ListField(child=serializers.CharField(), allow_empty=True)
