@@ -114,14 +114,19 @@ class ProductCreateAPIView(CreateAPIView):
         serializer = self.get_serializer(data=product_data)
 
         if serializer.is_valid():
-            serializer.save()
-            product = Product.objects.get(name=product_data["name"])
+            product = serializer.save()
+            response_data = {}
             if articles:
                 for article_name in articles:
-                    Article.objects.create(
-                        name = article_name,
-                        product = product
-                    )
+                    # if Article.objects.filter(name=article_name, product=product, product__store=product.store).exists():
+                    #     response_data["errors"] = f"{article_name} artıq mövcuddur."
+                    if Article.objects.filter(name=article_name).exclude(product__name=product.name).exists():
+                        response_data["errors"] = f"Artikl '{article_name}' artıq mövcuddur."
+                    else:
+                        Article.objects.create(
+                            name = article_name,
+                            product = product
+                        )
             if titles and contents:
                 for i in range(len(titles)):
                     ProductAbout.objects.create(
@@ -129,9 +134,7 @@ class ProductCreateAPIView(CreateAPIView):
                         title = titles[i],
                         content = contents[i]
                     )
-            response_data = {
-                "message": "Məhsul əlavə edildi."
-            }
+            response_data["message"] = "Məhsul əlavə edildi."
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -140,8 +143,6 @@ class ProductRetrieveAPIView(RetrieveAPIView):
     serializer_class = ProductSerializer
     lookup_field = "id"
 
-from core.api.serializers import ProductArticleSerializer
-from rest_framework.parsers import JSONParser
 class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductUpdateSerializer
@@ -207,23 +208,34 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
         serializer = self.get_serializer(instance, data=data, partial=True)
         if serializer.is_valid():
-            serializer.save()
+            product = serializer.save()
 
             article_ids = article_ids if article_ids else []
             articles = articles if articles else []
+            response_data = {}
             if articles:
                 if article_ids:
                     for i in range(len(article_ids)):
                         product_article = Article.objects.get(id=article_ids[i])
                         product_article.name = articles[i]
+                        print(product_article.name)
+                        if Article.objects.filter(name=product_article.name, product__name=product.name, product__store__name=product.store.name).exists():
+                            response_data["errors"] = f"Artikl '{product_article.name}' artıq mövcuddur."
+                        elif Article.objects.filter(name=product_article.name).exclude(product__name=product.name).exists():
+                            response_data["errors"] = f"Artikl '{product_article.name}' artıq mövcuddur."
                         product_article.save()
                 if len(articles) > len(article_ids):
                     # 0 1 2   0 1 2 3 4 5
                     for i in range(len(article_ids), len(articles)):
-                        Article.objects.create(
-                            name = articles[i],
-                            product = instance
-                        )
+                        if Article.objects.filter(name=articles[i], product__name=product.name, product__store__name=product.store.name).exists():
+                            response_data["errors"] = f"Artikl '{articles[i]}' artıq mövcuddur."
+                        elif Article.objects.filter(name=articles[i]).exclude(product__name=product.name).exists():
+                            response_data["errors"] = f"Artikl '{articles[i]}' artıq mövcuddur."
+                        else:
+                            Article.objects.create(
+                                name = articles[i],
+                                product = instance
+                            )
             about_ids = about_ids if about_ids else []
             contents = contents if contents else []
             titles = titles if titles else []
@@ -241,8 +253,8 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                             title = titles[i],
                             content = contents[i]
                         )
-
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            response_data["data"] = serializer.data
+            return Response(response_data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             

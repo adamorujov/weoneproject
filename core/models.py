@@ -90,7 +90,7 @@ class Product(models.Model):
         ('D', 'Dollar'),
         ('R', 'Rubl')
     )
-    name = models.CharField("Ad", max_length=256, unique=True)
+    name = models.CharField("Ad", max_length=256)
     image = models.ImageField("Şəkil", upload_to="product_imgs/", blank=True, null=True)
     cost_price = models.FloatField("Maya dəyəri", default=0)
     purchase_price = models.FloatField("Alış qiyməti", default=0)
@@ -106,6 +106,9 @@ class Product(models.Model):
         verbose_name = "məhsul"
         verbose_name_plural = "Məhsullar"
         ordering = ("-id",)
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'store'], name='unique_product_per_brand')
+        ]
 
     def __str__(self):
         return self.name
@@ -125,7 +128,7 @@ class ProductAbout(models.Model):
     
     
 class Article(models.Model):
-    name = models.CharField("Artikl", max_length=50, unique=True)
+    name = models.CharField("Artikl", max_length=50)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="articles")
 
     class Meta:
@@ -135,6 +138,11 @@ class Article(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        if Article.objects.filter(name=self.name) and (not Product.objects.filter(name=self.product.name).exclude(id=self.product.id).exists() or Product.objects.filter(name=self.product.name, store=self.product.store).exclude(id=self.product.id).exists()):
+            return None
+        return super(Article, self).save(*args, **kwargs)
 
 class Application(models.Model):
     name = models.CharField("Ad", max_length=50)
