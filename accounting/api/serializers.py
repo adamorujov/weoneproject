@@ -63,10 +63,35 @@ class SaleSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class SaleListRetrieveSerializer(serializers.ModelSerializer):
+    old_debt = serializers.SerializerMethodField()
+    new_debt = serializers.SerializerMethodField()
+    total_paid_amount = serializers.SerializerMethodField()
+    total_debt = serializers.SerializerMethodField()
+    total_profit = serializers.SerializerMethodField()
     salelist_sales = SaleSerializer(many=True)
     class Meta:
         model = SaleList
         fields = "__all__"
+
+    def get_old_debt(self, obj):
+        old_sales = Sale.objects.exclude(salelist = obj)
+        return sum([sale.price * sale.amount for sale in old_sales])
+
+    def get_new_debt(self, obj):
+        new_sales = Sale.objects.filter(salelist = obj)
+        return sum([sale.price * sale.amount for sale in new_sales])
+
+    def get_total_paid_amount(self, obj):
+        customer = obj.salelist_sales.first().customer
+        payments = Payment.objects.filter(customer = customer)
+        return sum([payment.amount for payment in payments])
+
+    def get_total_debt(self, obj):
+        return self.get_old_debt(obj) + self.get_new_debt(obj) - self.get_total_paid_amount(obj)
+    
+    def get_total_profit(self, obj):
+        cost_price = sum([sale.product.cost_price * sale.amount for sale in obj.salelist_sales.all()])
+        return self.get_new_debt(obj) - cost_price
 
 class SaleCreateSerializer(serializers.ModelSerializer):
     class Meta:
