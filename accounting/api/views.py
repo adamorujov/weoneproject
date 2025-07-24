@@ -553,6 +553,9 @@ class DashboardAPIView(APIView):
             returnbacks = ReturnBack.objects.filter(
                 date__month = m, date__year = year
             )
+            supplierpayments = SupplierPayment.objects.filter(
+                datetime__month = m, datetime__year = year
+            )
         else:
             sales = Sale.objects.filter(
                 datetime__year = year, status = "S"
@@ -566,15 +569,20 @@ class DashboardAPIView(APIView):
             returnbacks = ReturnBack.objects.filter(
                 date__year = year
             )
+            supplierpayments = SupplierPayment.objects.filter(
+                datetime__year = year
+            )
         if user.is_superuser:
             total_income = sum([payment.amount for payment in payments])
             total_outcome = sum([expense.amount for expense in expenses])
             total_returnback = sum([returnback.amount * returnback.sale.price for returnback in returnbacks])
+            total_supplierpayments = sum([payment.amount for payment in supplierpayments])
         else:
             sales = sales.filter(seller=user)
             total_income = None
             total_outcome = None
             total_returnback = None
+            total_supplierpayments = None
         sold_product_number = sum([sale.amount for sale in sales])
         customer_number = sales.values('customer').distinct().count()
         total_sale_amount = sum([sale.price * sale.amount for sale in sales])
@@ -586,7 +594,8 @@ class DashboardAPIView(APIView):
             "total_income": total_income,
             "total_outcome": total_outcome,
             "total_returnback": total_returnback,
-            "total_cost_amount": total_cost_amount
+            "total_cost_amount": total_cost_amount,
+            "total_supplier_payment_amount": total_supplierpayments
         }
         return Response(dashboard_data, status=status.HTTP_200_OK)
     permission_classes = (IsAdminUser,)
@@ -661,7 +670,8 @@ class MostInDebtedCustomerAPIView(APIView):
         customer_debts = []
         for customer in customers:
             customer_debt = sum([sale.price * sale.amount for sale in customer.customer_sales.all()]) - sum([payment.amount for payment in customer.payments.all()])
-            customer_debts.append(customer_debt)
+            our_debt = sum([purchase.product.purchase_price * purchase.amount for purchase in customer.supplier_purchases.all()]) - sum([payment.amount for payment in customer.supplier_payments.all()])
+            customer_debts.append(customer_debt - our_debt)
         
         indebted_customers = list(zip(customers, customer_debts))
         indebted_customers.sort(reverse=True, key=lambda x: x[1])
