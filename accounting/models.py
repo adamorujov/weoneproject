@@ -1,6 +1,15 @@
 from django.db import models
 from core.models import Product, CustomUser
 
+class PurchaseList(models.Model):
+    class Meta:
+        ordering = ("-id",)
+        verbose_name = "Alış siyahısı"
+        verbose_name_plural = "Alış siyahıları"
+
+    def __str__(self):
+        return str(self.id)
+
 class Purchase(models.Model):
     STATUS = (
         ('G', 'Gözləyir'),
@@ -8,6 +17,7 @@ class Purchase(models.Model):
     )
     supplier = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="supplier_purchases")
     product = models.ForeignKey(Product, verbose_name="Məhsul", on_delete=models.CASCADE, related_name="purchases")
+    purchaselist = models.ForeignKey(PurchaseList, on_delete=models.CASCADE, related_name="purchaselist_purchases", blank=True, null=True)
     amount = models.IntegerField("Miqdar", default=0)
     date = models.DateField("Alış tarixi")
     status = models.CharField("Status", choices=STATUS, max_length=1, default='G')
@@ -141,6 +151,17 @@ class Expense(models.Model):
     def __str__(self):
         return self.name
     
+class SupplierPayment(models.Model):
+    supplier = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="supplier_payments")
+    amount = models.FloatField()
+    datetime = models.DateTimeField()
+
+    class Meta:
+        verbose_name = "Tədarükçü ödənişi"
+        verbose_name_plural = "Tədarükçü ödənişləri"
+
+    def __str__(self):
+        return self.supplier.username
 
 
 

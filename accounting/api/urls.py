@@ -5,6 +5,9 @@ urlpatterns = [
     path('purchase-create/', views.PurchaseCreateAPIView.as_view()),
     path('purchase-retrieve-update-delete/<int:id>/', views.PurchaseRetrieveUpdateDestroyAPIView.as_view()),
     path('purchase-list/', views.PurchaseListAPIView.as_view()),
+    path('purchaselist-list/', views.PurchaseListListAPIView.as_view()),
+    path('purchaselist-retrieve/<int:id>/', views.PurchaseListRetrieveAPIView.as_view()),
+    path('bulk-purchase/', views.BulkPurchaseAPIView.as_view()),
     path('stock-list/', views.StockListAPIView.as_view()),
     path('addtostock/', views.AddToStockAPIView.as_view()),
     path('stock-retrieve-update-delete/<int:id>/', views.StockRetrieveUpdateDestroyAPIView.as_view()),
@@ -30,4 +33,7 @@ urlpatterns = [
     path('saledynamics/<int:seller_id>/<str:filter_data>/', views.SaleDynamicsAPIView.as_view()),
     path('mostindebtedcustomers/', views.MostInDebtedCustomerAPIView.as_view()),
     path('stockoutproducts-list/', views.StockOutProductsListAPIView.as_view()),
+    path('supplierpayment-list/', views.SupplierPaymentListAPIView.as_view()),
+    path('supplierpayment-create/', views.SupplierPaymentCreateAPIView.as_view()),
+    path('supplierpayment-retrieve-update-delete/<int:id>/', views.SupplierPaymentRetrieveUpdateDestroyAPIView.as_view())
 ]

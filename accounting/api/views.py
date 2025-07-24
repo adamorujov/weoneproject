@@ -3,12 +3,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from accounting.models import Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
+from accounting.models import PurchaseList, Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense, SupplierPayment
 from accounting.api.serializers import (
-    PurchaseCreateSerializer, PurchaseSerializer, AddToStockSerializer, StockSerializer, StockUpdateSerializer, SaleSerializer, SaleListSerializer,
+    PurchaseCreateSerializer, PurchaseSerializer, PurchaseListSerializer, PurchaseListRetrieveSerializer,
+    AddToStockSerializer, StockSerializer, StockUpdateSerializer, SaleSerializer, SaleListSerializer,
     SaleListRetrieveSerializer, SaleCreateSerializer, PaymentSerializer, PaymentCreateSerializer, ProductActionSerializer,
-    CustomerActionSerializer, BulkSaleSerializer, ReturnBackSerializer, ReturnBackCreateSerializer,
-    ExpenseSerializer
+    CustomerActionSerializer, BulkPurchaseSerializer, BulkSaleSerializer, ReturnBackSerializer, ReturnBackCreateSerializer,
+    ExpenseSerializer, SupplierPaymentSerializer, SupplierPaymentCreateSerializer
 )
 from core.models import Product, CustomUser
 from core.api.serializers import ProductSerializer, ProductUpdateSerializer, CustomUserSerializer
@@ -130,6 +131,72 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 class PurchaseListAPIView(ListAPIView):
     queryset = Purchase.objects.all()
     serializer_class = PurchaseSerializer
+
+class PurchaseListListAPIView(ListAPIView):
+    queryset = PurchaseList.objects.all()
+    serializer_class = PurchaseListSerializer
+
+class PurchaseListRetrieveAPIView(RetrieveAPIView):
+    queryset = PurchaseList.objects.all()
+    serializer_class = PurchaseListRetrieveSerializer
+    lookup_field = "id"
+
+class BulkPurchaseAPIView(APIView):
+    def post(self, request):
+        serializer = BulkPurchaseSerializer(data=request.data)
+        if serializer.is_valid():
+            supplier_id = serializer.validated_data.get("supplier")
+            date = serializer.validated_data.get("date")
+            p_status = serializer.validated_data.get("status")
+            currency = serializer.validated_data.get("currency")
+            products = serializer.validated_data.get("products")
+            amounts = serializer.validated_data.get("amounts")
+            purchase_prices = serializer.validated_data.get("purchase_prices")
+            cost_prices = serializer.validated_data.get("cost_prices")
+            prices = serializer.validated_data.get("prices")
+            discount_prices = serializer.validated_data.get("discount_prices")
+
+            purchaselist = PurchaseList.objects.create()
+            supplier = get_object_or_404(CustomUser, id=supplier_id)
+
+            for i in range(len(products)):
+                product = get_object_or_404(Product, id=products[i])
+                Purchase.objects.create(
+                    supplier = supplier,
+                    product = product,
+                    purchaselist = purchaselist,
+                    amount = amounts[i],
+                    date = date,
+                    status = p_status,
+                )
+                product.purchase_price = purchase_prices[i]
+                product.cost_price = cost_prices[i]
+                product.price = prices[i]
+                product.discount_price = discount_prices[i]
+                product.currency = currency
+                product.amount = product.amount + amounts[i]
+                product.save()
+
+                if p_status == "A":
+                    stock, created = Stock.objects.get_or_create(
+                        product = product
+                    )
+                    stock.amount = stock.amount + amounts[i]
+                    stock.save()
+
+                    ProductAction.objects.create(
+                        product = product,
+                        date = date,
+                        incoming_product_number = amounts[i],
+                        remaining_product_number = stock.amount
+                    )
+
+            response_data = {
+                "message": f"{len(products)} məhsul alışı icra edildi."
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class StockListAPIView(ListAPIView):
     queryset = Stock.objects.all()
@@ -614,4 +681,16 @@ class StockOutProductsListAPIView(ListAPIView):
     def get_queryset(self):
         return Product.objects.filter(amount__lte=10)
     serializer_class = ProductSerializer
-            
+
+class SupplierPaymentListAPIView(ListAPIView):
+    queryset = SupplierPayment.objects.all()
+    serializer_class = SupplierPaymentSerializer
+
+class SupplierPaymentCreateAPIView(CreateAPIView):
+    queryset = SupplierPayment.objects.all()
+    serializer_class = SupplierPaymentCreateSerializer
+    
+class SupplierPaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = SupplierPayment.objects.all()
+    serializer_class = SupplierPaymentCreateSerializer
+    lookup_field = "id"

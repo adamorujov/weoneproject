@@ -1,7 +1,50 @@
 from rest_framework import serializers
-from accounting.models import Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense
+from accounting.models import PurchaseList, Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense, SupplierPayment
 from core.api.serializers import ProductSerializer, CustomUserSerializer
 
+class PurchaseListSerializer(serializers.ModelSerializer):
+    supplier = serializers.SerializerMethodField()
+    amount = serializers.SerializerMethodField()
+    purchase_price = serializers.SerializerMethodField()
+    cost_price = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
+    discount_price = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    date = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PurchaseList
+        fields = "__all__"
+
+    def _get_total(self, obj, attr_name):
+        purchases = obj.purchaselist_purchases.all()
+        return sum(getattr(purchase.product, attr_name, 0) * purchase.amount for purchase in purchases if purchase.product)
+
+    def get_supplier(self, obj):
+        supplier = obj.purchaselist_purchases.first().supplier
+        return CustomUserSerializer(instance=supplier).data
+    
+    def get_amount(self, obj):
+        return sum([purchase.amount for purchase in obj.purchaselist_purchases.all()])
+    
+    def get_purchase_price(self, obj):
+        return self._get_total(obj, "purchase_price")
+
+    def get_cost_price(self, obj):
+        return self._get_total(obj, "cost_price")
+
+    def get_price(self, obj):
+        return self._get_total(obj, "price")
+
+    def get_discount_price(self, obj):
+        return self._get_total(obj, "discount_price")
+    
+    def get_status(self, obj):
+        return obj.purchaselist_purchases.first().status
+    
+    def get_date(self, obj):
+        return obj.purchaselist_purchases.first().date
+    
 class PurchaseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Purchase
@@ -11,6 +54,12 @@ class PurchaseSerializer(serializers.ModelSerializer):
     product = ProductSerializer()
     class Meta:
         model = Purchase
+        fields = "__all__"
+
+class PurchaseListRetrieveSerializer(serializers.ModelSerializer):
+    purchaselist_purchases = PurchaseSerializer(many=True)
+    class Meta:
+        model = PurchaseList
         fields = "__all__"
 
 class AddToStockSerializer(serializers.Serializer):
@@ -123,10 +172,23 @@ class CustomerActionSerializer(serializers.ModelSerializer):
         model = CustomerAction
         fields = "__all__"
 
+class BulkPurchaseSerializer(serializers.Serializer):
+    supplier = serializers.IntegerField()
+    date = serializers.DateField()
+    status = serializers.CharField()
+    currency = serializers.CharField()
+    products = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
+    amounts = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
+    purchase_prices = serializers.ListField(child=serializers.FloatField(), allow_empty=False)
+    cost_prices = serializers.ListField(child=serializers.FloatField(), allow_empty=False)
+    prices = serializers.ListField(child=serializers.FloatField(), allow_empty=False)
+    discount_prices = serializers.ListField(child=serializers.FloatField(), allow_empty=False)
+
+
 class BulkSaleSerializer(serializers.Serializer):
     customer = serializers.IntegerField()
     products = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
-    prices = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
+    prices = serializers.ListField(child=serializers.FloatField(), allow_empty=False)
     amounts = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
     datetimes = serializers.ListField(child=serializers.DateTimeField(), allow_empty=False)
     statuses = serializers.ListField(child=serializers.CharField(), allow_empty=False)
@@ -145,4 +207,15 @@ class ReturnBackCreateSerializer(serializers.ModelSerializer):
 class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
+        fields = "__all__"
+
+class SupplierPaymentSerializer(serializers.ModelSerializer):
+    supplier = CustomUserSerializer()
+    class Meta:
+        model = SupplierPayment
+        fields = "__all__"
+
+class SupplierPaymentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupplierPayment
         fields = "__all__"

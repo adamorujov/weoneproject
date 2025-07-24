@@ -35,7 +35,9 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 
 class CustomUserSerializer(serializers.ModelSerializer):
     total_amount = serializers.SerializerMethodField()
+    total_supplier_amount = serializers.SerializerMethodField()
     total_paid_amount = serializers.SerializerMethodField()
+    total_supplier_paid_amount = serializers.SerializerMethodField()
     customer_debt_amount = serializers.SerializerMethodField()
     our_debt_amount = serializers.SerializerMethodField()
 
@@ -47,9 +49,17 @@ class CustomUserSerializer(serializers.ModelSerializer):
         total_amount = sum([sale.price * sale.amount for sale in obj.customer_sales.all()])
         return total_amount
     
+    def get_total_supplier_amount(self, obj):
+        total_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.all()])
+        return total_amount
+    
     def get_total_paid_amount(self, obj):
         total_paid_amount = sum([payment.amount for payment in obj.payments.all()])
         return total_paid_amount
+    
+    def get_total_supplier_paid_amount(self, obj):
+        total_supplier_paid_amount = sum([supplierpayment.amount for supplierpayment in obj.supplier_payments.all()])
+        return total_supplier_paid_amount
     
     def calculate_customer_debt_amount(self, obj):
         return self.get_total_amount(obj) - self.get_total_paid_amount(obj)
@@ -59,7 +69,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return total_customer_debt_amount if total_customer_debt_amount > 0 else 0
     
     def calculate_our_debt_amount(self, obj):
-        return sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.all()])
+        return self.get_total_supplier_amount(obj) - self.get_total_supplier_paid_amount(obj)
     
     def get_our_debt_amount(self, obj):
         total_our_debt_amount = self.calculate_our_debt_amount(obj) - self.calculate_customer_debt_amount(obj)
