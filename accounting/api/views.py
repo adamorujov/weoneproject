@@ -711,8 +711,7 @@ class MostInDebtedCustomerAPIView(APIView):
         customer_debts = []
         for customer in customers:
             customer_debt = sum([sale.price * sale.amount for sale in customer.customer_sales.all()]) - sum([payment.amount for payment in customer.payments.all()])
-            our_debt = sum([purchase.product.purchase_price * purchase.amount for purchase in customer.supplier_purchases.all()]) - sum([payment.amount for payment in customer.supplier_payments.all()])
-            customer_debts.append(customer_debt - our_debt)
+            customer_debts.append(customer_debt)
         
         indebted_customers = list(zip(customers, customer_debts))
         indebted_customers.sort(reverse=True, key=lambda x: x[1])
