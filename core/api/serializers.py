@@ -50,30 +50,47 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return total_amount
     
     def get_total_supplier_amount(self, obj):
-        total_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.all()])
-        return total_amount
+        if obj.is_supplier:
+            total_m_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.filter(purchaselist__currency="M")])
+            total_d_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.filter(purchaselist__currency="D")])
+            total_r_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.filter(purchaselist__currency="R")])
+            return [total_m_amount, total_d_amount, total_r_amount]
+        return None
     
     def get_total_paid_amount(self, obj):
         total_paid_amount = sum([payment.amount for payment in obj.payments.all()])
         return total_paid_amount
     
     def get_total_supplier_paid_amount(self, obj):
-        total_supplier_paid_amount = sum([supplierpayment.amount for supplierpayment in obj.supplier_payments.all()])
-        return total_supplier_paid_amount
+        if obj.is_supplier:
+            total_supplier_m_paid_amount = sum([supplierpayment.amount for supplierpayment in obj.supplier_payments.filter(currency="M")])
+            total_supplier_d_paid_amount = sum([supplierpayment.amount for supplierpayment in obj.supplier_payments.filter(currency="D")])
+            total_supplier_r_paid_amount = sum([supplierpayment.amount for supplierpayment in obj.supplier_payments.filter(currency="R")])
+            return [total_supplier_m_paid_amount, total_supplier_d_paid_amount, total_supplier_r_paid_amount]
     
     def calculate_customer_debt_amount(self, obj):
         return self.get_total_amount(obj) - self.get_total_paid_amount(obj)
     
     def get_customer_debt_amount(self, obj):
-        total_customer_debt_amount = self.calculate_customer_debt_amount(obj) - self.calculate_our_debt_amount(obj)
+        if self.calculate_our_debt_amount(obj):
+            total_customer_debt_amount = self.calculate_customer_debt_amount(obj) - self.calculate_our_debt_amount(obj)[0]
+        else:
+            total_customer_debt_amount = self.calculate_customer_debt_amount(obj)
         return total_customer_debt_amount if total_customer_debt_amount > 0 else 0
     
     def calculate_our_debt_amount(self, obj):
-        return self.get_total_supplier_amount(obj) - self.get_total_supplier_paid_amount(obj)
+        if obj.is_supplier:
+            results = []
+            for i in range(3):
+                results.append(self.get_total_supplier_amount(obj)[i] - self.get_total_supplier_paid_amount(obj)[i])
+            return results
+        return None
     
     def get_our_debt_amount(self, obj):
-        total_our_debt_amount = self.calculate_our_debt_amount(obj) - self.calculate_customer_debt_amount(obj)
-        return total_our_debt_amount if total_our_debt_amount > 0 else 0
+        if self.calculate_our_debt_amount(obj):
+            total_our_debt_amount = self.calculate_our_debt_amount(obj)[0] - self.calculate_customer_debt_amount(obj)
+            return [total_our_debt_amount if total_our_debt_amount > 0 else 0, self.calculate_our_debt_amount(obj)[1], self.calculate_our_debt_amount(obj)[2]]
+        return None
     
 class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:

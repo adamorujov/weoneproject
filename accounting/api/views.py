@@ -156,7 +156,7 @@ class BulkPurchaseAPIView(APIView):
             prices = serializer.validated_data.get("prices")
             discount_prices = serializer.validated_data.get("discount_prices")
 
-            purchaselist = PurchaseList.objects.create()
+            purchaselist = PurchaseList.objects.create(currency=currency)
             supplier = get_object_or_404(CustomUser, id=supplier_id)
 
             for i in range(len(products)):
@@ -576,13 +576,17 @@ class DashboardAPIView(APIView):
             total_income = sum([payment.amount for payment in payments])
             total_outcome = sum([expense.amount for expense in expenses])
             total_returnback = sum([returnback.amount * returnback.sale.price for returnback in returnbacks])
-            total_supplierpayments = sum([payment.amount for payment in supplierpayments])
+            total_m_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="M")])
+            total_d_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="D")])
+            total_r_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="R")])
         else:
             sales = sales.filter(seller=user)
             total_income = None
             total_outcome = None
             total_returnback = None
-            total_supplierpayments = None
+            total_m_supplierpayments = None
+            total_d_supplierpayments = None
+            total_r_supplierpayments = None
         sold_product_number = sum([sale.amount for sale in sales])
         customer_number = sales.values('customer').distinct().count()
         total_sale_amount = sum([sale.price * sale.amount for sale in sales])
@@ -595,14 +599,15 @@ class DashboardAPIView(APIView):
             "total_outcome": total_outcome,
             "total_returnback": total_returnback,
             "total_cost_amount": total_cost_amount,
-            "total_supplier_payment_amount": total_supplierpayments
+            "total_supplier_m_payment_amount": total_m_supplierpayments,
+            "total_supplier_d_payment_amount": total_d_supplierpayments,
+            "total_supplier_r_payment_amount": total_r_supplierpayments
         }
         return Response(dashboard_data, status=status.HTTP_200_OK)
     permission_classes = (IsAdminUser,)
     
 class SaleDynamicsAPIView(APIView):
-    def get(self, request, seller_id, filter_data):
-        # filter_data = self.kwargs.get("my_filter_data")
+    def get(self, request, seller_id, filter_data, brand_id):
         user = get_object_or_404(CustomUser, id=seller_id)
         if filter_data == "A":
             months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun", "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"]
@@ -610,21 +615,40 @@ class SaleDynamicsAPIView(APIView):
             if user.is_superuser:
                 for i in range(len(months)):
                     year = datetime.datetime.now().year
-                    total_sale_amount = sum([sale.price * sale.amount for sale in Sale.objects.filter(
-                        datetime__date__month = i + 1,
-                        datetime__date__year = year,
-                        status = "S"
-                    )])
+                    if brand_id:
+                        sales = Sale.objects.filter(
+                            product__brand__id = brand_id,
+                            datetime__date__month = i + 1,
+                            datetime__date__year = year,
+                            status = "S"
+                        )
+                    else:
+                        sales = Sale.objects.filter(
+                            datetime__date__month = i + 1,
+                            datetime__date__year = year,
+                            status = "S"
+                        )
+                    total_sale_amount = sum([sale.price * sale.amount for sale in sales])
                     total_sale_amounts.append(total_sale_amount)
             else:
                 for i in range(len(months)):
                     year = datetime.datetime.now().year
-                    total_sale_amount = sum([sale.price * sale.amount for sale in Sale.objects.filter(
-                        seller = user,
-                        datetime__date__month = i + 1,
-                        datetime__date__year = year,
-                        status = "S"
-                    )])
+                    if brand_id:
+                        sales = Sale.objects.filter(
+                            seller = user,
+                            product__brand__id = brand_id,
+                            datetime__date__month = i + 1,
+                            datetime__date__year = year,
+                            status = "S"
+                        )
+                    else:
+                        sales = Sale.objects.filter(
+                            seller = user,
+                            datetime__date__month = i + 1,
+                            datetime__date__year = year,
+                            status = "S"
+                        )
+                    total_sale_amount = sum([sale.price * sale.amount for sale in sales])
                     total_sale_amounts.append(total_sale_amount)
             response_data = {
                 month: amount for (month, amount) in zip(months, total_sale_amounts)
@@ -637,10 +661,18 @@ class SaleDynamicsAPIView(APIView):
                 all_sale_years.sort()
                 total_sale_amounts = []
                 for year in all_sale_years:
-                    total_sale_amount = sum([sale.price * sale.amount for sale in Sale.objects.filter(
-                        datetime__year = year,
-                        status = "S"
-                    )])
+                    if brand_id:
+                        sales = Sale.objects.filter(
+                            product__brand__id = brand_id,
+                            datetime__date__year = year,
+                            status = "S"
+                        )
+                    else:
+                        sales = Sale.objects.filter(
+                            datetime__date__year = year,
+                            status = "S"
+                        )
+                    total_sale_amount = sum([sale.price * sale.amount for sale in sales])
                     total_sale_amounts.append(total_sale_amount)
             else:
                 all_sale_years = [sale.datetime.year for sale in Sale.objects.filter(seller=user)]
@@ -648,11 +680,20 @@ class SaleDynamicsAPIView(APIView):
                 all_sale_years.sort()
                 total_sale_amounts = []
                 for year in all_sale_years:
-                    total_sale_amount = sum([sale.price * sale.amount for sale in Sale.objects.filter(
-                        seller = user,
-                        datetime__year = year,
-                        status = "S"
-                    )])
+                    if brand_id:
+                        sales = Sale.objects.filter(
+                            seller = user,
+                            product__brand__id = brand_id,
+                            datetime__date__year = year,
+                            status = "S"
+                        )
+                    else:
+                        sales = Sale.objects.filter(
+                            seller = user,
+                            datetime__date__year = year,
+                            status = "S"
+                        )
+                    total_sale_amount = sum([sale.price * sale.amount for sale in sales])
                     total_sale_amounts.append(total_sale_amount)
             response_data = {
                 year: amount for (year, amount) in zip(all_sale_years, total_sale_amounts)
@@ -679,7 +720,7 @@ class MostInDebtedCustomerAPIView(APIView):
         customers_data = []
         for customer in most_indebted_customers:
             customer_data = {
-                "name": customer[0].first_name + " " + customer[0].last_name,
+                "name": customer[0].username,
                 "debt": customer[1],
                 "phone_number": customer[0].phone_number
             }

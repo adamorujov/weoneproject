@@ -30,7 +30,7 @@ urlpatterns = [
     path('expense-retrieve-update-delete/<int:id>/', views.ExpenseRetrieveUpdateDestroyAPIView.as_view()),
     path('invoice-list/<int:id>/', views.InvoiceListAPIView.as_view()),
     path('dashboard/<int:seller_id>/<str:month>/<int:year>/', views.DashboardAPIView.as_view()),
-    path('saledynamics/<int:seller_id>/<str:filter_data>/', views.SaleDynamicsAPIView.as_view()),
+    path('saledynamics/<int:seller_id>/<str:filter_data>/<int:brand_id>/', views.SaleDynamicsAPIView.as_view()),
     path('mostindebtedcustomers/', views.MostInDebtedCustomerAPIView.as_view()),
     path('stockoutproducts-list/', views.StockOutProductsListAPIView.as_view()),
     path('supplierpayment-list/', views.SupplierPaymentListAPIView.as_view()),

@@ -2,6 +2,7 @@ from django.db import models
 from core.models import Product, CustomUser
 
 class PurchaseList(models.Model):
+    currency = models.CharField(max_length=1, blank=True, null=True)
     class Meta:
         ordering = ("-id",)
         verbose_name = "Alış siyahısı"
@@ -152,8 +153,14 @@ class Expense(models.Model):
         return self.name
     
 class SupplierPayment(models.Model):
+    CURRENCIES = (
+        ('M', 'Manat'),
+        ('D', 'Dollar'),
+        ('R', 'Rubl')
+    )
     supplier = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="supplier_payments")
     amount = models.FloatField()
+    currency = models.CharField(max_length=1, choices=CURRENCIES, default="M")
     datetime = models.DateTimeField()
 
     class Meta:
