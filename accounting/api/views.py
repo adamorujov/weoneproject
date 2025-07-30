@@ -6,10 +6,10 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from accounting.models import PurchaseList, Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense, SupplierPayment
 from accounting.api.serializers import (
     PurchaseCreateSerializer, PurchaseSerializer, PurchaseListSerializer, PurchaseListRetrieveSerializer,
-    AddToStockSerializer, StockSerializer, StockUpdateSerializer, SaleSerializer, SaleListSerializer,
-    SaleListRetrieveSerializer, SaleCreateSerializer, PaymentSerializer, PaymentCreateSerializer, ProductActionSerializer,
-    CustomerActionSerializer, BulkPurchaseSerializer, BulkSaleSerializer, ReturnBackSerializer, ReturnBackCreateSerializer,
-    ExpenseSerializer, SupplierPaymentSerializer, SupplierPaymentCreateSerializer
+    PurchaseListDestroySerializer, AddToStockSerializer, StockSerializer, StockUpdateSerializer, SaleSerializer, 
+    SaleListSerializer, SaleListRetrieveSerializer, SaleListDestroySerializer, SaleCreateSerializer, PaymentSerializer, 
+    PaymentCreateSerializer, ProductActionSerializer, CustomerActionSerializer, BulkPurchaseSerializer, BulkSaleSerializer, 
+    ReturnBackSerializer, ReturnBackCreateSerializer, ExpenseSerializer, SupplierPaymentSerializer, SupplierPaymentCreateSerializer
 )
 from core.models import Product, CustomUser
 from core.api.serializers import ProductSerializer, ProductUpdateSerializer, CustomUserSerializer
@@ -139,6 +139,11 @@ class PurchaseListRetrieveAPIView(RetrieveAPIView):
     queryset = PurchaseList.objects.all()
     serializer_class = PurchaseListRetrieveSerializer
     lookup_field = "id"
+    
+class PurchaseListDestroyAPIView(RetrieveAPIView):
+    queryset = PurchaseList.objects.all()
+    serializer_class = PurchaseListDestroySerializer
+    lookup_field = "id"
 
 class BulkPurchaseAPIView(APIView):
     def post(self, request):
@@ -238,6 +243,11 @@ class SaleListListAPIView(ListAPIView):
 class SaleListRetrieveAPIView(RetrieveAPIView):
     queryset = SaleList.objects.all()
     serializer_class = SaleListRetrieveSerializer
+    lookup_field = "id"
+
+class SaleListDestroyAPIView(RetrieveAPIView):
+    queryset = SaleList.objects.all()
+    serializer_class = SaleListDestroySerializer
     lookup_field = "id"
 
 class SaleCreateAPIView(CreateAPIView):

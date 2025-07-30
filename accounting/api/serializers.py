@@ -62,6 +62,11 @@ class PurchaseListRetrieveSerializer(serializers.ModelSerializer):
         model = PurchaseList
         fields = "__all__"
 
+class PurchaseListDestroySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseList
+        fields = "__all__"
+
 class AddToStockSerializer(serializers.Serializer):
     item_ids = serializers.ListField(
         child = serializers.IntegerField(), allow_empty=False
@@ -95,7 +100,7 @@ class SaleListSerializer(serializers.ModelSerializer):
         return obj.salelist_sales.first().seller.username if obj.salelist_sales.exists() else None
     
     def get_total_amount(self, obj):
-        return sum([sale.price * sale.amount for sale in obj.salelist_sales.all()])
+        return sum([sale.price * sale.amount for sale in obj.salelist_sales.filter(status="S")])
     
     def get_sale_datetime(self, obj):
         return obj.salelist_sales.first().datetime if obj.salelist_sales.exists() else None
@@ -123,11 +128,11 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_old_debt(self, obj):
-        old_sales = Sale.objects.exclude(salelist = obj)
+        old_sales = Sale.objects.exclude(salelist = obj).filter(status="S")
         return sum([sale.price * sale.amount for sale in old_sales])
 
     def get_new_debt(self, obj):
-        new_sales = Sale.objects.filter(salelist = obj)
+        new_sales = Sale.objects.filter(salelist = obj, status="S")
         return sum([sale.price * sale.amount for sale in new_sales])
 
     def get_total_paid_amount(self, obj):
@@ -139,8 +144,13 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
         return self.get_old_debt(obj) + self.get_new_debt(obj) - self.get_total_paid_amount(obj)
     
     def get_total_profit(self, obj):
-        cost_price = sum([sale.product.cost_price * sale.amount for sale in obj.salelist_sales.all()])
+        cost_price = sum([sale.product.cost_price * sale.amount for sale in obj.salelist_sales.filter(status="S")])
         return self.get_new_debt(obj) - cost_price
+
+class SaleListDestroySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SaleList
+        fields = "__all__"
 
 class SaleCreateSerializer(serializers.ModelSerializer):
     class Meta:
