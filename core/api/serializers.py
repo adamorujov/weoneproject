@@ -46,7 +46,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         exclude = ("password", "groups", "user_permissions")
 
     def get_total_amount(self, obj):
-        total_amount = sum([sale.price * sale.amount for sale in obj.customer_sales.all()])
+        total_amount = sum([sale.price * sale.amount for sale in obj.customer_sales.filter(status="S")])
         return total_amount
     
     def get_total_supplier_amount(self, obj):
