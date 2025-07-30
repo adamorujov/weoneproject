@@ -92,11 +92,10 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 )
                 stock.amount = stock.amount + instance.amount
                 stock.save()
-                dt_data = purchase_data["date"].split("-")
                 ProductAction.objects.create(
                     product = instance.product,
-                    date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))),
-                    incoming_product_number = int(purchase_data["amount"]),
+                    date = instance.date,
+                    incoming_product_number = instance.amount,
                     remaining_product_number = stock.amount
                 )
             elif previous_instance_status == "A" and instance.status == "G":
