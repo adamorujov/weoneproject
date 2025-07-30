@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -140,7 +140,7 @@ class PurchaseListRetrieveAPIView(RetrieveAPIView):
     serializer_class = PurchaseListRetrieveSerializer
     lookup_field = "id"
     
-class PurchaseListDestroyAPIView(RetrieveAPIView):
+class PurchaseListDestroyAPIView(DestroyAPIView):
     queryset = PurchaseList.objects.all()
     serializer_class = PurchaseListDestroySerializer
     lookup_field = "id"
@@ -245,7 +245,7 @@ class SaleListRetrieveAPIView(RetrieveAPIView):
     serializer_class = SaleListRetrieveSerializer
     lookup_field = "id"
 
-class SaleListDestroyAPIView(RetrieveAPIView):
+class SaleListDestroyAPIView(DestroyAPIView):
     queryset = SaleList.objects.all()
     serializer_class = SaleListDestroySerializer
     lookup_field = "id"
