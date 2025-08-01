@@ -124,7 +124,7 @@ class SaleSerializer(serializers.ModelSerializer):
 class SaleListRetrieveSerializer(serializers.ModelSerializer):
     old_debt = serializers.SerializerMethodField()
     new_debt = serializers.SerializerMethodField()
-    total_paid_amount = serializers.SerializerMethodField()
+    paid_amount = serializers.SerializerMethodField()
     total_debt = serializers.SerializerMethodField()
     total_profit = serializers.SerializerMethodField()
     salelist_sales = SaleSerializer(many=True)
@@ -134,16 +134,27 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
 
     def get_old_debt(self, obj):
         old_sales = Sale.objects.exclude(salelist = obj).filter(status="S")
-        return sum([sale.price * sale.amount for sale in old_sales])
+        total_old_price = sum([sale.price * sale.amount for sale in old_sales])
+        total_old_debt = total_old_price - self.get_total_paid_amount(obj)
+        return total_old_debt if total_old_debt > 0 else 0
 
     def get_new_debt(self, obj):
+        old_sales = Sale.objects.exclude(salelist = obj).filter(status="S")
+        total_old_price = sum([sale.price * sale.amount for sale in old_sales])
         new_sales = Sale.objects.filter(salelist = obj, status="S")
-        return sum([sale.price * sale.amount for sale in new_sales])
+        total_new_price = sum([sale.price * sale.amount for sale in new_sales])
+        total_new_debt = total_old_price + total_new_price - self.get_total_paid_amount(obj)
+        return total_new_debt if self.get_old_debt(obj) == 0 else 0
 
     def get_total_paid_amount(self, obj):
         customer = obj.salelist_sales.first().customer
         payments = Payment.objects.filter(customer = customer)
         return sum([payment.amount for payment in payments])
+    
+    def get_paid_amount(self, obj):
+        customer = obj.salelist_sales.first().customer
+        payment = Payment.objects.filter(customer = customer).last()
+        return payment.amount if payment else 0
 
     def get_total_debt(self, obj):
         return self.get_old_debt(obj) + self.get_new_debt(obj) - self.get_total_paid_amount(obj)
