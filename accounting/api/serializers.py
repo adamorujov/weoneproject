@@ -161,6 +161,7 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
     
     def get_paid_amount(self, obj):
         customer = obj.salelist_sales.first().customer
+        dt = obj.salelist_sales.first().datetime
         old_sales = Sale.objects.filter(customer=customer, status="S", datetime__lt=dt)
         total_old_price = sum([sale.price * sale.amount for sale in old_sales])
         total_payment_amount = sum([payment for payment in Payment.objects.filter(customer = customer)])
