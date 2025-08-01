@@ -62,6 +62,11 @@ class PurchaseListRetrieveSerializer(serializers.ModelSerializer):
         model = PurchaseList
         fields = "__all__"
 
+class PurchaseListUpdateSerializer(serializers.Serializer):
+    currency = serializers.CharField(allow_blank=True)
+    status = serializers.CharField(allow_blank=True)
+    date = serializers.DateField(allow_null=True)
+
 class PurchaseListDestroySerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseList

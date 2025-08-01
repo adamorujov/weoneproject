@@ -1,11 +1,11 @@
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView, DestroyAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from accounting.models import PurchaseList, Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense, SupplierPayment
 from accounting.api.serializers import (
-    PurchaseCreateSerializer, PurchaseSerializer, PurchaseListSerializer, PurchaseListRetrieveSerializer,
+    PurchaseCreateSerializer, PurchaseSerializer, PurchaseListSerializer, PurchaseListRetrieveSerializer, PurchaseListUpdateSerializer,
     PurchaseListDestroySerializer, AddToStockSerializer, StockSerializer, StockUpdateSerializer, SaleSerializer, 
     SaleListSerializer, SaleListRetrieveSerializer, SaleListDestroySerializer, SaleCreateSerializer, PaymentSerializer, 
     PaymentCreateSerializer, ProductActionSerializer, CustomerActionSerializer, BulkPurchaseSerializer, BulkSaleSerializer, 
@@ -148,6 +148,45 @@ class PurchaseListRetrieveAPIView(RetrieveAPIView):
     queryset = PurchaseList.objects.all()
     serializer_class = PurchaseListRetrieveSerializer
     lookup_field = "id"
+
+class PurchaseListUpdateAPIView(UpdateAPIView):
+    queryset = PurchaseList.objects.all()
+    serializer_class = PurchaseListUpdateSerializer
+    lookup_field = "id"
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data, partial=True)
+        if serializer.is_valid():
+            currency = serializer.validated_data.get("currency")
+            p_status = serializer.validated_data.get("status")
+            date = serializer.validated_data.get("date")
+            purchases = instance.purchaselist_purchases.all()
+            if currency:
+                instance.currency = currency
+                instance.save()
+            if p_status:
+                for purchase in purchases:
+                    if purchase.status == 'A' and p_status == 'G':
+                        purchase.status = 'G'
+                        purchase.save()
+                        purchase.product.stock.amount = purchase.product.stock.amount - purchase.amount
+                        if purchase.product.stock.amount > 0:
+                            purchase.product.stock.save()
+                        else:
+                            purchase.product.stock.delete()
+                    elif purchase.status == 'G' and p_status == 'A':
+                        purchase.status = 'A'
+                        purchase.save()
+                        stock, created = Stock.objects.get_or_create(
+                            product = purchase.product
+                        )
+                        stock.amount = stock.amount + purchase.amount
+                        stock.save()
+            if date:
+                purchases.update(date=date)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class PurchaseListDestroyAPIView(DestroyAPIView):
     queryset = PurchaseList.objects.all()

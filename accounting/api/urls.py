@@ -7,6 +7,7 @@ urlpatterns = [
     path('purchase-list/', views.PurchaseListAPIView.as_view()),
     path('purchaselist-list/', views.PurchaseListListAPIView.as_view()),
     path('purchaselist-retrieve/<int:id>/', views.PurchaseListRetrieveAPIView.as_view()),
+    path('purchaselist-update/<int:id>/', views.PurchaseListUpdateAPIView.as_view()),
     path('purchaselist-delete/<int:id>/', views.PurchaseListDestroyAPIView.as_view()),
     path('bulk-purchase/', views.BulkPurchaseAPIView.as_view()),
     path('stock-list/', views.StockListAPIView.as_view()),
