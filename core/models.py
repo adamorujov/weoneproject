@@ -11,7 +11,7 @@ class CustomUser(AbstractUser):
     phone_number = models.CharField("Telefon nömrəsi", max_length=20, blank=True, null=True)
     status = models.CharField("Ödəniş statusu", max_length=2, choices=PAYMENT_STATUS, blank=True, null=True)
     website = models.CharField("Vebsayt", max_length=256, blank=True, null=True)
-    is_supplier = models.BooleanField("Tədarükçü statusu", default=False)
+    is_supplier = models.BooleanField("Tədarükçü statusu", default=True, editable=False)
 
 class SiteSettings(models.Model):
     logo = models.ImageField("Loqo", upload_to="site_imgs/", blank=True, null=True)

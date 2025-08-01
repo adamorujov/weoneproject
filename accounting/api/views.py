@@ -126,6 +126,15 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.status == 'A':
+            instance.product.stock.amount = instance.product.stock.amount - instance.amount
+            if instance.product.stock.amount > 0:
+                instance.product.stock.save()
+            else:
+                instance.product.stock.delete()
+        return super().delete(request, *args, **kwargs)
 
 class PurchaseListAPIView(ListAPIView):
     queryset = Purchase.objects.all()
@@ -144,6 +153,19 @@ class PurchaseListDestroyAPIView(DestroyAPIView):
     queryset = PurchaseList.objects.all()
     serializer_class = PurchaseListDestroySerializer
     lookup_field = "id"
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        purchases = instance.purchaselist_purchases.filter(status='A')
+
+        for purchase in purchases:
+            purchase.product.stock.amount = purchase.product.stock.amount - purchase.amount
+            if purchase.product.stock.amount > 0:
+                purchase.product.stock.save()
+            else:
+                purchase.product.stock.delete()
+
+        return super().delete(request, *args, **kwargs)
 
 class BulkPurchaseAPIView(APIView):
     def post(self, request):

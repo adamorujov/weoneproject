@@ -12,7 +12,7 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ("username", "first_name", "last_name", "address", "password", "phone_number", "status", "is_staff", "is_superuser", "is_supplier")
+        fields = ("username", "first_name", "last_name", "address", "password", "phone_number", "status", "is_staff", "is_superuser")
 
     def validate(self, data):
         validate_password(data["password"])
@@ -28,8 +28,7 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
             phone_number = validated_data["phone_number"],
             status = validated_data["status"],
             is_staff = validated_data["is_staff"],
-            is_superuser = validated_data["is_superuser"],
-            is_supplier = validated_data["is_supplier"]
+            is_superuser = validated_data["is_superuser"]
         )
         return user
 
