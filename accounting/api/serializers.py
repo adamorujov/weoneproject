@@ -159,11 +159,15 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
         return payment.amount if payment else 0
 
     def get_total_debt(self, obj):
-        return self.get_old_debt(obj) + self.get_new_debt(obj) - self.get_total_paid_amount(obj)
+        customer = obj.salelist_sales.first().customer
+        sales = Sale.objects.filter(customer=customer, status="S")
+        total_price = sum([sale.price * sale.amount for sale in sales])
+        return total_price - self.get_total_paid_amount(obj)
     
     def get_total_profit(self, obj):
+        price = sum([sale.price * sale.amount for sale in obj.salelist_sales.filter(status="S")])
         cost_price = sum([sale.product.cost_price * sale.amount for sale in obj.salelist_sales.filter(status="S")])
-        return self.get_new_debt(obj) - cost_price
+        return price - cost_price
 
 class SaleListDestroySerializer(serializers.ModelSerializer):
     class Meta:
