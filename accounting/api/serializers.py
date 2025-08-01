@@ -161,6 +161,10 @@ class SaleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sale
         fields = "__all__"
+
+class SaleListUpdateSerializer(serializers.Serializer):
+    status = serializers.CharField(allow_blank=True)
+    dt = serializers.DateTimeField(allow_null=True) # datetime
     
 class PaymentSerializer(serializers.ModelSerializer):
     customer = CustomUserSerializer()

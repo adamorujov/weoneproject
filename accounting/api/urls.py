@@ -16,6 +16,7 @@ urlpatterns = [
     path('sale-list/', views.SaleListAPIView.as_view()),
     path('salelist-list/', views.SaleListListAPIView.as_view()),
     path('salelist-retrieve/<int:id>/', views.SaleListRetrieveAPIView.as_view()),
+    path('salelist-update/<int:id>/', views.SaleListUpdateAPIView.as_view()),
     path('salelist-delete/<int:id>/', views.SaleListDestroyAPIView.as_view()),
     path('sale-create/', views.SaleCreateAPIView.as_view()),
     path('sale-retrieve-update-delete/<int:id>/', views.SaleRetrieveUpdateDestroyAPIView.as_view()),

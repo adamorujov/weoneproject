@@ -7,7 +7,7 @@ from accounting.models import PurchaseList, Purchase, Stock, SaleList, Sale, Pay
 from accounting.api.serializers import (
     PurchaseCreateSerializer, PurchaseSerializer, PurchaseListSerializer, PurchaseListRetrieveSerializer, PurchaseListUpdateSerializer,
     PurchaseListDestroySerializer, AddToStockSerializer, StockSerializer, StockUpdateSerializer, SaleSerializer, 
-    SaleListSerializer, SaleListRetrieveSerializer, SaleListDestroySerializer, SaleCreateSerializer, PaymentSerializer, 
+    SaleListSerializer, SaleListRetrieveSerializer, SaleListDestroySerializer, SaleCreateSerializer, SaleListUpdateSerializer, PaymentSerializer, 
     PaymentCreateSerializer, ProductActionSerializer, CustomerActionSerializer, BulkPurchaseSerializer, BulkSaleSerializer, 
     ReturnBackSerializer, ReturnBackCreateSerializer, ExpenseSerializer, SupplierPaymentSerializer, SupplierPaymentCreateSerializer
 )
@@ -126,6 +126,7 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
         if instance.status == 'A':
@@ -262,7 +263,6 @@ class BulkPurchaseAPIView(APIView):
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 class StockListAPIView(ListAPIView):
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
@@ -306,6 +306,44 @@ class SaleListRetrieveAPIView(RetrieveAPIView):
     serializer_class = SaleListRetrieveSerializer
     lookup_field = "id"
 
+class SaleListUpdateAPIView(UpdateAPIView):
+    queryset = SaleList.objects.all()
+    serializer_class = SaleListUpdateSerializer
+    lookup_field = "id"
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data, partial=True)
+
+        if serializer.is_valid():
+            s_status = serializer.validated_data.get("status")
+            dt = serializer.validated_data.get("dt")
+
+            sales = instance.salelist_sales.all()
+            if s_status:
+                for sale in sales:
+                    if sale.status == "S" and s_status == "G":
+                        sale.status = "G"
+                        sale.save()
+                        stock, created = Stock.objects.get_or_create(
+                            product = sale.product
+                        )
+                        stock.amount = stock.amount + sale.amount
+                        stock.save()
+                    elif sale.status == "G" and s_status == "S":
+                        sale.status = "S"
+                        sale.save()
+                        stock, created = Stock.objects.get_or_create(
+                            product = sale.product
+                        )
+                        stock.amount = stock.amount - sale.amount
+                        stock.save()
+            if dt:
+                sales.update(datetime=dt)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+    
 class SaleListDestroyAPIView(DestroyAPIView):
     queryset = SaleList.objects.all()
     serializer_class = SaleListDestroySerializer
