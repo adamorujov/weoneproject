@@ -387,7 +387,7 @@ class SaleCreateAPIView(CreateAPIView):
                 customer = customer,
                 product = product,
                 date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))), 
-                product_price = sale_data["price"]
+                product_price = int(sale_data["price"]) * int(sale_data["amount"])
             )
             response_data = {"message": "Satış edildi."}
             return Response(response_data, status=status.HTTP_201_CREATED)
