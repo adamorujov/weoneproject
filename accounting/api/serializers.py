@@ -21,8 +21,10 @@ class PurchaseListSerializer(serializers.ModelSerializer):
         return sum(getattr(purchase.product, attr_name, 0) * purchase.amount for purchase in purchases if purchase.product)
 
     def get_supplier(self, obj):
-        supplier = obj.purchaselist_purchases.first().supplier
-        return CustomUserSerializer(instance=supplier).data
+        if obj.purchaselist_purchases.exists():
+            supplier = obj.purchaselist_purchases.first().supplier
+            return CustomUserSerializer(instance=supplier).data
+        return None
     
     def get_amount(self, obj):
         return sum([purchase.amount for purchase in obj.purchaselist_purchases.all()])
@@ -40,10 +42,14 @@ class PurchaseListSerializer(serializers.ModelSerializer):
         return self._get_total(obj, "discount_price")
     
     def get_status(self, obj):
-        return obj.purchaselist_purchases.first().status
+        if obj.purchaselist_purchases.exists():
+            return obj.purchaselist_purchases.first().status
+        return None
     
     def get_date(self, obj):
-        return obj.purchaselist_purchases.first().date
+        if obj.purchaselist_purchases.exists():
+            return obj.purchaselist_purchases.first().date
+        return None
     
 class PurchaseCreateSerializer(serializers.ModelSerializer):
     class Meta:
