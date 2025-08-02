@@ -141,8 +141,8 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
 
     def get_old_debt(self, obj):
         customer = obj.salelist_sales.first().customer
-        dt = obj.salelist_sales.first().datetime
-        old_sales = Sale.objects.filter(customer=customer, status="S", datetime__lt=dt)
+        # dt = obj.salelist_sales.first().datetime
+        old_sales = Sale.objects.filter(customer=customer, status="S", salelist__id__lt=obj.id)
         total_old_price = sum([sale.price * sale.amount for sale in old_sales])
         total_old_debt = total_old_price - self.get_total_paid_amount(obj)
         return total_old_debt if total_old_debt > 0 else 0
@@ -150,7 +150,8 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
     def get_new_debt(self, obj):
         customer = obj.salelist_sales.first().customer
         dt = obj.salelist_sales.first().datetime
-        old_sales = Sale.objects.filter(customer=customer, status="S", datetime__lt=dt)
+        # old_sales = Sale.objects.filter(customer=customer, status="S", datetime__lt=dt)
+        old_sales = Sale.objects.filter(customer=customer, status="S", salelist__id__lt=obj.id)
         total_old_price = sum([sale.price * sale.amount for sale in old_sales])
         new_sales = Sale.objects.filter(salelist = obj, status="S")
         total_new_price = sum([sale.price * sale.amount for sale in new_sales])
@@ -169,7 +170,8 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
     def get_paid_amount(self, obj):
         customer = obj.salelist_sales.first().customer
         dt = obj.salelist_sales.first().datetime
-        old_sales = Sale.objects.filter(customer=customer, status="S", datetime__lt=dt)
+        # old_sales = Sale.objects.filter(customer=customer, status="S", datetime__lt=dt)
+        old_sales = Sale.objects.filter(customer=customer, status="S", salelist__id__lt=obj.id)
         total_old_price = sum([sale.price * sale.amount for sale in old_sales])
         new_sales = Sale.objects.filter(salelist = obj, status="S")
         total_new_price = sum([sale.price * sale.amount for sale in new_sales])
