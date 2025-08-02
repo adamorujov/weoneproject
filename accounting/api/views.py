@@ -200,10 +200,11 @@ class PurchaseListDestroyAPIView(DestroyAPIView):
 
         for purchase in purchases:
             purchase.product.stock.amount = purchase.product.stock.amount - purchase.amount
-            if purchase.product.stock.amount > 0:
-                purchase.product.stock.save()
-            else:
-                purchase.product.stock.delete()
+            if hasattr(purchase.product, "stock"):
+                if purchase.product.stock.amount > 0:
+                    purchase.product.stock.save()
+                else:
+                    purchase.product.stock.delete()
 
         return super().delete(request, *args, **kwargs)
 
