@@ -199,8 +199,8 @@ class PurchaseListDestroyAPIView(DestroyAPIView):
         purchases = instance.purchaselist_purchases.filter(status='A')
 
         for purchase in purchases:
-            purchase.product.stock.amount = purchase.product.stock.amount - purchase.amount
             if hasattr(purchase.product, "stock"):
+                purchase.product.stock.amount = purchase.product.stock.amount - purchase.amount
                 if purchase.product.stock.amount > 0:
                     purchase.product.stock.save()
                 else:
