@@ -128,6 +128,7 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
     total_debt = serializers.SerializerMethodField()
     total_profit = serializers.SerializerMethodField()
     salelist_sales = SaleSerializer(many=True)
+
     class Meta:
         model = SaleList
         fields = "__all__"
