@@ -472,7 +472,7 @@ class BulkSaleAPIView(APIView):
                     customer = customer,
                     product = product,
                     date = datetimes[i].date(), 
-                    product_price = prices[i]
+                    product_price = prices[i] * amounts[i]
                 )
             response_data = {
                 "message": f"Seçilmiş məhsullar '{customer}' müştəriyə satıldı."
