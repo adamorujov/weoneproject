@@ -50,9 +50,9 @@ class CustomUserSerializer(serializers.ModelSerializer):
     
     def get_total_supplier_amount(self, obj):
         if obj.is_supplier:
-            total_m_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.filter(purchaselist__currency="M")])
-            total_d_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.filter(purchaselist__currency="D")])
-            total_r_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.filter(purchaselist__currency="R")])
+            total_m_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.filter(status="A", purchaselist__currency="M")])
+            total_d_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.filter(status="A", purchaselist__currency="D")])
+            total_r_amount = sum([purchase.product.purchase_price * purchase.amount for purchase in obj.supplier_purchases.filter(status="A", purchaselist__currency="R")])
             return [total_m_amount, total_d_amount, total_r_amount]
         return None
     
