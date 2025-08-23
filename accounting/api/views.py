@@ -182,8 +182,12 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         purchase.product.stock.amount = purchase.product.stock.amount - purchase.amount
                         if purchase.product.stock.amount > 0:
                             purchase.product.stock.save()
+                            purchase.product.amount = purchase.product.stock.amount
+                            purchase.product.save()
                         else:
                             purchase.product.stock.delete()
+                            purchase.product.amount = 0
+                            purchase.product.save()
                     elif purchase.status == 'G' and p_status == 'A':
                         purchase.status = 'A'
                         purchase.save()
@@ -192,7 +196,8 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         )
                         stock.amount = stock.amount + purchase.amount
                         stock.save()
-                    purchase.product.amount = purchase.product.stock.amount()
+                        purchase.product.amount = stock.amount
+                        purchase.product.save()
             if date:
                 purchases.update(date=date)
             return Response(serializer.data, status=status.HTTP_200_OK)
