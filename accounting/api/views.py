@@ -303,6 +303,8 @@ class AddToStockAPIView(APIView):
                 stock.save()
                 item.status = "A"
                 item.save()
+                item.product.amount = stock.amount
+                item.product.save()
             response_data = {
                 "message": f"{len(items)} məhsul anbara əlavə edildi."
             }
