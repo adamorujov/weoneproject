@@ -864,7 +864,7 @@ class MostInDebtedCustomerAPIView(APIView):
     
 class StockOutProductsListAPIView(ListAPIView):
     def get_queryset(self):
-        return Product.objects.filter(amount__lte=10)
+        return Product.objects.filter(amount__lte=20)
     serializer_class = ProductSerializer
 
 class SupplierPaymentListAPIView(ListAPIView):
