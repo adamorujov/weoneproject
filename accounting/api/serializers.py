@@ -128,6 +128,7 @@ class SaleSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class SaleListRetrieveSerializer(serializers.ModelSerializer):
+    customer = serializers.SerializerMethodField()
     old_debt = serializers.SerializerMethodField()
     new_debt = serializers.SerializerMethodField()
     paid_amount = serializers.SerializerMethodField()
@@ -139,8 +140,11 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
         model = SaleList
         fields = "__all__"
 
+    def get_customer(self, obj):
+        return obj.salelist_sales.first().customer.id
+
     def get_old_debt(self, obj):
-        customer = obj.salelist_sales.first().customer
+        customer = self.get_customer(obj)
         old_sales = Sale.objects.filter(customer=customer, status="S", salelist__id__lt=obj.id)
         total_old_price = sum([sale.price * sale.amount for sale in old_sales])
         total_old_debt = total_old_price - self.get_total_paid_amount(obj)
@@ -160,12 +164,13 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
         return total_new_price
 
     def get_total_paid_amount(self, obj):
-        customer = obj.salelist_sales.first().customer
+        # customer = obj.salelist_sales.first().customer
+        customer = self.get_customer(obj)
         payments = Payment.objects.filter(customer = customer)
         return sum([payment.amount for payment in payments])
     
     def get_paid_amount(self, obj):
-        customer = obj.salelist_sales.first().customer
+        customer = self.get_customer(obj)
         old_sales = Sale.objects.filter(customer=customer, status="S", salelist__id__lt=obj.id)
         total_old_price = sum([sale.price * sale.amount for sale in old_sales])
         new_sales = Sale.objects.filter(salelist = obj, status="S")
@@ -177,7 +182,7 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
         return total_new_price
 
     def get_total_debt(self, obj):
-        customer = obj.salelist_sales.first().customer
+        customer = self.get_customer(obj)
         sales = Sale.objects.filter(customer=customer, status="S")
         total_price = sum([sale.price * sale.amount for sale in sales])
         return total_price - self.get_total_paid_amount(obj)
