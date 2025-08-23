@@ -111,7 +111,7 @@ class SaleListSerializer(serializers.ModelSerializer):
         return obj.salelist_sales.first().seller.username if obj.salelist_sales.exists() else None
     
     def get_total_amount(self, obj):
-        return sum([sale.price * sale.amount for sale in obj.salelist_sales.filter(status="S")])
+        return sum([sale.price * sale.amount for sale in obj.salelist_sales.all()])
     
     def get_sale_datetime(self, obj):
         return obj.salelist_sales.first().datetime if obj.salelist_sales.exists() else None
@@ -147,16 +147,16 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
         return total_old_debt if total_old_debt > 0 else 0
 
     def get_new_debt(self, obj):
-        customer = obj.salelist_sales.first().customer
-        old_sales = Sale.objects.filter(customer=customer, status="S", salelist__id__lt=obj.id)
-        total_old_price = sum([sale.price * sale.amount for sale in old_sales])
+        # customer = obj.salelist_sales.first().customer
+        # old_sales = Sale.objects.filter(customer=customer, status="S", salelist__id__lt=obj.id)
+        # total_old_price = sum([sale.price * sale.amount for sale in old_sales])
         new_sales = Sale.objects.filter(salelist = obj, status="S")
         total_new_price = sum([sale.price * sale.amount for sale in new_sales])
-        total_new_debt = total_old_price + total_new_price - self.get_total_paid_amount(obj)
-        if self.get_old_debt(obj) == 0:
-            if total_new_debt > 0:
-                return total_new_debt
-            return 0
+        # total_new_debt = total_old_price + total_new_price - self.get_total_paid_amount(obj)
+        # if self.get_old_debt(obj) == 0:
+        #     if total_new_debt > 0:
+        #         return total_new_debt
+        #     return 0
         return total_new_price
 
     def get_total_paid_amount(self, obj):

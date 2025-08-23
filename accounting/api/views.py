@@ -46,7 +46,7 @@ class PurchaseCreateAPIView(CreateAPIView):
             product.price = product_data["price"]
             product.discount_price = product_data["discount_price"]
             product.currency = product_data["currency"] if product_data["currency"] else product.currency
-            product.amount = product.amount + int(purchase_data["amount"])
+            # product.amount = product.amount + int(purchase_data["amount"])
             product.save()
 
             stock_status = serializer.data.get("status")
@@ -54,6 +54,7 @@ class PurchaseCreateAPIView(CreateAPIView):
                 stock, created = Stock.objects.get_or_create(
                     product = product
                 )
+                product.amount = product.amount + int(purchase_data["amount"])
                 stock.amount = stock.amount + int(purchase_data["amount"])
                 stock.save()
 
@@ -80,16 +81,17 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
-            previous_instance_amount = instance.amount
+            # previous_instance_amount = instance.amount
             previous_instance_status = instance.status
             serializer.save()
-            instance.product.amount = instance.product.amount - previous_instance_amount + instance.amount
-            instance.product.save()
+            # instance.product.amount = instance.product.amount - previous_instance_amount + instance.amount
+            # instance.product.save()
 
             if previous_instance_status == "G" and instance.status == "A":
                 stock, created = Stock.objects.get_or_create(
                     product = instance.product
                 )
+
                 stock.amount = stock.amount + instance.amount
                 stock.save()
                 ProductAction.objects.create(
@@ -110,6 +112,8 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 )
                 stock.amount = stock.amount - previous_instance_amount + instance.amount
                 stock.save()
+            instance.product.amount = instance.product.stock.amount
+            instance.product.save()
             # pr_serializer = ProductUpdateSerializer(instance.product, data=product_data, partial=True)
             # print(type(instance.product))
             # print(pr_serializer.is_valid())
@@ -133,8 +137,12 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             instance.product.stock.amount = instance.product.stock.amount - instance.amount
             if instance.product.stock.amount > 0:
                 instance.product.stock.save()
+                instance.product.amount = instance.product.stock.amount
+                instance.product.save()
             else:
                 instance.product.stock.delete()
+                instance.product.amount = 0
+                instance.product.save()
         return super().delete(request, *args, **kwargs)
 
 class PurchaseListAPIView(ListAPIView):
@@ -184,6 +192,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         )
                         stock.amount = stock.amount + purchase.amount
                         stock.save()
+                    purchase.product.amount = purchase.product.stock.amount()
             if date:
                 purchases.update(date=date)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -203,8 +212,12 @@ class PurchaseListDestroyAPIView(DestroyAPIView):
                 purchase.product.stock.amount = purchase.product.stock.amount - purchase.amount
                 if purchase.product.stock.amount > 0:
                     purchase.product.stock.save()
+                    purchase.product.amount = purchase.product.stock.amount
+                    purchase.product.save()
                 else:
                     purchase.product.stock.delete()
+                    purchase.product.amount = 0
+                    purchase.product.save()
 
         return super().delete(request, *args, **kwargs)
 
@@ -241,7 +254,7 @@ class BulkPurchaseAPIView(APIView):
                 product.price = prices[i]
                 product.discount_price = discount_prices[i]
                 product.currency = currency
-                product.amount = product.amount + amounts[i]
+                # product.amount = product.amount + amounts[i]
                 product.save()
 
                 if p_status == "A":
@@ -250,6 +263,8 @@ class BulkPurchaseAPIView(APIView):
                     )
                     stock.amount = stock.amount + amounts[i]
                     stock.save()
+                    product.amount = stock.amount
+                    product.save()
 
                     ProductAction.objects.create(
                         product = product,
@@ -339,6 +354,8 @@ class SaleListUpdateAPIView(UpdateAPIView):
                         )
                         stock.amount = stock.amount - sale.amount
                         stock.save()
+                    sale.product.amount = stock.amount
+                    sale.product.save()
             if dt:
                 sales.update(datetime=dt)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -368,11 +385,13 @@ class SaleCreateAPIView(CreateAPIView):
        if serializer.is_valid():
             serializer.save()
             product = Product.objects.get(id=sale_data["product"])
-            product.amount = product.amount - int(sale_data["amount"])
-            product.save()
+            # product.amount = product.amount - int(sale_data["amount"])
+            # product.save()
             if hasattr(product, "stock"):
                 product.stock.amount = product.stock.amount - int(sale_data["amount"])
                 product.stock.save()
+                product.amount = product.stock.amount
+                product.save()
             customer = CustomUser.objects.get(id=sale_data["customer"])
             dt = sale_data["datetime"].split("T")[0]
             dt_data = dt.split("-")
