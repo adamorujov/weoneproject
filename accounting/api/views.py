@@ -81,7 +81,7 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
-            # previous_instance_amount = instance.amount
+            previous_instance_amount = instance.amount
             previous_instance_status = instance.status
             serializer.save()
             # instance.product.amount = instance.product.amount - previous_instance_amount + instance.amount
@@ -220,6 +220,12 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         stock.save()
                         purchase.product.amount = stock.amount
                         purchase.product.save()
+                    ProductAction.objects.create(
+                        product = purchase.product,
+                        date = purchase.date,
+                        incoming_product_number = purchase.amount,
+                        remaining_product_number = purchase.product.amount
+                    )
             if date:
                 purchases.update(date=date)
             return Response(serializer.data, status=status.HTTP_200_OK)
