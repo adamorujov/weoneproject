@@ -9,7 +9,8 @@ from accounting.api.serializers import (
     PurchaseListDestroySerializer, AddToStockSerializer, StockSerializer, StockUpdateSerializer, SaleSerializer, 
     SaleListSerializer, SaleListRetrieveSerializer, SaleListDestroySerializer, SaleCreateSerializer, SaleListUpdateSerializer, PaymentSerializer, 
     PaymentCreateSerializer, ProductActionSerializer, CustomerActionSerializer, BulkPurchaseSerializer, BulkSaleSerializer, 
-    ReturnBackSerializer, ReturnBackCreateSerializer, ExpenseSerializer, SupplierPaymentSerializer, SupplierPaymentCreateSerializer
+    ReturnBackSerializer, ReturnBackCreateSerializer, ExpenseSerializer, SupplierPaymentSerializer, SupplierPaymentCreateSerializer,
+    CustomerActionListSerializer
 )
 from core.models import Product, CustomUser
 from core.api.serializers import ProductSerializer, ProductUpdateSerializer, CustomUserSerializer
@@ -609,7 +610,10 @@ class CustomerActionListAPIView(APIView):
             customer = customer
         )
 
-        return Response(customeractionlists + customeractions, status=status.HTTP_200_OK)
+        cl_data = CustomerActionListSerializer(customeractionlists, many=True).data
+        c_data = CustomerActionSerializer(customeractions, many=True).data
+
+        return Response(cl_data + c_data, status=status.HTTP_200_OK)
 
 class ReturnBackListAPIView(ListAPIView):
     queryset = ReturnBack.objects.all()
