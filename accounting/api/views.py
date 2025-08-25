@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from accounting.models import PurchaseList, Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense, SupplierPayment
+from accounting.models import PurchaseList, Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense, SupplierPayment, CustomerActionList
 from accounting.api.serializers import (
     PurchaseCreateSerializer, PurchaseSerializer, PurchaseListSerializer, PurchaseListRetrieveSerializer, PurchaseListUpdateSerializer,
     PurchaseListDestroySerializer, AddToStockSerializer, StockSerializer, StockUpdateSerializer, SaleSerializer, 
@@ -58,13 +58,13 @@ class PurchaseCreateAPIView(CreateAPIView):
                 stock.amount = stock.amount + int(purchase_data["amount"])
                 stock.save()
 
-                dt_data = purchase_data["date"].split("-")
-                ProductAction.objects.create(
-                    product = product,
-                    date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))),
-                    incoming_product_number = int(purchase_data["amount"]),
-                    remaining_product_number = stock.amount
-                )
+                # dt_data = purchase_data["date"].split("-")
+                # ProductAction.objects.create(
+                #     product = product,
+                #     date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))),
+                #     incoming_product_number = int(purchase_data["amount"]),
+                #     remaining_product_number = stock.amount
+                # )
 
             response_data = {
                 "message": f"{int(purchase_data['amount'])} Məhsul alındı: {product.name}"
@@ -106,12 +106,24 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 )
                 stock.amount = stock.amount - previous_instance_amount
                 stock.save()
+                ProductAction.objects.create(
+                    product = instance.product,
+                    date = instance.date,
+                    incoming_product_number = instance.amount,
+                    remaining_product_number = stock.amount
+                )
             elif previous_instance_status == "A" and instance.status == "A":
                 stock = Stock.objects.get(
                     product = instance.product
                 )
                 stock.amount = stock.amount - previous_instance_amount + instance.amount
                 stock.save()
+                ProductAction.objects.create(
+                    product = instance.product,
+                    date = instance.date,
+                    incoming_product_number = instance.amount,
+                    remaining_product_number = stock.amount
+                )
             instance.product.amount = instance.product.stock.amount
             instance.product.save()
             # pr_serializer = ProductUpdateSerializer(instance.product, data=product_data, partial=True)
@@ -139,10 +151,20 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 instance.product.stock.save()
                 instance.product.amount = instance.product.stock.amount
                 instance.product.save()
+                ProductAction.objects.create(
+                    product = instance.product,
+                    date = instance.date,
+                    remaining_product_number = instance.product.stock.amount
+                )
             else:
                 instance.product.stock.delete()
                 instance.product.amount = 0
                 instance.product.save()
+                ProductAction.objects.create(
+                    product = instance.product,
+                    date = instance.date,
+                    remaining_product_number = 0
+                )
         return super().delete(request, *args, **kwargs)
 
 class PurchaseListAPIView(ListAPIView):
@@ -243,6 +265,7 @@ class BulkPurchaseAPIView(APIView):
 
             purchaselist = PurchaseList.objects.create(currency=currency)
             supplier = get_object_or_404(CustomUser, id=supplier_id)
+            customeractionlist = CustomerActionList.objects.create()
 
             for i in range(len(products)):
                 product = get_object_or_404(Product, id=products[i])
@@ -276,6 +299,14 @@ class BulkPurchaseAPIView(APIView):
                         date = date,
                         incoming_product_number = amounts[i],
                         remaining_product_number = stock.amount
+                    )
+
+                    CustomerAction.objects.create(
+                        customeractionlist = customeractionlist,
+                        customer = supplier,
+                        product = product,
+                        date = date,
+                        product_price = purchase_prices[i]
                     )
 
             response_data = {
@@ -470,6 +501,8 @@ class BulkSaleAPIView(APIView):
             customer = CustomUser.objects.get(id=customer_id)
             salelist = SaleList.objects.create()
 
+            customeractionlist = CustomerActionList.objects.create()
+
             for i in range(len(products_id)):
                 product = get_object_or_404(Product, id=products_id[i])
                 sale = Sale.objects.create(
@@ -496,6 +529,7 @@ class BulkSaleAPIView(APIView):
                     remaining_product_number = product.amount
                 )
                 CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
                     customer = customer,
                     product = product,
                     date = datetimes[i].date(), 
@@ -558,14 +592,18 @@ class ProductActionListAPIView(ListAPIView):
         )
     serializer_class = ProductActionSerializer
 
-class CustomerActionListAPIView(ListAPIView):
-    def get_queryset(self):
+class CustomerActionListAPIView(APIView):
+    def get(self, request, id):
         customer_id = self.kwargs.get("id")
         customer = get_object_or_404(CustomUser, id=customer_id)
-        return CustomerAction.objects.filter(
+        customeractionlists = CustomerActionList.objects.filter(
+            c_customer_actions__customer=customer
+        )
+        customeractions = CustomerAction.objects.filter(
             customer = customer
         )
-    serializer_class = CustomerActionSerializer
+
+        return Response(customeractionlists + customeractions, status=status.HTTP_200_OK)
 
 class ReturnBackListAPIView(ListAPIView):
     queryset = ReturnBack.objects.all()

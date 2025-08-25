@@ -104,7 +104,17 @@ class ProductAction(models.Model):
     def __str__(self):
         return self.product.name
     
+class CustomerActionList(models.Model):
+    class Meta:
+        ordering = ("-id",)
+        verbose_name = "Müştəri hərəkət siyahısı"
+        verbose_name_plural = "Müştəri hərəkət siyahıları"
+
+    def __str__(self):
+        return str(self.id)
+    
 class CustomerAction(models.Model):
+    customeractionlist = models.ForeignKey(CustomerActionList, verbose_name="Siyahı", on_delete=models.CASCADE, related_name="c_customer_actions", blank=True, null=True)
     customer = models.ForeignKey(CustomUser, verbose_name="Müştəri", on_delete=models.CASCADE, related_name="customer_actions")
     product = models.ForeignKey(Product, verbose_name="Məhsul", on_delete=models.CASCADE, related_name="product_customer_actions", blank=True, null=True)
     date = models.DateField("Tarix")

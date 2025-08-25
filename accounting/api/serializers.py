@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from accounting.models import PurchaseList, Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense, SupplierPayment
+from accounting.models import PurchaseList, Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense, SupplierPayment, CustomerActionList
 from core.api.serializers import ProductSerializer, CustomUserSerializer
 
 class PurchaseListSerializer(serializers.ModelSerializer):
@@ -230,6 +230,28 @@ class CustomerActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerAction
         fields = "__all__"
+
+class CustomerActionListSerializer(serializers.ModelSerializer):
+    customer = serializers.SerializerMethodField()
+    date = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CustomerActionList
+        fields = "__all__"
+
+    def get_customer(self, obj):
+        if obj.c_customer_actions.exists():
+            return obj.c_customer_actions.first().customer.username
+        return None
+    
+    def get_date(self, obj):
+        if obj.c_customer_actions.exists():
+            return obj.c_customer_actions.first().date
+        return None
+    
+    def get_price(self, obj):
+        return sum([action.price for action in obj.c_customer_actions.all()])
 
 class BulkPurchaseSerializer(serializers.Serializer):
     supplier = serializers.IntegerField()
