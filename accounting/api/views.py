@@ -607,13 +607,16 @@ class CustomerActionListAPIView(APIView):
             c_customer_actions__customer=customer
         )
         customeractions = CustomerAction.objects.filter(
-            customer = customer
+            customer = customer,
+            customeractionlist = None
         )
 
         cl_data = CustomerActionListSerializer(customeractionlists, many=True).data
         c_data = CustomerActionSerializer(customeractions, many=True).data
 
-        return Response(cl_data + c_data, status=status.HTTP_200_OK)
+        response_data = cl_data + c_data
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 class ReturnBackListAPIView(ListAPIView):
     queryset = ReturnBack.objects.all()
