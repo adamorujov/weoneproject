@@ -251,7 +251,7 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
         return None
     
     def get_price(self, obj):
-        return sum([action.price for action in obj.c_customer_actions.all()])
+        return sum([action.product_price for action in obj.c_customer_actions.all()])
 
 class BulkPurchaseSerializer(serializers.Serializer):
     supplier = serializers.IntegerField()
