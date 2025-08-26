@@ -26,6 +26,7 @@ urlpatterns = [
     path('payment-retrieve-update-delete/<int:id>/', views.PaymentRetrieveUpdateDestroyAPIView.as_view()),
     path('productaction-list/<int:id>/', views.ProductActionListAPIView.as_view()),
     path('customeraction-list/<int:id>/', views.CustomerActionListAPIView.as_view()),
+    path('customeraction-retrieve/<int:id>/', views.CustomerActionListRetrieveAPIView.as_view()),
     path('returnback-list/', views.ReturnBackListAPIView.as_view()),
     path('returnback-create/', views.ReturnBackCreateAPIView.as_view()),
     path('returnback-retrieve-update-delete/<int:id>/', views.ReturnBackRetrieveUpdateDestroyAPIView.as_view()),

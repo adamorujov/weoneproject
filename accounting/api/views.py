@@ -617,6 +617,13 @@ class CustomerActionListAPIView(APIView):
         response_data = cl_data + c_data
 
         return Response(response_data, status=status.HTTP_200_OK)
+    
+class CustomerActionListRetrieveAPIView(ListAPIView):
+    def get_queryset(self):
+        customeractionlist_id = self.kwargs.get("id")
+        customeractionlist = CustomerActionList.objects.get(id=customeractionlist_id)
+        return CustomerAction.objects.filter(customeractionlist=customeractionlist)
+    serializer_class = CustomerActionSerializer
 
 class ReturnBackListAPIView(ListAPIView):
     queryset = ReturnBack.objects.all()
