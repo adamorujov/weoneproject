@@ -225,11 +225,14 @@ class ProductActionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class CustomerActionSerializer(serializers.ModelSerializer):
-    customer = CustomUserSerializer()
+    customer = serializers.SerializerMethodField()
     product = ProductSerializer()
     class Meta:
         model = CustomerAction
         fields = "__all__"
+
+    def get_customer(self, obj):
+        return obj.customer.username
 
 class CustomerActionListSerializer(serializers.ModelSerializer):
     customer = serializers.SerializerMethodField()
