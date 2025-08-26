@@ -604,7 +604,7 @@ class CustomerActionListAPIView(APIView):
         customer_id = self.kwargs.get("id")
         customer = get_object_or_404(CustomUser, id=customer_id)
         customeractionlists = CustomerActionList.objects.filter(
-            c_customer_actions__in=customer.customer_actions
+            c_customer_actions__in=customer.customer_actions.all()
         )
         customeractions = CustomerAction.objects.filter(
             customer = customer,
