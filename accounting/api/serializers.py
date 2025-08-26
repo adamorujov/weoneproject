@@ -237,7 +237,7 @@ class CustomerActionSerializer(serializers.ModelSerializer):
 class CustomerActionListSerializer(serializers.ModelSerializer):
     customer = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
-    price = serializers.SerializerMethodField()
+    product_price = serializers.SerializerMethodField()
     
     class Meta:
         model = CustomerActionList
@@ -253,7 +253,7 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
             return obj.c_customer_actions.first().date
         return None
     
-    def get_price(self, obj):
+    def get_product_price(self, obj):
         return sum([action.product_price for action in obj.c_customer_actions.all()])
 
 class BulkPurchaseSerializer(serializers.Serializer):
