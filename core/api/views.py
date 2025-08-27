@@ -2,7 +2,8 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView,
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, filters
+from rest_framework.pagination import PageNumberPagination
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Store, Product, ProductAbout, Application, SocialMedia, Advantage,
@@ -16,7 +17,10 @@ from core.api.serializers import (
 )
 from django.shortcuts import get_object_or_404
 import json
-from django.db import IntegrityError
+
+class CustomPagination(PageNumberPagination):
+    page_size = 10  # hər səhifədə 5 obyekt
+    page_size_query_param = 'page'  # URL-də ?page_size=20 yazıla bilər
 
 class UserCreateAPIView(CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -27,6 +31,8 @@ class UserListAPIView(ListAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (IsAdminUser,)
+    pagination_class = CustomPagination
+    search_fields = ["username", "first_name", "last_name"]
 
 class UserRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     def get_object(self):
