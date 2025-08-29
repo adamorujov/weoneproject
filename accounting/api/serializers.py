@@ -102,7 +102,7 @@ class SaleListSerializer(serializers.ModelSerializer):
     sale_status = serializers.SerializerMethodField()
     class Meta:
         model = SaleList
-        fields = "__all__"
+        fields = ["customer", "seller", "total_amount", "sale_datetime", "sale_status"]
 
     def get_customer(self, obj):
         return obj.salelist_sales.first().customer.username if obj.salelist_sales.exists() else None

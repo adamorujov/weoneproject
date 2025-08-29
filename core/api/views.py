@@ -19,8 +19,9 @@ from django.shortcuts import get_object_or_404
 import json
 
 class CustomPagination(PageNumberPagination):
-    page_size = 10  # hər səhifədə 5 obyekt
-    page_size_query_param = 'page'  # URL-də ?page_size=20 yazıla bilər
+    page_size = 10  # default olaraq hər səhifədə 10 obyekt
+    page_size_query_param = 'page_size'  # istifadəçi ?page_size=20 yaza bilər
+    max_page_size = 100  # maksimum icazə verilən ölçü
 
 class UserCreateAPIView(CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -32,7 +33,8 @@ class UserListAPIView(ListAPIView):
     serializer_class = CustomUserSerializer
     permission_classes = (IsAdminUser,)
     pagination_class = CustomPagination
-    search_fields = ["username", "first_name", "last_name"]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["username", "first_name", "last_name", "phone_number", "address"]
 
 class UserRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     def get_object(self):
@@ -70,8 +72,11 @@ class StoreListAPIView(ListAPIView):
     serializer_class = StoreSerializer
 
 class ProductListAPIView(ListAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().distinct()
     serializer_class = ProductSerializer
+    pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
 
 class CategoryProductListAPIView(ListAPIView):
     def get_queryset(self):

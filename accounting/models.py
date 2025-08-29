@@ -51,6 +51,11 @@ class SaleList(models.Model):
 
     def __str__(self):
         return str(self.id)
+    
+    @property
+    def total_amount(self):
+        sales = self.salelist_sales.all()
+        return sum([sale.amount * sale.price for sale in sales])
 
 class Sale(models.Model):
     STATUS = (

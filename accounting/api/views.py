@@ -1,8 +1,9 @@
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.pagination import PageNumberPagination
 from accounting.models import PurchaseList, Purchase, Stock, SaleList, Sale, Payment, ProductAction, CustomerAction, ReturnBack, Expense, SupplierPayment, CustomerActionList
 from accounting.api.serializers import (
     PurchaseCreateSerializer, PurchaseSerializer, PurchaseListSerializer, PurchaseListRetrieveSerializer, PurchaseListUpdateSerializer,
@@ -16,6 +17,42 @@ from core.models import Product, CustomUser
 from core.api.serializers import ProductSerializer, ProductUpdateSerializer, CustomUserSerializer
 from django.shortcuts import get_object_or_404
 import datetime
+
+from rest_framework.filters import BaseFilterBackend
+
+class TotalDebtFilterBackend(BaseFilterBackend):
+    """
+    Filter queryset by min_total_debt and max_total_debt query params.
+    """
+    def filter_queryset(self, request, queryset, view):
+        min_amount = request.query_params.get('min_total_amount')
+        max_amount = request.query_params.get('max_total_amount')
+
+        if not min_amount and not max_amount:
+            return queryset
+
+        # convert to float
+        if min_amount:
+            min_amount = float(min_amount)
+        if max_amount:
+            max_amount = float(max_amount)
+
+        # filter manually because total_debt is Python property
+        filtered = []
+        for sale in queryset:
+            amount = sale.total_amount
+            if min_amount is not None and amount < min_amount:
+                continue
+            if max_amount is not None and amount > max_amount:
+                continue
+            filtered.append(sale)
+
+        return filtered
+
+class CustomPagination(PageNumberPagination):
+    page_size = 10  # default olaraq hər səhifədə 10 obyekt
+    page_size_query_param = 'page_size'  # istifadəçi ?page_size=20 yaza bilər
+    max_page_size = 100  # maksimum icazə verilən ölçü
 
 class PurchaseCreateAPIView(CreateAPIView):
     queryset = Purchase.objects.all()
@@ -175,6 +212,9 @@ class PurchaseListAPIView(ListAPIView):
 class PurchaseListListAPIView(ListAPIView):
     queryset = PurchaseList.objects.all()
     serializer_class = PurchaseListSerializer
+    pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["purchaselist_purchases__supplier__username", "purchaselist_purchases__supplier__first_name", "purchaselist_purchases__supplier__last_name"]
 
 class PurchaseListRetrieveAPIView(RetrieveAPIView):
     queryset = PurchaseList.objects.all()
@@ -325,6 +365,9 @@ class BulkPurchaseAPIView(APIView):
 class StockListAPIView(ListAPIView):
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
+    pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["product__name", "product__articles__name"]
 
 class AddToStockAPIView(APIView):
     def post(self, request):
@@ -361,6 +404,9 @@ class SaleListAPIView(ListAPIView):
 class SaleListListAPIView(ListAPIView):
     queryset = SaleList.objects.all()
     serializer_class = SaleListSerializer
+    pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter, TotalDebtFilterBackend]
+    search_fields = ["salelist_sales__seller__username", "salelist_sales__seller__first_name", "salelist_sales__seller__last_name", "salelist_sales__customer__username", "salelist_sales__customer__first_name", "salelist_sales__customer__last_name", "salelist_sales__status"]
 
 class SaleListRetrieveAPIView(RetrieveAPIView):
     queryset = SaleList.objects.all()
@@ -551,6 +597,9 @@ class BulkSaleAPIView(APIView):
 class PaymentListAPIView(ListAPIView):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
+    pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["customer__username", "customer__first_name", "customer__last_name"]
 
 class PaymentCreateAPIView(CreateAPIView):
     queryset = Payment.objects.all()
@@ -628,6 +677,9 @@ class CustomerActionListRetrieveAPIView(ListAPIView):
 class ReturnBackListAPIView(ListAPIView):
     queryset = ReturnBack.objects.all()
     serializer_class = ReturnBackSerializer
+    pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["sale__customer__username", "sale__customer__first_name", "sale__customer__last_name", "sale__product__name", "sale__product__articles__name", "reason"]
 
 class ReturnBackCreateAPIView(CreateAPIView):
     queryset = ReturnBack.objects.all()
@@ -707,6 +759,9 @@ class ReturnBackRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 class ExpenseListAPIView(ListAPIView):
     queryset = Expense.objects.all()
     serializer_class = ExpenseSerializer
+    pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["name"]
 
 class ExpenseCreateAPIView(CreateAPIView):
     queryset = Expense.objects.all()
@@ -898,36 +953,71 @@ class SaleDynamicsAPIView(APIView):
             }
             return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
         
+# class MostInDebtedCustomerAPIView(APIView):
+#     def get(self, request):
+#         customers = CustomUser.objects.all()
+#         customer_debts = []
+#         for customer in customers:
+#             customer_debt = sum([sale.price * sale.amount for sale in customer.customer_sales.all()]) - sum([payment.amount for payment in customer.payments.all()])
+#             customer_debts.append(customer_debt)
+        
+#         indebted_customers = list(zip(customers, customer_debts))
+#         indebted_customers.sort(reverse=True, key=lambda x: x[1])
+#         most_indebted_customers = indebted_customers[:5]
+#         customers_data = []
+#         for customer in most_indebted_customers:
+#             customer_data = {
+#                 "name": customer[0].username,
+#                 "debt": customer[1],
+#                 "phone_number": customer[0].phone_number
+#             }
+#             customers_data.append(customer_data)
+#         response_data = {"most_indebted_customers": customers_data}
+#         return Response(response_data, status=status.HTTP_200_OK)
+
+from django.db.models import Sum, F, FloatField
+
 class MostInDebtedCustomerAPIView(APIView):
     def get(self, request):
-        customers = CustomUser.objects.all()
-        customer_debts = []
-        for customer in customers:
-            customer_debt = sum([sale.price * sale.amount for sale in customer.customer_sales.all()]) - sum([payment.amount for payment in customer.payments.all()])
-            customer_debts.append(customer_debt)
-        
-        indebted_customers = list(zip(customers, customer_debts))
-        indebted_customers.sort(reverse=True, key=lambda x: x[1])
-        most_indebted_customers = indebted_customers[:5]
-        customers_data = []
-        for customer in most_indebted_customers:
-            customer_data = {
-                "name": customer[0].username,
-                "debt": customer[1],
-                "phone_number": customer[0].phone_number
+        # Annotate ilə borc hesablayırıq
+        customers = (
+            CustomUser.objects
+            .annotate(
+                total_sales=Sum(F("customer_sales__price") * F("customer_sales__amount"), output_field=FloatField()),
+                total_payments=Sum("payments__amount", output_field=FloatField())
+            )
+            .annotate(debt=F("total_sales") - F("total_payments"))
+            .order_by("-debt")
+        )
+
+        # Pagination tətbiq edirik
+        paginator = CustomPagination()
+        paginated_customers = paginator.paginate_queryset(customers, request)
+
+        # Data serialize edirik
+        customers_data = [
+            {
+                "name": customer.username,
+                "debt": customer.debt if customer.debt else 0,
+                "phone_number": customer.phone_number,
             }
-            customers_data.append(customer_data)
-        response_data = {"most_indebted_customers": customers_data}
-        return Response(response_data, status=status.HTTP_200_OK)
+            for customer in paginated_customers
+        ]
+
+        return paginator.get_paginated_response(customers_data)
     
 class StockOutProductsListAPIView(ListAPIView):
     def get_queryset(self):
         return Product.objects.filter(amount__lte=20)
     serializer_class = ProductSerializer
+    pagination_class = CustomPagination
 
 class SupplierPaymentListAPIView(ListAPIView):
     queryset = SupplierPayment.objects.all()
     serializer_class = SupplierPaymentSerializer
+    pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["supplier__username", "supplier__first_name", "supplier__last_name"]
 
 class SupplierPaymentCreateAPIView(CreateAPIView):
     queryset = SupplierPayment.objects.all()
