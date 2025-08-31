@@ -72,11 +72,16 @@ class StoreListAPIView(ListAPIView):
     serializer_class = StoreSerializer
 
 class ProductListAPIView(ListAPIView):
-    queryset = Product.objects.all().distinct()
+    queryset = Product.objects.all()
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
+
+class RecentProductListAPIView(ListAPIView):
+    queryset = Product.objects.all()[:300]
+    serializer_class = ProductSerializer
+    pagination_class = CustomPagination
 
 class CategoryProductListAPIView(ListAPIView):
     def get_queryset(self):
@@ -86,6 +91,7 @@ class CategoryProductListAPIView(ListAPIView):
             category = category
         )
     serializer_class = ProductSerializer
+    pagination_class = CustomPagination
 
 class ProductCreateAPIView(CreateAPIView):
     queryset = Product.objects.all()

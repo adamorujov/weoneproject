@@ -48,6 +48,37 @@ class TotalDebtFilterBackend(BaseFilterBackend):
             filtered.append(sale)
 
         return filtered
+    
+class PurchaseDateFilterBackend(BaseFilterBackend):
+    """
+    Filter queryset by min_total_debt and max_total_debt query params.
+    """
+    def filter_queryset(self, request, queryset, view):
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        if not start_date and not end_date:
+            return queryset
+
+        # convert to float
+        if start_date:
+            st_dt = start_date.split("-")
+            start_date = datetime.date(int(st_dt[0]), int(st_dt[1]), int(st_dt[2]))
+        if end_date:
+            e_dt = end_date.split("-")
+            end_date = datetime.date(int(e_dt[0]), int(e_dt[1]), int(e_dt[2]))
+
+        # filter manually because total_debt is Python property
+        filtered = []
+        for purchaselist in queryset:
+            p_date = purchaselist.purchaselist_purchases.first().date
+            if start_date is not None and p_date < start_date:
+                continue
+            if end_date is not None and p_date > end_date:
+                continue
+            filtered.append(purchaselist)
+
+        return filtered
 
 class CustomPagination(PageNumberPagination):
     page_size = 10  # default olaraq hər səhifədə 10 obyekt
@@ -208,12 +239,15 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 class PurchaseListAPIView(ListAPIView):
     queryset = Purchase.objects.all()
     serializer_class = PurchaseSerializer
+    pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["product__name", "product__articles__name", "product__brand__name", "product__store__name", "product__category__name"]
 
 class PurchaseListListAPIView(ListAPIView):
     queryset = PurchaseList.objects.all()
     serializer_class = PurchaseListSerializer
     pagination_class = CustomPagination
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, PurchaseDateFilterBackend]
     search_fields = ["purchaselist_purchases__supplier__username", "purchaselist_purchases__supplier__first_name", "purchaselist_purchases__supplier__last_name"]
 
 class PurchaseListRetrieveAPIView(RetrieveAPIView):
@@ -1011,6 +1045,8 @@ class StockOutProductsListAPIView(ListAPIView):
         return Product.objects.filter(amount__lte=20)
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["name", "articles__name", "brand__name", "store__name", "category__name"]
 
 class SupplierPaymentListAPIView(ListAPIView):
     queryset = SupplierPayment.objects.all()
