@@ -95,14 +95,19 @@ class StockUpdateSerializer(serializers.ModelSerializer):
         fields = "__all__" 
 
 class SaleListSerializer(serializers.ModelSerializer):
+    customer_id = serializers.SerializerMethodField()
     customer = serializers.SerializerMethodField()
     seller = serializers.SerializerMethodField()
     total_amount = serializers.SerializerMethodField()
     sale_datetime = serializers.SerializerMethodField()
     sale_status = serializers.SerializerMethodField()
+
     class Meta:
         model = SaleList
-        fields = ["id", "customer", "seller", "total_amount", "sale_datetime", "sale_status"]
+        fields = ["id", "customer_id", "customer", "seller", "total_amount", "sale_datetime", "sale_status"]
+
+    def get_customer_id(self, obj):
+        return obj.salelist_sales.first().customer.id if obj.salelist_sales.exists() else None
 
     def get_customer(self, obj):
         return obj.salelist_sales.first().customer.username if obj.salelist_sales.exists() else None

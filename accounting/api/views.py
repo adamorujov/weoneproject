@@ -71,12 +71,47 @@ class PurchaseDateFilterBackend(BaseFilterBackend):
         # filter manually because total_debt is Python property
         filtered = []
         for purchaselist in queryset:
+            if not purchaselist.purchaselist_purchases.exists():
+                continue
             p_date = purchaselist.purchaselist_purchases.first().date
             if start_date is not None and p_date < start_date:
                 continue
             if end_date is not None and p_date > end_date:
                 continue
             filtered.append(purchaselist)
+
+        return filtered
+    
+class SaleDateFilterBackend(BaseFilterBackend):
+    """
+    Filter queryset by min_total_debt and max_total_debt query params.
+    """
+    def filter_queryset(self, request, queryset, view):
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        if not start_date and not end_date:
+            return queryset
+
+        # convert to float
+        if start_date:
+            st_dt = start_date.split("-")
+            start_date = datetime.date(int(st_dt[0]), int(st_dt[1]), int(st_dt[2]))
+        if end_date:
+            e_dt = end_date.split("-")
+            end_date = datetime.date(int(e_dt[0]), int(e_dt[1]), int(e_dt[2]))
+
+        # filter manually because total_debt is Python property
+        filtered = []
+        for salelist in queryset:
+            if not salelist.salelist_sales.exists():
+                continue
+            dt = salelist.salelist_sales.first().datetime.date()
+            if start_date is not None and dt < start_date:
+                continue
+            if end_date is not None and dt > end_date:
+                continue
+            filtered.append(salelist)
 
         return filtered
 
@@ -439,7 +474,7 @@ class SaleListListAPIView(ListAPIView):
     queryset = SaleList.objects.all()
     serializer_class = SaleListSerializer
     pagination_class = CustomPagination
-    filter_backends = [filters.SearchFilter, TotalDebtFilterBackend]
+    filter_backends = [filters.SearchFilter, TotalDebtFilterBackend, SaleDateFilterBackend]
     search_fields = ["salelist_sales__seller__username", "salelist_sales__seller__first_name", "salelist_sales__seller__last_name", "salelist_sales__customer__username", "salelist_sales__customer__first_name", "salelist_sales__customer__last_name", "salelist_sales__status"]
 
 class SaleListRetrieveAPIView(RetrieveAPIView):
