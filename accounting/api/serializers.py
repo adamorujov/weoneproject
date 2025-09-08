@@ -275,6 +275,7 @@ class BulkPurchaseSerializer(serializers.Serializer):
 
 
 class BulkSaleSerializer(serializers.Serializer):
+    salelist = serializers.IntegerField(required=False)
     customer = serializers.IntegerField()
     products = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
     prices = serializers.ListField(child=serializers.FloatField(), allow_empty=False)

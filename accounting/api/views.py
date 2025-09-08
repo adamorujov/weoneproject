@@ -612,6 +612,7 @@ class BulkSaleAPIView(APIView):
     def post(self, request):
         serializer = BulkSaleSerializer(data=request.data)
         if serializer.is_valid():
+            salelist_id = serializer.validated_data.get("salelist")
             customer_id = serializer.validated_data["customer"]
             products_id = serializer.validated_data["products"]
             prices = serializer.validated_data["prices"]
@@ -621,7 +622,7 @@ class BulkSaleAPIView(APIView):
 
             seller = request.user
             customer = CustomUser.objects.get(id=customer_id)
-            salelist = SaleList.objects.create()
+            salelist = SaleList.objects.get(id=salelist_id) if salelist_id else SaleList.objects.create()
 
             customeractionlist = CustomerActionList.objects.create()
 
