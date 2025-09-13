@@ -507,13 +507,16 @@ class SaleListUpdateAPIView(UpdateAPIView):
                         stock.amount = stock.amount + sale.amount
                         stock.save()
                     elif sale.status == "G" and s_status == "S":
-                        sale.status = "S"
-                        sale.save()
-                        stock, created = Stock.objects.get_or_create(
-                            product = sale.product
-                        )
-                        stock.amount = stock.amount - sale.amount
-                        stock.save()
+                        if stock.amount - sale.amount >= 0:
+                            sale.status = "S"
+                            sale.save()
+                            stock, created = Stock.objects.get_or_create(
+                                product = sale.product
+                            )
+                            stock.amount = stock.amount - sale.amount
+                            stock.save()
+                        else:
+                            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                     sale.product.amount = stock.amount
                     sale.product.save()
             if dt:
