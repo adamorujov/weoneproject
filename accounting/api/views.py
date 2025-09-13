@@ -622,42 +622,105 @@ class BulkSaleAPIView(APIView):
 
             seller = request.user
             customer = CustomUser.objects.get(id=customer_id)
-            salelist = SaleList.objects.get(id=salelist_id) if salelist_id else SaleList.objects.create()
-
             customeractionlist = CustomerActionList.objects.create()
 
-            for i in range(len(products_id)):
-                product = get_object_or_404(Product, id=products_id[i])
-                sale = Sale.objects.create(
-                    seller = seller,
-                    customer = customer,
-                    salelist = salelist,
-                    product = product,
-                    amount = amounts[i],
-                    datetime = datetimes[i],
-                    price = prices[i],
-                    status = statuses[i]
-                )
-                if sale.status == "S":
-                    product.amount = product.amount - amounts[i]
-                    product.save()
-                    if hasattr(product, "stock"):
-                        product.stock.amount = product.stock.amount - amounts[i]
-                        product.stock.save()
-                ProductAction.objects.create(
-                    product = product,
-                    customer = customer,
-                    date = datetimes[i].date(), 
-                    sold_product_number = amounts[i],
-                    remaining_product_number = product.amount
-                )
-                CustomerAction.objects.create(
-                    customeractionlist = customeractionlist,
-                    customer = customer,
-                    product = product,
-                    date = datetimes[i].date(), 
-                    product_price = prices[i] * amounts[i]
-                )
+            if salelist_id:
+                salelist = SaleList.objects.get(id=salelist_id)
+                for i in range(len(products_id)):
+                    product = get_object_or_404(Product, id=products_id[i])
+                    sale, created = Sale.objects.get_or_create(
+                        seller = seller,
+                        customer = customer,
+                        salelist = salelist,
+                        product = product, 
+                        datetime = datetimes[i],
+                        price = prices[i],
+                    )
+                    if created:
+                        sale.status = statuses[i]
+                        sale.amount = amounts[i]
+                        sale.save()
+                        if sale.status == "S":
+                            product.amount = product.amount - sale.amount
+                            product.save()
+                            if hasattr(product, "stock"):
+                                product.stock.amount = product.stock.amount - sale.amount
+                                product.stock.save()
+                    else:
+                        old_sale_status = sale.status
+                        old_sale_amount = sale.amount
+                        sale.amount = amounts[i]
+                        sale.status = statuses[i]
+                        sale.save()
+                        if old_sale_status == "S" and sale.status == "G":
+                            product.amount = product.amount + old_sale_amount
+                            product.save()
+                            if hasattr(product, "stock"):
+                                product.stock.amount = product.amount
+                                product.stock.save()
+                        elif old_sale_status == "G" and sale.status == "S":
+                            product.amount = product.amount - sale.amount
+                            product.save()
+                            if hasattr(product, "stock"):
+                                product.stock.amount = product.amount
+                                product.stock.save()
+                        elif old_sale_status == "S" and sale.status == "S":
+                            product.amount = product.amount + old_sale_amount - sale.amount
+                            product.save()
+                            if hasattr(product, "stock"):
+                                product.stock.amount = product.amount
+                                product.stock.save()
+
+                    ProductAction.objects.create(
+                        product = product,
+                        customer = customer,
+                        date = datetimes[i].date(), 
+                        sold_product_number = amounts[i],
+                        remaining_product_number = product.amount
+                    )
+                    CustomerAction.objects.create(
+                        customeractionlist = customeractionlist,
+                        customer = customer,
+                        product = product,
+                        date = datetimes[i].date(), 
+                        product_price = prices[i] * amounts[i]
+                    )
+            else:
+                salelist = SaleList.objects.create()
+                for i in range(len(products_id)):
+                    product = get_object_or_404(Product, id=products_id[i])
+                    sale = Sale.objects.create(
+                        seller = seller,
+                        customer = customer,
+                        salelist = salelist,
+                        product = product,
+                        amount = amounts[i],
+                        datetime = datetimes[i],
+                        price = prices[i],
+                        status = statuses[i]
+                    )
+                    if sale.status == "S":
+                        product.amount = product.amount - amounts[i]
+                        product.save()
+                        if hasattr(product, "stock"):
+                            product.stock.amount = product.stock.amount - amounts[i]
+                            product.stock.save()
+                    ProductAction.objects.create(
+                        product = product,
+                        customer = customer,
+                        date = datetimes[i].date(), 
+                        sold_product_number = amounts[i],
+                        remaining_product_number = product.amount
+                    )
+                    CustomerAction.objects.create(
+                        customeractionlist = customeractionlist,
+                        customer = customer,
+                        product = product,
+                        date = datetimes[i].date(), 
+                        product_price = prices[i] * amounts[i]
+                    )
+
+            
             response_data = {
                 "message": f"Seçilmiş məhsullar '{customer}' müştəriyə satıldı."
             }
