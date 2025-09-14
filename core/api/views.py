@@ -13,7 +13,7 @@ from core.api.serializers import (
     CustomUserCreateSerializer, CustomUserSerializer, CustomUserSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer, ProductCreateSerializer,
     ProductUpdateSerializer, ArticleSerializer, BrandSerializer, StoreSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
     ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer,
-    OrderCreateSerializer
+    OrderCreateSerializer, ProductListSerializer
 )
 from django.shortcuts import get_object_or_404
 import json
@@ -71,6 +71,15 @@ class StoreListAPIView(ListAPIView):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
 
+class ShortProductListAPIView(ListAPIView):
+    serializer_class = ProductListSerializer
+    pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
+
+    def get_queryset(self):
+        return Product.objects.select_related("brand").prefetch_related("articles").all()
+
 class ProductListAPIView(ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -79,18 +88,19 @@ class ProductListAPIView(ListAPIView):
     search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
 
 class RecentProductListAPIView(ListAPIView):
-    queryset = Product.objects.all()[:300]
-    serializer_class = ProductSerializer
+    serializer_class = ProductListSerializer
     pagination_class = CustomPagination
+
+    def get_queryset(self):
+        return Product.objects.select_related("brand").prefetch_related("articles").all()[:300]
 
 class CategoryProductListAPIView(ListAPIView):
     def get_queryset(self):
         category_id = self.kwargs.get("id")
-        category = ProductCategory.objects.get(id=category_id)
         return Product.objects.filter(
-            category = category
-        )
-    serializer_class = ProductSerializer
+            category__id = category_id
+        ).select_related("brand").prefetch_related("articles")
+    serializer_class = ProductListSerializer
     pagination_class = CustomPagination
 
 class ProductCreateAPIView(CreateAPIView):

@@ -12,6 +12,7 @@ urlpatterns = [
     path("category-list/", views.ProductCategoryListAPIView.as_view()),
     path("brand-list/", views.BrandListAPIView.as_view()),
     path("store-list/", views.StoreListAPIView.as_view()),
+    path("short-product-list/", views.ShortProductListAPIView.as_view()),
     path("product-list/", views.ProductListAPIView.as_view()),
     path("category-product-list/<int:id>/", views.CategoryProductListAPIView.as_view()),
     path("recent-product-list/", views.RecentProductListAPIView.as_view()),

@@ -126,6 +126,14 @@ class ProductAboutSerializer(serializers.ModelSerializer):
         model = ProductAbout
         fields = "__all__"
 
+class ProductListSerializer(serializers.ModelSerializer):
+    brand_name = serializers.CharField(source="brand.name", read_only=True)
+    article_names = serializers.SlugRelatedField(many=True, read_only=True, slug_field="name", source="articles")
+    
+    class Meta:
+        model = Product
+        fields = ('id', 'name', 'image', 'brand_name', 'article_names')
+
 class ProductSerializer(serializers.ModelSerializer):
     category = ProductCategorySerializer()
     brand = BrandSerializer()
