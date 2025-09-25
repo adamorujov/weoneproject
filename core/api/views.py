@@ -23,6 +23,11 @@ class CustomPagination(PageNumberPagination):
     page_size_query_param = 'page_size'  # istifadəçi ?page_size=20 yaza bilər
     max_page_size = 100  # maksimum icazə verilən ölçü
 
+class ShortProductCustomPagination(PageNumberPagination):
+    page_size = 5  # default olaraq hər səhifədə 10 obyekt
+    page_size_query_param = 'page_size'  # istifadəçi ?page_size=20 yaza bilər
+    max_page_size = 100  # maksimum icazə verilən ölçü
+
 class UserCreateAPIView(CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserCreateSerializer
@@ -73,7 +78,7 @@ class StoreListAPIView(ListAPIView):
 
 class ShortProductListAPIView(ListAPIView):
     serializer_class = ProductListSerializer
-    pagination_class = CustomPagination
+    pagination_class = ShortProductCustomPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
 
