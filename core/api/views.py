@@ -94,7 +94,7 @@ class ProductListAPIView(ListAPIView):
 
 class RecentProductListAPIView(ListAPIView):
     serializer_class = ProductListSerializer
-    pagination_class = CustomPagination
+    pagination_class = ShortProductCustomPagination
 
     def get_queryset(self):
         return Product.objects.select_related("brand").prefetch_related("articles").all()[:300]
