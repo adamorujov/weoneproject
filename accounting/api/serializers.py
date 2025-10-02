@@ -23,7 +23,8 @@ class PurchaseListSerializer(serializers.ModelSerializer):
     def get_supplier(self, obj):
         if obj.purchaselist_purchases.exists():
             supplier = obj.purchaselist_purchases.first().supplier
-            return CustomUserSerializer(instance=supplier).data
+            return supplier.username
+            # return CustomUserSerializer(instance=supplier).data
         return None
     
     def get_amount(self, obj):
