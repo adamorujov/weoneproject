@@ -263,6 +263,7 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
         return sum([action.product_price for action in obj.c_customer_actions.all()])
 
 class BulkPurchaseSerializer(serializers.Serializer):
+    purchaselist = serializers.IntegerField(required=False)
     supplier = serializers.IntegerField()
     date = serializers.DateField()
     status = serializers.CharField()

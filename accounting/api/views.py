@@ -17,6 +17,7 @@ from core.models import Product, CustomUser
 from core.api.serializers import ProductSerializer, ProductUpdateSerializer, CustomUserSerializer
 from django.shortcuts import get_object_or_404
 import datetime
+from decimal import Decimal
 
 from rest_framework.filters import BaseFilterBackend
 
@@ -368,6 +369,7 @@ class BulkPurchaseAPIView(APIView):
     def post(self, request):
         serializer = BulkPurchaseSerializer(data=request.data)
         if serializer.is_valid():
+            purchaselist_id = serializer.validated_data.get("purchaselist")
             supplier_id = serializer.validated_data.get("supplier")
             date = serializer.validated_data.get("date")
             p_status = serializer.validated_data.get("status")
@@ -379,51 +381,138 @@ class BulkPurchaseAPIView(APIView):
             prices = serializer.validated_data.get("prices")
             discount_prices = serializer.validated_data.get("discount_prices")
 
-            purchaselist = PurchaseList.objects.create(currency=currency)
             supplier = get_object_or_404(CustomUser, id=supplier_id)
             customeractionlist = CustomerActionList.objects.create()
 
-            for i in range(len(products)):
-                product = get_object_or_404(Product, id=products[i])
-                Purchase.objects.create(
-                    supplier = supplier,
-                    product = product,
-                    purchaselist = purchaselist,
-                    amount = amounts[i],
-                    date = date,
-                    status = p_status,
-                )
-                product.purchase_price = purchase_prices[i]
-                product.cost_price = cost_prices[i]
-                product.price = prices[i]
-                product.discount_price = discount_prices[i]
-                product.currency = currency
-                # product.amount = product.amount + amounts[i]
-                product.save()
-
-                if p_status == "A":
-                    stock, created = Stock.objects.get_or_create(
-                        product = product
+            if purchaselist_id:
+                purchaselist = PurchaseList.objects.get(id=purchaselist_id)
+                for i in range(len(products)):
+                    product = get_object_or_404(Product, id=products[i])
+                    purchase, created = Purchase.objects.get_or_create(
+                        supplier = supplier,
+                        product = product,
+                        purchaselist = purchaselist
+                        # amount = amounts[i],
+                        # date = date,
+                        # status = p_status,
                     )
-                    stock.amount = stock.amount + amounts[i]
-                    stock.save()
-                    product.amount = stock.amount
+                    if created:
+                        purchase.amount = amounts[i]
+                        purchase.date = date
+                        purchase.status = p_status
+                        purchase.save()
+                        product.purchase_price = purchase_prices[i]
+                        product.cost_price = cost_prices[i]
+                        product.price = prices[i]
+                        product.discount_price = discount_prices[i]
+                        product.currency = currency
+                        # product.amount = product.amount + amounts[i]
+                        product.save()
+
+                        if p_status == "A":
+                            stock, created = Stock.objects.get_or_create(
+                                product = product
+                            )
+                            stock.amount = stock.amount + amounts[i]
+                            stock.save()
+                            product.amount = stock.amount
+                            product.save()
+
+                            ProductAction.objects.create(
+                                product = product,
+                                date = date,
+                                incoming_product_number = amounts[i],
+                                remaining_product_number = stock.amount
+                            )
+
+                            CustomerAction.objects.create(
+                                customeractionlist = customeractionlist,
+                                customer = supplier,
+                                product = product,
+                                date = date,
+                                product_price = purchase_prices[i]
+                            )
+                    else:
+                        old_p_amount = purchase.amount
+                        purchase.amount = amounts[i]
+                        purchase.date = date
+                        purchase.status = p_status
+                        purchase.save()
+                        product.purchase_price = purchase_prices[i]
+                        product.cost_price = cost_prices[i]
+                        product.price = prices[i]
+                        product.discount_price = discount_prices[i]
+                        product.currency = currency
+                        # product.amount = product.amount + amounts[i]
+                        product.save()
+
+                        if p_status == "A":
+                            stock, created = Stock.objects.get_or_create(
+                                product = product
+                            )
+                            stock.amount = stock.amount - old_p_amount + amounts[i]
+                            stock.save()
+                            product.amount = stock.amount
+                            product.save()
+
+                            ProductAction.objects.create(
+                                product = product,
+                                date = date,
+                                incoming_product_number = amounts[i],
+                                remaining_product_number = stock.amount
+                            )
+
+                            CustomerAction.objects.create(
+                                customeractionlist = customeractionlist,
+                                customer = supplier,
+                                product = product,
+                                date = date,
+                                product_price = purchase_prices[i]
+                            )
+
+            else:
+                purchaselist = PurchaseList.objects.create(currency=currency)
+                for i in range(len(products)):
+                    product = get_object_or_404(Product, id=products[i])
+                    Purchase.objects.create(
+                        supplier = supplier,
+                        product = product,
+                        purchaselist = purchaselist,
+                        amount = amounts[i],
+                        date = date,
+                        status = p_status,
+                    )
+                    product.purchase_price = purchase_prices[i]
+                    product.cost_price = cost_prices[i]
+                    product.price = prices[i]
+                    product.discount_price = discount_prices[i]
+                    product.currency = currency
+                    # product.amount = product.amount + amounts[i]
                     product.save()
 
-                    ProductAction.objects.create(
-                        product = product,
-                        date = date,
-                        incoming_product_number = amounts[i],
-                        remaining_product_number = stock.amount
-                    )
+                    if p_status == "A":
+                        stock, created = Stock.objects.get_or_create(
+                            product = product
+                        )
+                        stock.amount = stock.amount + amounts[i]
+                        stock.save()
+                        product.amount = stock.amount
+                        product.save()
 
-                    CustomerAction.objects.create(
-                        customeractionlist = customeractionlist,
-                        customer = supplier,
-                        product = product,
-                        date = date,
-                        product_price = purchase_prices[i]
-                    )
+                        ProductAction.objects.create(
+                            product = product,
+                            date = date,
+                            incoming_product_number = amounts[i],
+                            remaining_product_number = stock.amount
+                        )
+
+                        CustomerAction.objects.create(
+                            customeractionlist = customeractionlist,
+                            customer = supplier,
+                            product = product,
+                            date = date,
+                            product_price = purchase_prices[i]
+                        )
 
             response_data = {
                 "message": f"{len(products)} məhsul alışı icra edildi."
@@ -963,6 +1052,9 @@ class DashboardAPIView(APIView):
             total_m_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="M")])
             total_d_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="D")])
             total_r_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="R")])
+            total_m_purchase = sum([purchase.product.purchase_price for purchase in Purchase.objects.filter(purchaselist__currency="M")])
+            total_d_purchase = sum([purchase.product.purchase_price for purchase in Purchase.objects.filter(purchaselist__currency="D")])
+            total_r_purchase = sum([purchase.product.purchase_price for purchase in Purchase.objects.filter(purchaselist__currency="R")])
         else:
             sales = sales.filter(seller=user)
             total_income = None
@@ -971,10 +1063,13 @@ class DashboardAPIView(APIView):
             total_m_supplierpayments = None
             total_d_supplierpayments = None
             total_r_supplierpayments = None
+            total_m_purchase = None
+            total_d_purchase = None
+            total_r_purchase = None
         sold_product_number = sum([sale.amount for sale in sales])
         customer_number = sales.values('customer').distinct().count()
         total_sale_amount = sum([sale.price * sale.amount for sale in sales])
-        total_cost_amount = sum([sale.product.cost_price * sale.amount for sale in sales])
+        total_cost_amount = sum([Decimal(str(sale.product.cost_price)) * Decimal(str(sale.amount)) for sale in sales])
         dashboard_data = {
             "sold_product_number": sold_product_number,
             "customer_number": customer_number,
@@ -985,7 +1080,10 @@ class DashboardAPIView(APIView):
             "total_cost_amount": total_cost_amount,
             "total_supplier_m_payment_amount": total_m_supplierpayments,
             "total_supplier_d_payment_amount": total_d_supplierpayments,
-            "total_supplier_r_payment_amount": total_r_supplierpayments
+            "total_supplier_r_payment_amount": total_r_supplierpayments,
+            "total_m_purchase": total_m_purchase,
+            "total_d_purchase": total_d_purchase,
+            "total_r_purchase": total_r_purchase
         }
         return Response(dashboard_data, status=status.HTTP_200_OK)
     permission_classes = (IsAdminUser,)
