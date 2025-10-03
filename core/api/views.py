@@ -17,6 +17,7 @@ from core.api.serializers import (
 )
 from django.shortcuts import get_object_or_404
 import json
+from django.db.models import F, Subquery
 
 class CustomPagination(PageNumberPagination):
     page_size = 10  # default olaraq hər səhifədə 10 obyekt
@@ -104,7 +105,13 @@ class RecentProductListAPIView(ListAPIView):
     search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
 
     def get_queryset(self):
-        return Product.objects.select_related("brand").prefetch_related("articles").all()[:300]
+        qs = (
+            Product.objects
+            .select_related("brand", "store", "category")
+            .prefetch_related("articles")
+        )
+        limited_ids = qs.values_list("id", flat=True)[:300]
+        return qs.filter(id__in=Subquery(limited_ids))
 
 class CategoryProductListAPIView(ListAPIView):
     def get_queryset(self):
