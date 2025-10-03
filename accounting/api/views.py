@@ -1052,9 +1052,9 @@ class DashboardAPIView(APIView):
             total_m_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="M")])
             total_d_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="D")])
             total_r_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="R")])
-            total_m_purchase = sum([purchase.product.purchase_price for purchase in Purchase.objects.filter(purchaselist__currency="M")])
-            total_d_purchase = sum([purchase.product.purchase_price for purchase in Purchase.objects.filter(purchaselist__currency="D")])
-            total_r_purchase = sum([purchase.product.purchase_price for purchase in Purchase.objects.filter(purchaselist__currency="R")])
+            total_m_purchase = sum([purchase.product.purchase_price * purchase.amount for purchase in Purchase.objects.filter(status="A", purchaselist__currency="M")])
+            total_d_purchase = sum([purchase.product.purchase_price * purchase.amount for purchase in Purchase.objects.filter(status="A", purchaselist__currency="D")])
+            total_r_purchase = sum([purchase.product.purchase_price * purchase.amount for purchase in Purchase.objects.filter(status="A", purchaselist__currency="R")])
         else:
             sales = sales.filter(seller=user)
             total_income = None
