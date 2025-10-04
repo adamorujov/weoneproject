@@ -1221,6 +1221,7 @@ class MostInDebtedCustomerAPIView(APIView):
                 total_payments=Sum("payments__amount", output_field=FloatField())
             )
             .annotate(debt=F("total_sales") - F("total_payments"))
+            .filter(debt__gt=0)
             .order_by("-debt")
         )
 
