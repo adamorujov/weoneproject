@@ -1209,7 +1209,8 @@ class SaleDynamicsAPIView(APIView):
 #         response_data = {"most_indebted_customers": customers_data}
 #         return Response(response_data, status=status.HTTP_200_OK)
 
-from django.db.models import Sum, F, Q, FloatField
+from django.db.models import Sum, F, Value, FloatField
+from django.db.models.functions import Coalesce
 
 class MostInDebtedCustomerAPIView(APIView):
     def get(self, request):
@@ -1217,11 +1218,11 @@ class MostInDebtedCustomerAPIView(APIView):
         customers = (
             CustomUser.objects
             .annotate(
-                total_sales=Sum(F("customer_sales__price") * F("customer_sales__amount"), output_field=FloatField()),
-                total_payments=Sum("payments__amount", output_field=FloatField())
+                total_sales=Coalesce(Sum(F("customer_sales__price") * F("customer_sales__amount"), output_field=FloatField()), Value(0.0)),
+                total_payments=Coalesce(Sum("payments__amount", output_field=FloatField()), Value(0.0))
             )
-            .filter(Q(total_sales__gt=F("total_payments")))
             .annotate(debt=F("total_sales") - F("total_payments"))
+            .filter(debt__gt=0)
             .order_by("-debt")
         )
 
