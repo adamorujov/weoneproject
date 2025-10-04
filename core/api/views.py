@@ -13,7 +13,7 @@ from core.api.serializers import (
     CustomUserCreateSerializer, CustomUserSerializer, CustomUserSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer, ProductCreateSerializer,
     ProductUpdateSerializer, ArticleSerializer, BrandSerializer, StoreSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
     ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer,
-    OrderCreateSerializer, ProductListSerializer
+    OrderCreateSerializer, ProductListSerializer, CustomUserRetrieveSerializer
 )
 from django.shortcuts import get_object_or_404
 import json
@@ -46,6 +46,13 @@ class UserListAPIView(ListAPIView):
     pagination_class = CustomUserPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ["username", "first_name", "last_name", "phone_number", "address"]
+
+class UserRetrieveAPIView(RetrieveAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserRetrieveSerializer
+    permission_classes = (IsAdminUser,)
+    lookup_field = "id"
+
 
 class UserRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     def get_object(self):
@@ -255,6 +262,9 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance, data=data, partial=True)
         if serializer.is_valid():
             product = serializer.save()
+            if(hasattr(product, "stock")):
+                product.stock.amount = product.amount
+                product.stock.save()
 
             article_ids = article_ids if article_ids else []
             articles = articles if articles else []
@@ -264,7 +274,6 @@ class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     for i in range(len(article_ids)):
                         product_article = Article.objects.get(id=article_ids[i])
                         product_article.name = articles[i]
-                        print(product_article.name)
                         if Article.objects.filter(name=product_article.name, product__name=product.name, product__store__name=product.store.name).exists():
                             response_data["errors"] = f"Artikl '{product_article.name}' artıq mövcuddur."
                         elif Article.objects.filter(name=product_article.name).exclude(product__name=product.name).exists():

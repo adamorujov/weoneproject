@@ -33,16 +33,21 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
         return user
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    total_amount = serializers.SerializerMethodField()
-    total_supplier_amount = serializers.SerializerMethodField()
-    total_paid_amount = serializers.SerializerMethodField()
-    total_supplier_paid_amount = serializers.SerializerMethodField()
+    class Meta:
+        model = CustomUser
+        exclude = ("password", "groups", "user_permissions")
+    
+class CustomUserRetrieveSerializer(serializers.ModelSerializer):
+    # total_amount = serializers.SerializerMethodField()
+    # total_supplier_amount = serializers.SerializerMethodField()
+    # total_paid_amount = serializers.SerializerMethodField()
+    # total_supplier_paid_amount = serializers.SerializerMethodField()
     customer_debt_amount = serializers.SerializerMethodField()
     our_debt_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        exclude = ("password", "groups", "user_permissions")
+        fields = ("id", "customer_debt_amount", "our_debt_amount")
 
     def get_total_amount(self, obj):
         total_amount = sum([sale.price * sale.amount for sale in obj.customer_sales.filter(status="S")])
@@ -90,7 +95,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
             total_our_debt_amount = self.calculate_our_debt_amount(obj)[0] - self.calculate_customer_debt_amount(obj)
             return [total_our_debt_amount if total_our_debt_amount > 0 else 0, self.calculate_our_debt_amount(obj)[1], self.calculate_our_debt_amount(obj)[2]]
         return None
-    
+
 class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings

@@ -5,6 +5,7 @@ urlpatterns = [
     path("user-create/", views.UserCreateAPIView.as_view()),
     path("user-list/", views.UserListAPIView.as_view()),
     path("user-retrieve-update-delete/", views.UserRetrieveUpdateDestroyAPIView.as_view()),
+    path("user-retrieve/<int:id>/", views.UserRetrieveAPIView.as_view()),
     path("profile-retrieve-update-delete/<int:id>/", views.ProfileRetrieveUpdateDestroyAPIView.as_view()),
     path("supplier-list/", views.SupplierListAPIView.as_view()),
     path("settings/", views.SiteSettingsListAPIView.as_view()),
