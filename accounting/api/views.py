@@ -1059,6 +1059,7 @@ class DashboardAPIView(APIView):
             total_m_purchase = sum([purchase.product.purchase_price * purchase.amount for purchase in Purchase.objects.filter(status="A", purchaselist__currency="M")])
             total_d_purchase = sum([purchase.product.purchase_price * purchase.amount for purchase in Purchase.objects.filter(status="A", purchaselist__currency="D")])
             total_r_purchase = sum([purchase.product.purchase_price * purchase.amount for purchase in Purchase.objects.filter(status="A", purchaselist__currency="R")])
+            total_stock_value = sum([stock.product.cost_price * stock.amount for stock in Stock.objects.all()])
         else:
             sales = sales.filter(seller=user)
             total_income = None
@@ -1070,6 +1071,7 @@ class DashboardAPIView(APIView):
             total_m_purchase = None
             total_d_purchase = None
             total_r_purchase = None
+            total_stock_value = None
         sold_product_number = sum([sale.amount for sale in sales])
         customer_number = sales.values('customer').distinct().count()
         total_sale_amount = sum([sale.price * sale.amount for sale in sales])
@@ -1087,7 +1089,8 @@ class DashboardAPIView(APIView):
             "total_supplier_r_payment_amount": total_r_supplierpayments,
             "total_m_purchase": total_m_purchase,
             "total_d_purchase": total_d_purchase,
-            "total_r_purchase": total_r_purchase
+            "total_r_purchase": total_r_purchase,
+            "total_stock_value": total_stock_value
         }
         return Response(dashboard_data, status=status.HTTP_200_OK)
     permission_classes = (IsAdminUser,)
