@@ -30,7 +30,7 @@ class CustomUserPagination(PageNumberPagination):
     max_page_size = 100  # maksimum icazə verilən ölçü
 
 class ShortProductCustomPagination(PageNumberPagination):
-    page_size = 5  # default olaraq hər səhifədə 10 obyekt
+    page_size = 10  # default olaraq hər səhifədə 10 obyekt
     page_size_query_param = 'page_size'  # istifadəçi ?page_size=20 yaza bilər
     max_page_size = 100  # maksimum icazə verilən ölçü
 
@@ -52,7 +52,6 @@ class UserRetrieveAPIView(RetrieveAPIView):
     serializer_class = CustomUserRetrieveSerializer
     permission_classes = (IsAdminUser,)
     lookup_field = "id"
-
 
 class UserRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     def get_object(self):

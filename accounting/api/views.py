@@ -725,12 +725,14 @@ class BulkSaleAPIView(APIView):
                         customer = customer,
                         salelist = salelist,
                         product = product, 
-                        datetime = datetimes[i],
-                        price = prices[i],
+                        # datetime = datetimes[i],
+                        # price = prices[i],
                     )
                     if created:
                         sale.status = statuses[i]
                         sale.amount = amounts[i]
+                        sale.datetime = datetimes[i]
+                        sale.price = prices[i]
                         sale.save()
                         if sale.status == "S":
                             product.amount = product.amount - sale.amount
@@ -743,6 +745,8 @@ class BulkSaleAPIView(APIView):
                         old_sale_amount = sale.amount
                         sale.amount = amounts[i]
                         sale.status = statuses[i]
+                        sale.datetime = datetimes[i]
+                        sale.price = prices[i]
                         sale.save()
                         if old_sale_status == "S" and sale.status == "G":
                             product.amount = product.amount + old_sale_amount

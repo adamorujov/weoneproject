@@ -67,8 +67,8 @@ class Sale(models.Model):
     salelist = models.ForeignKey(SaleList, verbose_name="Siyahı", on_delete=models.CASCADE, related_name="salelist_sales", blank=True, null=True)
     product = models.ForeignKey(Product, verbose_name="Məhsul", on_delete=models.CASCADE, related_name="product_sales")
     amount = models.IntegerField("Miqdar", default=0)
-    datetime = models.DateTimeField("Tarix və vaxt")
-    price = models.FloatField("Satış qiyməti")
+    datetime = models.DateTimeField("Tarix və vaxt", blank=True, null=True)
+    price = models.FloatField("Satış qiyməti", blank=True, null=True)
     status = models.CharField("Status", choices=STATUS, max_length=1, default='G')
 
     class Meta:
