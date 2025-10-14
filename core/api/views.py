@@ -95,7 +95,7 @@ class ShortProductListAPIView(ListAPIView):
     search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
 
     def get_queryset(self):
-        return Product.objects.select_related("brand").prefetch_related("articles").all()
+        return Product.objects.select_related("brand").prefetch_related("articles").order_by("-amount")
 
 class ProductListAPIView(ListAPIView):
     queryset = Product.objects.all()
