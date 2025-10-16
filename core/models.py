@@ -101,6 +101,7 @@ class Product(models.Model):
     brand = models.ForeignKey(Brand, verbose_name="Marka", on_delete=models.SET_NULL, related_name="brand_products", blank=True, null=True)
     store = models.ForeignKey(Store, verbose_name="Brend", on_delete=models.SET_NULL, related_name="store_products", blank=True, null=True)
     amount = models.IntegerField("Miqdar", default=0)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "məhsul"

@@ -114,7 +114,7 @@ class RecentProductListAPIView(ListAPIView):
         qs = (
             Product.objects
             .select_related("brand", "store", "category")
-            .prefetch_related("articles")
+            .prefetch_related("articles").order_by("-updated_at")
         )
         limited_ids = qs.values_list("id", flat=True)[:300]
         return qs.filter(id__in=Subquery(limited_ids))
