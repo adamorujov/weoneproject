@@ -721,7 +721,6 @@ class BulkSaleAPIView(APIView):
                 for i in range(len(products_id)):
                     product = get_object_or_404(Product, id=products_id[i])
                     sale, created = Sale.objects.get_or_create(
-                        seller = seller,
                         customer = customer,
                         salelist = salelist,
                         product = product, 
@@ -729,6 +728,7 @@ class BulkSaleAPIView(APIView):
                         # price = prices[i],
                     )
                     if created:
+                        sale.seller = request.user
                         sale.status = statuses[i]
                         sale.amount = amounts[i]
                         sale.datetime = datetimes[i]
