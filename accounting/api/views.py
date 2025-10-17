@@ -853,8 +853,8 @@ class PaymentCreateAPIView(CreateAPIView):
                 customer = customer,
                 date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))),
                 payment_amount = payment_data["amount"],
-                total_amount = previous_total_amount + int(payment_data["amount"]),
-                remaining_amount = customer_debt - previous_total_amount - int(payment_data["amount"]),
+                total_amount = previous_total_amount + float(payment_data["amount"]),
+                remaining_amount = customer_debt - previous_total_amount - float(payment_data["amount"]),
             )
 
             response_data = {
