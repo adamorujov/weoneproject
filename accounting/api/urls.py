@@ -14,6 +14,7 @@ urlpatterns = [
     path('addtostock/', views.AddToStockAPIView.as_view()),
     path('stock-retrieve-update-delete/<int:id>/', views.StockRetrieveUpdateDestroyAPIView.as_view()),
     path('sale-list/', views.SaleListAPIView.as_view()),
+    path('short-sale-list/', views.ShortSaleListAPIView.as_view()),
     path('salelist-list/', views.SaleListListAPIView.as_view()),
     path('salelist-retrieve/<int:id>/', views.SaleListRetrieveAPIView.as_view()),
     path('salelist-update/<int:id>/', views.SaleListUpdateAPIView.as_view()),

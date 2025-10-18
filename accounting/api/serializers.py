@@ -124,6 +124,16 @@ class SaleListSerializer(serializers.ModelSerializer):
     
     def get_sale_status(self, obj):
         return obj.salelist_sales.first().status if obj.salelist_sales.exists() else None
+    
+class ShortSaleSerializer(serializers.ModelSerializer):
+    sale = serializers.SerializerMethodField()
+    class Meta:
+        model = Sale
+        fields = ("id", "sale")
+
+    def get_sale(self, obj):
+        customer = obj.customer.first_name + " " + obj.customer.last_name if obj.customer.first_name and obj.customer.last_name else obj.customer.username
+        return customer + " - " + obj.product.name
 
 class SaleSerializer(serializers.ModelSerializer):
     seller = CustomUserSerializer()

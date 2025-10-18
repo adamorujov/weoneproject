@@ -11,7 +11,7 @@ from accounting.api.serializers import (
     SaleListSerializer, SaleListRetrieveSerializer, SaleListDestroySerializer, SaleCreateSerializer, SaleListUpdateSerializer, PaymentSerializer, 
     PaymentCreateSerializer, ProductActionSerializer, CustomerActionSerializer, BulkPurchaseSerializer, BulkSaleSerializer, 
     ReturnBackSerializer, ReturnBackCreateSerializer, ExpenseSerializer, SupplierPaymentSerializer, SupplierPaymentCreateSerializer,
-    CustomerActionListSerializer
+    CustomerActionListSerializer, ShortSaleSerializer
 )
 from core.models import Product, CustomUser
 from core.api.serializers import ProductSerializer, ProductUpdateSerializer, CustomUserSerializer
@@ -554,7 +554,11 @@ class StockRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Stock.objects.all()
     serializer_class = StockUpdateSerializer
     lookup_field = "id"
-    
+
+class ShortSaleListAPIView(ListAPIView):
+    queryset = Sale.objects.all()
+    serializer_class = ShortSaleSerializer
+
 class SaleListAPIView(ListAPIView):
     queryset = Sale.objects.all()
     serializer_class = SaleSerializer
