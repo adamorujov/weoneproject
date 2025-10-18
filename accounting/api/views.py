@@ -1216,38 +1216,70 @@ class SaleDynamicsAPIView(APIView):
 #         response_data = {"most_indebted_customers": customers_data}
 #         return Response(response_data, status=status.HTTP_200_OK)
 
-from django.db.models import Sum, F, Q, Value, FloatField
+from django.db.models import Sum, F, Q, Value, FloatField, Subquery, OuterRef, Prefetch
 from django.db.models.functions import Coalesce
 
 class MostInDebtedCustomerAPIView(APIView):
     def get(self, request):
         # Annotate ilə borc hesablayırıq
-        customers = (
-            CustomUser.objects
-            .annotate(
-                total_sales=Coalesce(Sum(F("customer_sales__price") * F("customer_sales__amount"), filter=Q(customer_sales__status="S"), output_field=FloatField()), Value(0.0)),
-                total_payments=Coalesce(Sum("payments__amount", output_field=FloatField()), Value(0.0))
-            )
-            .annotate(debt=F("total_sales") - F("total_payments"))
-            .filter(debt__gt=0)
-            .order_by("-debt")
+        # customers = (
+        #     CustomUser.objects
+        #     .annotate(
+        #         total_sales=Coalesce(Sum(F("customer_sales__price") * F("customer_sales__amount"), filter=Q(customer_sales__status="S"), output_field=FloatField()), Value(0.0)),
+        #         total_payments=Coalesce(Sum("payments__amount", output_field=FloatField()), Value(0.0))
+        #     )
+        #     .annotate(debt=F("total_sales") - F("total_payments"))
+        #     .filter(debt__gt=0)
+        #     .order_by("-debt")
+        # )
+        
+        # # Pagination tətbiq edirik
+        # paginator = CustomPagination()
+        # paginated_customers = paginator.paginate_queryset(customers, request)
+
+        # # Data serialize edirik
+        # customers_data = [
+        #     {
+        #         "name": customer.username,
+        #         "debt": customer.debt if customer.debt else 0,
+        #         "phone_number": customer.phone_number,
+        #     }
+        #     for customer in paginated_customers
+        # ]
+
+        # return paginator.get_paginated_response(customers_data)
+
+
+        customers = CustomUser.objects.prefetch_related(
+            "customer_sales",
+            "payments"
         )
+
+        # Python səviyyəsində borc hesablayırıq
+        customers_with_debt = []
+        for customer in customers:
+            # Statusu "S" olan satışları götürürük
+            total_sales = sum(
+                s.price * s.amount for s in customer.customer_sales.all() if s.status == "S"
+            )
+            total_payments = sum(p.amount for p in customer.payments.all())
+            debt = total_sales - total_payments
+
+            if debt > 0:
+                customers_with_debt.append({
+                    "name": customer.username,
+                    "debt": float(debt),
+                    "phone_number": customer.phone_number,
+                })
+
+        # Borca görə azalan sıraya düzürük
+        customers_with_debt.sort(key=lambda x: x["debt"], reverse=True)
 
         # Pagination tətbiq edirik
         paginator = CustomPagination()
-        paginated_customers = paginator.paginate_queryset(customers, request)
+        paginated_customers = paginator.paginate_queryset(customers_with_debt, request)
 
-        # Data serialize edirik
-        customers_data = [
-            {
-                "name": customer.username,
-                "debt": customer.debt if customer.debt else 0,
-                "phone_number": customer.phone_number,
-            }
-            for customer in paginated_customers
-        ]
-
-        return paginator.get_paginated_response(customers_data)
+        return paginator.get_paginated_response(paginated_customers)
     
 class StockOutProductsListAPIView(ListAPIView):
     def get_queryset(self):
