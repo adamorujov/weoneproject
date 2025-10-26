@@ -1269,8 +1269,11 @@ class MostInDebtedCustomerAPIView(APIView):
             total_sales = sum(
                 s.price * s.amount for s in customer.customer_sales.all() if s.status == "S"
             )
+            total_m_purchases = sum(
+                p.product.purchase_price * p.amount for p in customer.supplier_purchases.all() if p.status == "A" and p.purchaselist.currency == "M"
+            )
             total_payments = sum(p.amount for p in customer.payments.all())
-            debt = total_sales - total_payments
+            debt = total_sales - total_payments - total_m_purchases
 
             if debt > 0:
                 customers_with_debt.append({
