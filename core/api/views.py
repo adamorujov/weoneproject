@@ -95,11 +95,10 @@ class ShortProductListAPIView(ListAPIView):
     search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
 
     def get_queryset(self):
-        return Product.objects.select_related("brand").prefetch_related("articles").order_by("-amount")
+        return Product.objects.select_related("brand").prefetch_related("articles").order_by("-amount", "-updated_at")
 
 class ProductListAPIView(ListAPIView):
-    def get_queryset(self):
-        return Product.objects.order_by("-updated_at")
+    queryset = Product.objects.all()
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter]
