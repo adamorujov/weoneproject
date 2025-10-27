@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from tinymce.models import HTMLField
+from django.utils import timezone
 
 class CustomUser(AbstractUser):
     PAYMENT_STATUS = (
@@ -102,7 +103,7 @@ class Product(models.Model):
     store = models.ForeignKey(Store, verbose_name="Brend", on_delete=models.SET_NULL, related_name="store_products", blank=True, null=True)
     amount = models.IntegerField("Miqdar", default=0)
     updated_at = models.DateTimeField(auto_now=True)
-    updated_at_purchase = models.DateTimeField(blank=True, null=True)
+    updated_at_purchase_time = models.DateTimeField("Alış yenilənmə tarixi")
 
     class Meta:
         verbose_name = "məhsul"
