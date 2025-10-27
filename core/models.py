@@ -103,7 +103,7 @@ class Product(models.Model):
     store = models.ForeignKey(Store, verbose_name="Brend", on_delete=models.SET_NULL, related_name="store_products", blank=True, null=True)
     amount = models.IntegerField("Miqdar", default=0)
     updated_at = models.DateTimeField(auto_now=True)
-    updated_at_purchase_time = models.DateTimeField("Alış yenilənmə tarixi")
+    updated_at_purchase_time = models.DateTimeField("Alış yenilənmə tarixi", default=timezone.now)
 
     class Meta:
         verbose_name = "məhsul"

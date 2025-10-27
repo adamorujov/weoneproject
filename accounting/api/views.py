@@ -408,7 +408,7 @@ class BulkPurchaseAPIView(APIView):
                         product.discount_price = discount_prices[i]
                         product.currency = currency
                         # product.amount = product.amount + amounts[i]
-                        product.updated_at_purchase = timezone.now()
+                        product.updated_at_purchase_time = timezone.now()
                         product.save()
 
                         if p_status == "A":
@@ -446,7 +446,7 @@ class BulkPurchaseAPIView(APIView):
                         product.discount_price = discount_prices[i]
                         product.currency = currency
                         # product.amount = product.amount + amounts[i]
-                        product.updated_at_purchase = timezone.now()
+                        product.updated_at_purchase_time = timezone.now()
                         product.save()
 
                         if p_status == "A":
@@ -491,7 +491,7 @@ class BulkPurchaseAPIView(APIView):
                     product.discount_price = discount_prices[i]
                     product.currency = currency
                     # product.amount = product.amount + amounts[i]
-                    product.updated_at_purchase = timezone.now()
+                    product.updated_at_purchase_time = timezone.now()
                     product.save()
 
                     if p_status == "A":
