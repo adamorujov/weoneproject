@@ -17,6 +17,7 @@ from core.models import Product, CustomUser
 from core.api.serializers import ProductSerializer, ProductUpdateSerializer, CustomUserSerializer
 from django.shortcuts import get_object_or_404
 import datetime
+from django.utils import timezone
 from decimal import Decimal
 
 from rest_framework.filters import BaseFilterBackend
@@ -407,6 +408,7 @@ class BulkPurchaseAPIView(APIView):
                         product.discount_price = discount_prices[i]
                         product.currency = currency
                         # product.amount = product.amount + amounts[i]
+                        product.updated_at_purchase = timezone.now()
                         product.save()
 
                         if p_status == "A":
@@ -444,6 +446,7 @@ class BulkPurchaseAPIView(APIView):
                         product.discount_price = discount_prices[i]
                         product.currency = currency
                         # product.amount = product.amount + amounts[i]
+                        product.updated_at_purchase = timezone.now()
                         product.save()
 
                         if p_status == "A":
@@ -488,6 +491,7 @@ class BulkPurchaseAPIView(APIView):
                     product.discount_price = discount_prices[i]
                     product.currency = currency
                     # product.amount = product.amount + amounts[i]
+                    product.updated_at_purchase = timezone.now()
                     product.save()
 
                     if p_status == "A":

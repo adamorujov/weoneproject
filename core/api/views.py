@@ -98,7 +98,8 @@ class ShortProductListAPIView(ListAPIView):
         return Product.objects.select_related("brand").prefetch_related("articles").order_by("-amount")
 
 class ProductListAPIView(ListAPIView):
-    queryset = Product.objects.all()
+    def get_queryset(self):
+        return Product.objects.order_by("-updated_at")
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter]
@@ -114,7 +115,7 @@ class RecentProductListAPIView(ListAPIView):
         qs = (
             Product.objects
             .select_related("brand", "store", "category")
-            .prefetch_related("articles").order_by("-updated_at")
+            .prefetch_related("articles").order_by("-updated_at_purchase")
         )
         limited_ids = qs.values_list("id", flat=True)[:300]
         return qs.filter(id__in=Subquery(limited_ids))
