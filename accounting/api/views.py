@@ -594,6 +594,7 @@ class SaleListUpdateAPIView(UpdateAPIView):
         if serializer.is_valid():
             s_status = serializer.validated_data.get("status")
             dt = serializer.validated_data.get("dt")
+            customeractionlist = CustomerActionList.objects.create()
 
             sales = instance.salelist_sales.all()
             if s_status:
@@ -606,6 +607,7 @@ class SaleListUpdateAPIView(UpdateAPIView):
                         )
                         stock.amount = stock.amount + sale.amount
                         stock.save()
+                        sale.product.amount = stock.amount
                     elif sale.status == "G" and s_status == "S":
                         stock, created = Stock.objects.get_or_create(
                             product = sale.product
@@ -615,10 +617,23 @@ class SaleListUpdateAPIView(UpdateAPIView):
                             stock.save()
                             sale.status = "S"
                             sale.save()
+                            sale.product.amount = stock.amount
                         else:
                             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                    sale.product.amount = stock.amount
                     sale.product.save()
+                    ProductAction.objects.create(
+                        product = sale.product,
+                        customer = sale.customer,
+                        date = dt,
+                        remaining_product_number = sale.product.amount
+                    )
+                    CustomerAction.objects.create(
+                        customeractionlist = customeractionlist,
+                        customer = sale.customer,
+                        product = sale.product,
+                        date = dt,
+                        product_price = sale.price * sale.amount
+                    )
             if dt:
                 sales.update(datetime=dt)
             return Response(serializer.data, status=status.HTTP_200_OK)
