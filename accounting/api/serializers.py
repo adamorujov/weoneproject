@@ -185,6 +185,11 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
         payments = Payment.objects.filter(customer = customer)
         return sum([payment.amount for payment in payments])
     
+    def get_total_supplier_paid_amount(self, obj):
+        customer = self.get_customer(obj)
+        payments = SupplierPayment.objects.filter(supplier = customer)
+        return sum([payment.amount for payment in payments])
+    
     def get_paid_amount(self, obj):
         customer = self.get_customer(obj)
         old_sales = Sale.objects.filter(customer=customer, status="S", salelist__id__lt=obj.id)
@@ -203,7 +208,7 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
         purchases = Purchase.objects.filter(supplier=customer, status="A")
         total_sale_price = sum([sale.price * sale.amount for sale in sales])
         total_purchase_price = sum([purchase.product.purchase_price * purchase.amount for purchase in purchases])
-        return total_sale_price - total_purchase_price - self.get_total_paid_amount(obj)
+        return total_sale_price - self.get_total_paid_amount(obj) - total_purchase_price + self.get_total_supplier_paid_amount(obj)
     
     def get_total_profit(self, obj):
         price = sum([sale.price * sale.amount for sale in obj.salelist_sales.filter(status="S")])
