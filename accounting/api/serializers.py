@@ -200,8 +200,10 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
     def get_total_debt(self, obj):
         customer = self.get_customer(obj)
         sales = Sale.objects.filter(customer=customer, status="S")
-        total_price = sum([sale.price * sale.amount for sale in sales])
-        return total_price - self.get_total_paid_amount(obj)
+        purchases = Purchase.objects.filter(supplier=customer, status="A")
+        total_sale_price = sum([sale.price * sale.amount for sale in sales])
+        total_purchase_price = sum([purchase.price * purchase.amount for purchase in purchases])
+        return total_sale_price - total_purchase_price - self.get_total_paid_amount(obj)
     
     def get_total_profit(self, obj):
         price = sum([sale.price * sale.amount for sale in obj.salelist_sales.filter(status="S")])
