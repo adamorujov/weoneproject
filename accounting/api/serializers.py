@@ -56,7 +56,7 @@ class PurchaseListSerializer(serializers.ModelSerializer):
 class PurchaseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Purchase
-        fields = ("supplier", "product", "amount", "status", "date")
+        fields = ("supplier", "product", "price", "amount", "status", "date")
 
 class PurchaseSerializer(serializers.ModelSerializer):
     product = ProductSerializer()

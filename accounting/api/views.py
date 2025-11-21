@@ -190,6 +190,8 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             previous_instance_amount = instance.amount
             previous_instance_status = instance.status
             serializer.save()
+            instance.product.purchase_price = instance.price
+            instance.product.save()
             # instance.product.amount = instance.product.amount - previous_instance_amount + instance.amount
             # instance.product.save()
 
@@ -403,6 +405,7 @@ class BulkPurchaseAPIView(APIView):
                         purchase.status = p_status
                         purchase.price = purchase_prices[i]
                         purchase.save()
+                        product.purchase_price = purchase_prices[i]
                         product.cost_price = cost_prices[i]
                         product.price = prices[i]
                         product.discount_price = discount_prices[i]
@@ -441,6 +444,7 @@ class BulkPurchaseAPIView(APIView):
                         purchase.status = p_status
                         purchase.price = purchase_prices[i]
                         purchase.save()
+                        product.purchase_price = purchase_prices[i]
                         product.cost_price = cost_prices[i]
                         product.price = prices[i]
                         product.discount_price = discount_prices[i]
@@ -486,6 +490,7 @@ class BulkPurchaseAPIView(APIView):
                         date = date,
                         status = p_status,
                     )
+                    product.purchase_price = purchase_prices[i]
                     product.cost_price = cost_prices[i]
                     product.price = prices[i]
                     product.discount_price = discount_prices[i]
@@ -1037,6 +1042,9 @@ class InvoiceListAPIView(ListAPIView):
 
 class DashboardAPIView(APIView):
     def get(self, request, seller_id, month, year):
+        for purchase in Purchase.objects.all():
+            purchase.price = purchase.product.purchase_price
+            purchase.save()
         user = get_object_or_404(CustomUser, id=seller_id)
         months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr", "All"]
         try:
