@@ -332,12 +332,12 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         stock.save()
                         purchase.product.amount = stock.amount
                         purchase.product.save()
-                    ProductAction.objects.create(
-                        product = purchase.product,
-                        date = purchase.date,
-                        incoming_product_number = purchase.amount,
-                        remaining_product_number = purchase.product.amount
-                    )
+                    # ProductAction.objects.create(
+                    #     product = purchase.product,
+                    #     date = purchase.date,
+                    #     incoming_product_number = purchase.amount,
+                    #     remaining_product_number = purchase.product.amount
+                    # )
             if date:
                 purchases.update(date=date)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -401,8 +401,8 @@ class BulkPurchaseAPIView(APIView):
                         purchase.amount = amounts[i]
                         purchase.date = date
                         purchase.status = p_status
+                        purchase.price = purchase_prices[i]
                         purchase.save()
-                        product.purchase_price = purchase_prices[i]
                         product.cost_price = cost_prices[i]
                         product.price = prices[i]
                         product.discount_price = discount_prices[i]
@@ -439,8 +439,8 @@ class BulkPurchaseAPIView(APIView):
                         purchase.amount = amounts[i]
                         purchase.date = date
                         purchase.status = p_status
+                        purchase.price = purchase_prices[i]
                         purchase.save()
-                        product.purchase_price = purchase_prices[i]
                         product.cost_price = cost_prices[i]
                         product.price = prices[i]
                         product.discount_price = discount_prices[i]
@@ -482,10 +482,10 @@ class BulkPurchaseAPIView(APIView):
                         product = product,
                         purchaselist = purchaselist,
                         amount = amounts[i],
+                        price = purchase_prices[i],
                         date = date,
                         status = p_status,
                     )
-                    product.purchase_price = purchase_prices[i]
                     product.cost_price = cost_prices[i]
                     product.price = prices[i]
                     product.discount_price = discount_prices[i]
@@ -1059,6 +1059,9 @@ class DashboardAPIView(APIView):
             supplierpayments = SupplierPayment.objects.filter(
                 datetime__month = m, datetime__year = year
             )
+            purchases = Purchase.objects.filter(
+                date__month = m, date__year = year
+            )
         else:
             sales = Sale.objects.filter(
                 datetime__year = year, status = "S"
@@ -1075,6 +1078,9 @@ class DashboardAPIView(APIView):
             supplierpayments = SupplierPayment.objects.filter(
                 datetime__year = year
             )
+            purchases = Purchase.objects.filter(
+                date__year = year
+            )
         if user.is_superuser:
             total_income = sum([payment.amount for payment in payments])
             total_outcome = sum([expense.amount for expense in expenses])
@@ -1082,9 +1088,9 @@ class DashboardAPIView(APIView):
             total_m_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="M")])
             total_d_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="D")])
             total_r_supplierpayments = sum([payment.amount for payment in supplierpayments.filter(currency="R")])
-            total_m_purchase = sum([purchase.product.purchase_price * purchase.amount for purchase in Purchase.objects.filter(status="A", purchaselist__currency="M")])
-            total_d_purchase = sum([purchase.product.purchase_price * purchase.amount for purchase in Purchase.objects.filter(status="A", purchaselist__currency="D")])
-            total_r_purchase = sum([purchase.product.purchase_price * purchase.amount for purchase in Purchase.objects.filter(status="A", purchaselist__currency="R")])
+            total_m_purchase = sum([purchase.price * purchase.amount for purchase in purchases.filter(status="A", purchaselist__currency="M")])
+            total_d_purchase = sum([purchase.price * purchase.amount for purchase in purchases.filter(status="A", purchaselist__currency="D")])
+            total_r_purchase = sum([purchase.price * purchase.amount for purchase in purchases.filter(status="A", purchaselist__currency="R")])
             total_stock_value = sum([stock.product.cost_price * stock.amount for stock in Stock.objects.all()])
         else:
             sales = sales.filter(seller=user)
@@ -1145,7 +1151,7 @@ class SaleDynamicsAPIView(APIView):
                         )
                     total_sale_amount = sum([sale.price * sale.amount for sale in sales])
                     total_sale_amounts.append(total_sale_amount)
-            else:
+            elif user.is_staff:
                 for i in range(len(months)):
                     year = datetime.datetime.now().year
                     if brand_id:
@@ -1163,6 +1169,25 @@ class SaleDynamicsAPIView(APIView):
                             datetime__date__year = year,
                             status = "S"
                         )
+                    total_sale_amount = sum([sale.price * sale.amount for sale in sales])
+                    total_sale_amounts.append(total_sale_amount)
+            else:
+                for i in range(len(months)):
+                    year = datetime.datetime.now().year
+                    # if brand_id:
+                    #     sales = Sale.objects.filter(
+                    #         seller = user,
+                    #         product__brand__id = brand_id,
+                    #         datetime__date__month = i + 1,
+                    #         datetime__date__year = year,
+                    #         status = "S"
+                    #     )
+                    sales = Sale.objects.filter(
+                        customer = user,
+                        datetime__date__month = i + 1,
+                        datetime__date__year = year,
+                        status = "S"
+                    )
                     total_sale_amount = sum([sale.price * sale.amount for sale in sales])
                     total_sale_amounts.append(total_sale_amount)
             response_data = {
@@ -1289,7 +1314,7 @@ class MostInDebtedCustomerAPIView(APIView):
                 s.price * s.amount for s in customer.customer_sales.all() if s.status == "S"
             )
             total_m_purchases = sum(
-                p.product.purchase_price * p.amount for p in customer.supplier_purchases.all() if p.status == "A" and p.purchaselist.currency == "M"
+                p.price * p.amount for p in customer.supplier_purchases.all() if p.status == "A" and p.purchaselist.currency == "M"
             )
             total_payments = sum(p.amount for p in customer.payments.all())
             debt = total_sales - total_payments - total_m_purchases

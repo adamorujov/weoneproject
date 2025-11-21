@@ -88,6 +88,8 @@ class StoreListAPIView(ListAPIView):
     queryset = Store.objects.all()
     serializer_class = StoreSerializer
 
+from django.db.models import Case, When, IntegerField, Value
+
 class ShortProductListAPIView(ListAPIView):
     serializer_class = ProductListSerializer
     pagination_class = ShortProductCustomPagination
@@ -95,7 +97,15 @@ class ShortProductListAPIView(ListAPIView):
     search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
 
     def get_queryset(self):
-        return Product.objects.select_related("brand").prefetch_related("articles").order_by("-amount", "-updated_at")
+        # return Product.objects.select_related("brand").prefetch_related("articles").order_by("-updated_at")
+        return Product.objects.select_related("brand").prefetch_related("articles").annotate(
+                stock_status=Case(
+                    When(amount__gt=20, then=Value(1)),   # stock_in
+                    When(amount__gt=0, then=Value(2)),    # stock_out
+                    When(amount=0, then=Value(3)),        # out of stock
+                    output_field=IntegerField(),
+                )
+            ).order_by("stock_status", "-updated_at")
 
 class ProductListAPIView(ListAPIView):
     queryset = Product.objects.all()
@@ -115,6 +125,7 @@ class RecentProductListAPIView(ListAPIView):
             Product.objects
             .select_related("brand", "store", "category")
             .prefetch_related("articles").order_by("-updated_at_purchase_time")
+            .filter(price__gt=0)
         )
         limited_ids = qs.values_list("id", flat=True)[:300]
         return qs.filter(id__in=Subquery(limited_ids))

@@ -20,6 +20,7 @@ class Purchase(models.Model):
     product = models.ForeignKey(Product, verbose_name="Məhsul", on_delete=models.CASCADE, related_name="purchases")
     purchaselist = models.ForeignKey(PurchaseList, on_delete=models.CASCADE, related_name="purchaselist_purchases", blank=True, null=True)
     amount = models.IntegerField("Miqdar", default=0)
+    price = models.FloatField("Alış qiyməti", default=0)
     date = models.DateField("Alış tarixi", blank=True, null=True)
     status = models.CharField("Status", choices=STATUS, max_length=1, default='G')
 
