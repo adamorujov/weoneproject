@@ -1042,9 +1042,6 @@ class InvoiceListAPIView(ListAPIView):
 
 class DashboardAPIView(APIView):
     def get(self, request, seller_id, month, year):
-        for purchase in Purchase.objects.all():
-            purchase.price = purchase.product.purchase_price
-            purchase.save()
         user = get_object_or_404(CustomUser, id=seller_id)
         months = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr", "All"]
         try:
