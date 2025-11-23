@@ -93,6 +93,7 @@ class Product(models.Model):
     )
     name = models.CharField("Ad", max_length=256)
     image = models.ImageField("Şəkil", upload_to="product_imgs/", blank=True, null=True)
+    degree = models.CharField("Dərəcə", max_length=50, blank=True, null=True)
     cost_price = models.FloatField("Maya dəyəri", default=0)
     purchase_price = models.FloatField("Alış qiyməti", default=0)
     currency = models.CharField("Valyuta", max_length=1, default='M')

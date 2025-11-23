@@ -146,6 +146,7 @@ class ProductCreateAPIView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         product_data = {
             "name": request.data.get("name"),
+            "degree": request.data.get("degree"),
             "image": request.data.get("image"),
             "category": request.data.get("category"),
             "brand": request.data.get("brand"),

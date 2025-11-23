@@ -303,10 +303,16 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(data=request.data, partial=True)
         if serializer.is_valid():
+            supplier_id = serializer.validated_data.get("supplier_id")
             currency = serializer.validated_data.get("currency")
             p_status = serializer.validated_data.get("status")
             date = serializer.validated_data.get("date")
             purchases = instance.purchaselist_purchases.all()
+            if supplier_id:
+                supplier = get_object_or_404(CustomUser, id=supplier_id)
+                for purchase in purchases:
+                    purchase.supplier = supplier
+                    purchase.save()
             if currency:
                 instance.currency = currency
                 instance.save()
