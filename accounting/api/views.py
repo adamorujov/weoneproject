@@ -603,11 +603,17 @@ class SaleListUpdateAPIView(UpdateAPIView):
         serializer = self.get_serializer(data=request.data, partial=True)
 
         if serializer.is_valid():
+            customer_id = serializer.validated_data.get("customer_id")
             s_status = serializer.validated_data.get("status")
             dt = serializer.validated_data.get("dt")
             customeractionlist = CustomerActionList.objects.create()
 
             sales = instance.salelist_sales.all()
+            if customer_id:
+                customer = get_object_or_404(CustomUser, id=customer_id)
+                for sale in sales:
+                    sale.customer = customer
+                    sale.save()
             if s_status:
                 for sale in sales:
                     if sale.status == "S" and s_status == "G":

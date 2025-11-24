@@ -228,6 +228,7 @@ class SaleCreateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class SaleListUpdateSerializer(serializers.Serializer):
+    customer_id = serializers.IntegerField(required=False)
     status = serializers.CharField(allow_blank=True)
     dt = serializers.DateTimeField(allow_null=True) # datetime
     
