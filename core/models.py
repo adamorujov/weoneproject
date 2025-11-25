@@ -114,6 +114,10 @@ class Product(models.Model):
             models.UniqueConstraint(fields=['name', 'store'], name='unique_product_per_brand')
         ]
 
+    @property
+    def full_name(self):
+        return self.name + " " + self.degree
+
     def __str__(self):
         return self.name
     

@@ -94,7 +94,7 @@ class ShortProductListAPIView(ListAPIView):
     serializer_class = ProductListSerializer
     pagination_class = ShortProductCustomPagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
+    search_fields = ["name", "degree", "brand__name", "store__name", "category__name", "articles__name"]
 
     def get_queryset(self):
         # return Product.objects.select_related("brand").prefetch_related("articles").order_by("-updated_at")
@@ -112,13 +112,13 @@ class ProductListAPIView(ListAPIView):
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
+    search_fields = ["name", "degree", "brand__name", "store__name", "category__name", "articles__name"]
 
 class RecentProductListAPIView(ListAPIView):
     serializer_class = ProductListSerializer
     pagination_class = ShortProductCustomPagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ["name", "brand__name", "store__name", "category__name", "articles__name"]
+    search_fields = ["name", "degree", "brand__name", "store__name", "category__name", "articles__name"]
 
     def get_queryset(self):
         qs = (
