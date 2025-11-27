@@ -540,7 +540,7 @@ class StockListAPIView(ListAPIView):
     serializer_class = StockSerializer
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ["product__name", "product__articles__name"]
+    search_fields = ["product__name", "product__articles__name", "product__brand__name"]
 
 class AddToStockAPIView(APIView):
     def post(self, request):
