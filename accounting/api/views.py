@@ -763,6 +763,7 @@ class BulkSaleAPIView(APIView):
                 salelist = SaleList.objects.get(id=salelist_id)
                 for i in range(len(products_id)):
                     product = get_object_or_404(Product, id=products_id[i])
+                    dt = timezone.make_aware(datetimes[i])
                     sale, created = Sale.objects.get_or_create(
                         customer = customer,
                         salelist = salelist,
@@ -774,7 +775,7 @@ class BulkSaleAPIView(APIView):
                         sale.seller = request.user
                         sale.status = statuses[i]
                         sale.amount = amounts[i]
-                        sale.datetime = datetimes[i]
+                        sale.datetime = dt
                         sale.price = prices[i]
                         sale.save()
                         if sale.status == "S":
@@ -788,7 +789,7 @@ class BulkSaleAPIView(APIView):
                         old_sale_amount = sale.amount
                         sale.amount = amounts[i]
                         sale.status = statuses[i]
-                        sale.datetime = datetimes[i]
+                        sale.datetime = dt
                         sale.price = prices[i]
                         sale.save()
                         if old_sale_status == "S" and sale.status == "G":
@@ -809,11 +810,10 @@ class BulkSaleAPIView(APIView):
                             if hasattr(product, "stock"):
                                 product.stock.amount = product.amount
                                 product.stock.save()
-
                     ProductAction.objects.create(
                         product = product,
                         customer = customer,
-                        date = datetimes[i].date(), 
+                        date = dt.date(), 
                         sold_product_number = amounts[i],
                         remaining_product_number = product.amount
                     )
@@ -821,20 +821,21 @@ class BulkSaleAPIView(APIView):
                         customeractionlist = customeractionlist,
                         customer = customer,
                         product = product,
-                        date = datetimes[i].date(), 
+                        date = dt.date(), 
                         product_price = prices[i] * amounts[i]
                     )
             else:
                 salelist = SaleList.objects.create()
                 for i in range(len(products_id)):
                     product = get_object_or_404(Product, id=products_id[i])
+                    dt = timezone.make_aware(datetimes[i])
                     sale = Sale.objects.create(
                         seller = seller,
                         customer = customer,
                         salelist = salelist,
                         product = product,
                         amount = amounts[i],
-                        datetime = datetimes[i],
+                        datetime = dt,
                         price = prices[i],
                         status = statuses[i]
                     )
@@ -847,7 +848,7 @@ class BulkSaleAPIView(APIView):
                     ProductAction.objects.create(
                         product = product,
                         customer = customer,
-                        date = datetimes[i].date(), 
+                        date = dt.date(), 
                         sold_product_number = amounts[i],
                         remaining_product_number = product.amount
                     )
@@ -855,7 +856,7 @@ class BulkSaleAPIView(APIView):
                         customeractionlist = customeractionlist,
                         customer = customer,
                         product = product,
-                        date = datetimes[i].date(), 
+                        date = dt.date(), 
                         product_price = prices[i] * amounts[i]
                     )
 
