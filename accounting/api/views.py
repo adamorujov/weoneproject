@@ -824,6 +824,7 @@ class BulkSaleAPIView(APIView):
                         date = datetimes[i].date(), 
                         product_price = prices[i] * amounts[i]
                     )
+                    print("Saved value:", sale.datetime, sale.datetime.tzinfo)
             else:
                 salelist = SaleList.objects.create()
                 for i in range(len(products_id)):
@@ -858,6 +859,7 @@ class BulkSaleAPIView(APIView):
                         date = datetimes[i].date(), 
                         product_price = prices[i] * amounts[i]
                     )
+                    print("Saved value:", sale.datetime, sale.datetime.tzinfo)
 
             
             response_data = {
