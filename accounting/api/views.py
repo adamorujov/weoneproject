@@ -952,7 +952,12 @@ class PaymentCreateAPIView(CreateAPIView):
             c_payments = Payment.objects.filter(customer=customer)
             c_supplierpayments = SupplierPayment.objects.filter(supplier=customer)
 
-            c_debt = sum(c_sales) - sum(c_payments) - sum(c_purchases) + sum(c_supplierpayments)
+            total_c_sale = sum(sale.price * sale.amount for sale in c_sales)
+            total_c_payments = sum(payment.amount for payment in c_payments)
+            total_c_purchases = sum(purchase.price * purchase.amount for purchase in c_purchases)
+            total_c_supplierpayments = sum(supplierpayment.amount for supplierpayment in c_supplierpayments)
+
+            total_c_debt = total_c_sale - total_c_payments - total_c_purchases + total_c_supplierpayments
             dt = payment_data["datetime"].split("T")[0]
             dt_data = dt.split("-")
             CustomerAction.objects.create(
@@ -960,7 +965,7 @@ class PaymentCreateAPIView(CreateAPIView):
                 date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))),
                 payment_amount = payment_data["amount"],
                 total_amount = previous_total_amount + float(payment_data["amount"]),
-                remaining_amount = c_debt
+                remaining_amount = total_c_debt
             )
 
             response_data = {
