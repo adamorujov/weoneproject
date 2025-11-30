@@ -646,6 +646,9 @@ class SaleListUpdateAPIView(UpdateAPIView):
                         stock.amount = stock.amount + sale.amount
                         stock.save()
                         sale.product.amount = stock.amount
+
+                        if customeractionlist.id is None:
+                            customeractionlist.delete()
                     elif sale.status == "G" and s_status == "S":
                         stock, created = Stock.objects.get_or_create(
                             product = sale.product
@@ -658,20 +661,21 @@ class SaleListUpdateAPIView(UpdateAPIView):
                             sale.product.amount = stock.amount
                         else:
                             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                        
+                        ProductAction.objects.create(
+                            product = sale.product,
+                            customer = sale.customer,
+                            date = dt,
+                            remaining_product_number = sale.product.amount
+                        )
+                        CustomerAction.objects.create(
+                            customeractionlist = customeractionlist,
+                            customer = sale.customer,
+                            product = sale.product,
+                            date = dt,
+                            product_price = sale.price * sale.amount
+                        )
                     sale.product.save()
-                    ProductAction.objects.create(
-                        product = sale.product,
-                        customer = sale.customer,
-                        date = dt,
-                        remaining_product_number = sale.product.amount
-                    )
-                    CustomerAction.objects.create(
-                        customeractionlist = customeractionlist,
-                        customer = sale.customer,
-                        product = sale.product,
-                        date = dt,
-                        product_price = sale.price * sale.amount
-                    )
             if dt:
                 sales.update(datetime=dt)
             return Response(serializer.data, status=status.HTTP_200_OK)
