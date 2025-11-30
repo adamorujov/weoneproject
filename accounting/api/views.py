@@ -353,13 +353,14 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             remaining_product_number = purchase.product.amount
                         )
 
-                        CustomerAction.objects.create(
-                            customeractionlist = customeractionlist,
-                            customer = purchase.supplier,
-                            product = purchase.product,
-                            date = purchase.date,
-                            product_price = purchase.price
-                        )
+                        if not CustomerAction.objects.filter(customeractionlist=customeractionlist).exists:
+                            CustomerAction.objects.create(
+                                customeractionlist = customeractionlist,
+                                customer = purchase.supplier,
+                                product = purchase.product,
+                                date = purchase.date,
+                                product_price = purchase.price
+                            )
             if date:
                 purchases.update(date=date)
             return Response(serializer.data, status=status.HTTP_200_OK)
