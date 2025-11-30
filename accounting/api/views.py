@@ -945,8 +945,8 @@ class PaymentCreateAPIView(CreateAPIView):
             serializer.save()
             customer = CustomUser.objects.get(id=payment_data["customer"])
             # customer_debt = sum([sale.price * sale.amount for sale in customer.customer_sales.all()])
-            # previous_amounts = [action.payment_amount if action.payment_amount else 0 for action in customer.customer_actions.all()]
-            # previous_total_amount = 0 if not previous_amounts else sum(previous_amounts, start=0)
+            previous_amounts = [action.payment_amount if action.payment_amount else 0 for action in customer.customer_actions.all()]
+            previous_total_amount = 0 if not previous_amounts else sum(previous_amounts, start=0)
             c_purchases = Purchase.objects.filter(supplier=customer, status="A", purchaselist__currency="M")
             c_sales = Sale.objects.filter(customer=customer, status="S")
             c_payments = Payment.objects.filter(customer=customer)
