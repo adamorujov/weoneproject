@@ -340,12 +340,23 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         stock.save()
                         purchase.product.amount = stock.amount
                         purchase.product.save()
-                    # ProductAction.objects.create(
-                    #     product = purchase.product,
-                    #     date = purchase.date,
-                    #     incoming_product_number = purchase.amount,
-                    #     remaining_product_number = purchase.product.amount
-                    # )
+
+                        ProductAction.objects.create(
+                            product = purchase.product,
+                            date = purchase.date,
+                            incoming_product_number = purchase.amount,
+                            remaining_product_number = purchase.product.amount
+                        )
+
+                        customeractionlist = CustomerActionList.objects.create()
+
+                        CustomerAction.objects.create(
+                            customeractionlist = customeractionlist,
+                            customer = purchase.supplier,
+                            product = purchase.product,
+                            date = purchase.date,
+                            product_price = purchase_prices[i]
+                        )
             if date:
                 purchases.update(date=date)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -391,7 +402,6 @@ class BulkPurchaseAPIView(APIView):
             discount_prices = serializer.validated_data.get("discount_prices")
 
             supplier = get_object_or_404(CustomUser, id=supplier_id)
-            customeractionlist = CustomerActionList.objects.create()
 
             if purchaselist_id:
                 purchaselist = PurchaseList.objects.get(id=purchaselist_id)
@@ -436,6 +446,8 @@ class BulkPurchaseAPIView(APIView):
                                 remaining_product_number = stock.amount
                             )
 
+                            customeractionlist = CustomerActionList.objects.create()
+
                             CustomerAction.objects.create(
                                 customeractionlist = customeractionlist,
                                 customer = supplier,
@@ -474,6 +486,8 @@ class BulkPurchaseAPIView(APIView):
                                 incoming_product_number = amounts[i],
                                 remaining_product_number = stock.amount
                             )
+
+                            customeractionlist = CustomerActionList.objects.create()
 
                             CustomerAction.objects.create(
                                 customeractionlist = customeractionlist,
@@ -520,6 +534,8 @@ class BulkPurchaseAPIView(APIView):
                             incoming_product_number = amounts[i],
                             remaining_product_number = stock.amount
                         )
+
+                        customeractionlist = CustomerActionList.objects.create()
 
                         CustomerAction.objects.create(
                             customeractionlist = customeractionlist,
