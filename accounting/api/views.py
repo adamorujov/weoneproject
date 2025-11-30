@@ -355,7 +355,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             customer = purchase.supplier,
                             product = purchase.product,
                             date = purchase.date,
-                            product_price = purchase_prices[i]
+                            product_price = purchase.price
                         )
             if date:
                 purchases.update(date=date)
