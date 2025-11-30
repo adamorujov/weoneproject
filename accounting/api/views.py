@@ -331,8 +331,8 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             purchase.product.stock.delete()
                             purchase.product.amount = 0
                             purchase.product.save()
-                            
-                        if customeractionlist:
+
+                        if customeractionlist.id is not None:
                             customeractionlist.delete() 
 
                     elif purchase.status == 'G' and p_status == 'A':
