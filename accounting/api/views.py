@@ -309,6 +309,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
             date = serializer.validated_data.get("date")
             purchases = instance.purchaselist_purchases.all()
             customeractionlist = CustomerActionList.objects.create()
+            createaction = True if not CustomerAction.objects.filter(customeractionlist=customeractionlist).exists else False
             if supplier_id:
                 supplier = get_object_or_404(CustomUser, id=supplier_id)
                 for purchase in purchases:
@@ -353,7 +354,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             remaining_product_number = purchase.product.amount
                         )
 
-                        if not CustomerAction.objects.filter(customeractionlist=customeractionlist).exists:
+                        if createaction: 
                             CustomerAction.objects.create(
                                 customeractionlist = customeractionlist,
                                 customer = purchase.supplier,
