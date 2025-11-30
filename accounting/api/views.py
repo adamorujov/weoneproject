@@ -309,7 +309,6 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
             date = serializer.validated_data.get("date")
             purchases = instance.purchaselist_purchases.all()
             customeractionlist = CustomerActionList.objects.create()
-            createaction = True if not CustomerAction.objects.filter(customeractionlist=customeractionlist).exists() else False
             if supplier_id:
                 supplier = get_object_or_404(CustomUser, id=supplier_id)
                 for purchase in purchases:
@@ -334,6 +333,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             purchase.product.save()
 
                         if customeractionlist.id is not None:
+
                             customeractionlist.delete() 
 
                     elif purchase.status == 'G' and p_status == 'A':
@@ -354,14 +354,13 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             remaining_product_number = purchase.product.amount
                         )
 
-                        if createaction: 
-                            CustomerAction.objects.create(
-                                customeractionlist = customeractionlist,
-                                customer = purchase.supplier,
-                                product = purchase.product,
-                                date = purchase.date,
-                                product_price = purchase.price
-                            )
+                        CustomerAction.objects.create(
+                            customeractionlist = customeractionlist,
+                            customer = purchase.supplier,
+                            product = purchase.product,
+                            date = purchase.date,
+                            product_price = purchase.price * purchase.amount
+                        )
             if date:
                 purchases.update(date=date)
             return Response(serializer.data, status=status.HTTP_200_OK)
