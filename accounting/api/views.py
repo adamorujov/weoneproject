@@ -308,7 +308,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
             p_status = serializer.validated_data.get("status")
             date = serializer.validated_data.get("date")
             purchases = instance.purchaselist_purchases.all()
-            customeractionlist = CustomerActionList.objects.create()
+            customeractionlist = CustomerActionList.objects.create(action_type="A")
             if supplier_id:
                 supplier = get_object_or_404(CustomUser, id=supplier_id)
                 for purchase in purchases:
@@ -406,7 +406,7 @@ class BulkPurchaseAPIView(APIView):
             discount_prices = serializer.validated_data.get("discount_prices")
 
             supplier = get_object_or_404(CustomUser, id=supplier_id)
-            customeractionlist = CustomerActionList.objects.create()
+            customeractionlist = CustomerActionList.objects.create(action_type="A")
 
             if purchaselist_id:
                 purchaselist = PurchaseList.objects.get(id=purchaselist_id)
@@ -627,7 +627,7 @@ class SaleListUpdateAPIView(UpdateAPIView):
             customer_id = serializer.validated_data.get("customer_id")
             s_status = serializer.validated_data.get("status")
             dt = serializer.validated_data.get("dt")
-            customeractionlist = CustomerActionList.objects.create()
+            customeractionlist = CustomerActionList.objects.create(action_type="S")
 
             sales = instance.salelist_sales.all()
             if customer_id:
@@ -782,7 +782,7 @@ class BulkSaleAPIView(APIView):
 
             seller = request.user
             customer = CustomUser.objects.get(id=customer_id)
-            customeractionlist = CustomerActionList.objects.create()
+            customeractionlist = CustomerActionList.objects.create(action_type="S")
 
             if salelist_id:
                 salelist = SaleList.objects.get(id=salelist_id)
@@ -944,9 +944,15 @@ class PaymentCreateAPIView(CreateAPIView):
         if serializer.is_valid():
             serializer.save()
             customer = CustomUser.objects.get(id=payment_data["customer"])
-            customer_debt = sum([sale.price * sale.amount for sale in customer.customer_sales.all()])
-            previous_amounts = [action.payment_amount if action.payment_amount else 0 for action in customer.customer_actions.all()]
-            previous_total_amount = 0 if not previous_amounts else sum(previous_amounts, start=0)
+            # customer_debt = sum([sale.price * sale.amount for sale in customer.customer_sales.all()])
+            # previous_amounts = [action.payment_amount if action.payment_amount else 0 for action in customer.customer_actions.all()]
+            # previous_total_amount = 0 if not previous_amounts else sum(previous_amounts, start=0)
+            c_purchases = Purchase.objects.filter(supplier=customer, status="A", purchaselist__currency="M")
+            c_sales = Sale.objects.filter(customer=customer, status="S")
+            c_payments = Payment.objects.filter(customer=customer)
+            c_supplierpayments = SupplierPayment.objects.filter(supplier=customer)
+
+            c_debt = sum(c_sales) - sum(c_payments) - sum(c_purchases) + sum(c_supplierpayments)
             dt = payment_data["datetime"].split("T")[0]
             dt_data = dt.split("-")
             CustomerAction.objects.create(
@@ -954,7 +960,7 @@ class PaymentCreateAPIView(CreateAPIView):
                 date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))),
                 payment_amount = payment_data["amount"],
                 total_amount = previous_total_amount + float(payment_data["amount"]),
-                remaining_amount = customer_debt - previous_total_amount - float(payment_data["amount"]),
+                remaining_amount = c_debt
             )
 
             response_data = {
