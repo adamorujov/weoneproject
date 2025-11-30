@@ -804,6 +804,24 @@ class BulkSaleAPIView(APIView):
                             if hasattr(product, "stock"):
                                 product.stock.amount = product.stock.amount - sale.amount
                                 product.stock.save()
+                            
+                            ProductAction.objects.create(
+                                product = product,
+                                customer = customer,
+                                date = datetimes[i].date(), 
+                                sold_product_number = amounts[i],
+                                remaining_product_number = product.amount
+                            )
+                            CustomerAction.objects.create(
+                                customeractionlist = customeractionlist,
+                                customer = customer,
+                                product = product,
+                                date = datetimes[i].date(), 
+                                product_price = prices[i] * amounts[i]
+                            )
+                        else:
+                            if customeractionlist.id is not None:
+                                customeractionlist.delete()
                     else:
                         old_sale_status = sale.status
                         old_sale_amount = sale.amount
@@ -818,12 +836,31 @@ class BulkSaleAPIView(APIView):
                             if hasattr(product, "stock"):
                                 product.stock.amount = product.amount
                                 product.stock.save()
+
+                            if customeractionlist.id is not None:
+                                customeractionlist.delete()
+
                         elif old_sale_status == "G" and sale.status == "S":
                             product.amount = product.amount - sale.amount
                             product.save()
                             if hasattr(product, "stock"):
                                 product.stock.amount = product.amount
                                 product.stock.save()
+
+                            ProductAction.objects.create(
+                                product = product,
+                                customer = customer,
+                                date = datetimes[i].date(), 
+                                sold_product_number = amounts[i],
+                                remaining_product_number = product.amount
+                            )
+                            CustomerAction.objects.create(
+                                customeractionlist = customeractionlist,
+                                customer = customer,
+                                product = product,
+                                date = datetimes[i].date(), 
+                                product_price = prices[i] * amounts[i]
+                            )
                         elif old_sale_status == "S" and sale.status == "S":
                             product.amount = product.amount + old_sale_amount - sale.amount
                             product.save()
@@ -831,20 +868,10 @@ class BulkSaleAPIView(APIView):
                                 product.stock.amount = product.amount
                                 product.stock.save()
 
-                    ProductAction.objects.create(
-                        product = product,
-                        customer = customer,
-                        date = datetimes[i].date(), 
-                        sold_product_number = amounts[i],
-                        remaining_product_number = product.amount
-                    )
-                    CustomerAction.objects.create(
-                        customeractionlist = customeractionlist,
-                        customer = customer,
-                        product = product,
-                        date = datetimes[i].date(), 
-                        product_price = prices[i] * amounts[i]
-                    )
+                            if customeractionlist.id is not None:
+                                customeractionlist.delete()
+
+                    
                     print("Saved value:", sale.datetime, sale.datetime.tzinfo)
             else:
                 salelist = SaleList.objects.create()
@@ -866,20 +893,23 @@ class BulkSaleAPIView(APIView):
                         if hasattr(product, "stock"):
                             product.stock.amount = product.stock.amount - amounts[i]
                             product.stock.save()
-                    ProductAction.objects.create(
-                        product = product,
-                        customer = customer,
-                        date = datetimes[i].date(), 
-                        sold_product_number = amounts[i],
-                        remaining_product_number = product.amount
-                    )
-                    CustomerAction.objects.create(
-                        customeractionlist = customeractionlist,
-                        customer = customer,
-                        product = product,
-                        date = datetimes[i].date(), 
-                        product_price = prices[i] * amounts[i]
-                    )
+                        ProductAction.objects.create(
+                            product = product,
+                            customer = customer,
+                            date = datetimes[i].date(), 
+                            sold_product_number = amounts[i],
+                            remaining_product_number = product.amount
+                        )
+                        CustomerAction.objects.create(
+                            customeractionlist = customeractionlist,
+                            customer = customer,
+                            product = product,
+                            date = datetimes[i].date(), 
+                            product_price = prices[i] * amounts[i]
+                        )
+                    else:
+                        if customeractionlist.id is not None:
+                            customeractionlist.delete()
                     print("Saved value:", sale.datetime, sale.datetime.tzinfo)
 
             
