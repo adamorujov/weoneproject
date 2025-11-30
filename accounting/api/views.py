@@ -308,6 +308,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
             p_status = serializer.validated_data.get("status")
             date = serializer.validated_data.get("date")
             purchases = instance.purchaselist_purchases.all()
+            customeractionlist = CustomerActionList.objects.create()
             if supplier_id:
                 supplier = get_object_or_404(CustomUser, id=supplier_id)
                 for purchase in purchases:
@@ -330,6 +331,9 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             purchase.product.stock.delete()
                             purchase.product.amount = 0
                             purchase.product.save()
+
+                            customeractionlist.delete()
+
                     elif purchase.status == 'G' and p_status == 'A':
                         purchase.status = 'A'
                         purchase.save()
@@ -347,8 +351,6 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             incoming_product_number = purchase.amount,
                             remaining_product_number = purchase.product.amount
                         )
-
-                        customeractionlist = CustomerActionList.objects.create()
 
                         CustomerAction.objects.create(
                             customeractionlist = customeractionlist,
@@ -402,6 +404,7 @@ class BulkPurchaseAPIView(APIView):
             discount_prices = serializer.validated_data.get("discount_prices")
 
             supplier = get_object_or_404(CustomUser, id=supplier_id)
+            customeractionlist = CustomerActionList.objects.create()
 
             if purchaselist_id:
                 purchaselist = PurchaseList.objects.get(id=purchaselist_id)
@@ -446,8 +449,6 @@ class BulkPurchaseAPIView(APIView):
                                 remaining_product_number = stock.amount
                             )
 
-                            customeractionlist = CustomerActionList.objects.create()
-
                             CustomerAction.objects.create(
                                 customeractionlist = customeractionlist,
                                 customer = supplier,
@@ -455,6 +456,8 @@ class BulkPurchaseAPIView(APIView):
                                 date = date,
                                 product_price = purchase_prices[i]
                             )
+                        else:
+                            customeractionlist.delete()
                     else:
                         old_p_amount = purchase.amount
                         purchase.amount = amounts[i]
@@ -487,8 +490,6 @@ class BulkPurchaseAPIView(APIView):
                                 remaining_product_number = stock.amount
                             )
 
-                            customeractionlist = CustomerActionList.objects.create()
-
                             CustomerAction.objects.create(
                                 customeractionlist = customeractionlist,
                                 customer = supplier,
@@ -496,6 +497,8 @@ class BulkPurchaseAPIView(APIView):
                                 date = date,
                                 product_price = purchase_prices[i]
                             )
+                        else:
+                            customeractionlist.delete()
 
             else:
                 purchaselist = PurchaseList.objects.create(currency=currency)
@@ -535,8 +538,6 @@ class BulkPurchaseAPIView(APIView):
                             remaining_product_number = stock.amount
                         )
 
-                        customeractionlist = CustomerActionList.objects.create()
-
                         CustomerAction.objects.create(
                             customeractionlist = customeractionlist,
                             customer = supplier,
@@ -544,6 +545,8 @@ class BulkPurchaseAPIView(APIView):
                             date = date,
                             product_price = purchase_prices[i]
                         )
+                    else:
+                        customeractionlist.delete()
 
             response_data = {
                 "message": f"{len(products)} məhsul alışı icra edildi."
