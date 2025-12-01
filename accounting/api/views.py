@@ -459,7 +459,8 @@ class BulkPurchaseAPIView(APIView):
                                 product_price = purchase_prices[i]
                             )
                         else:
-                            customeractionlist.delete()
+                            if customeractionlist.id is not None:
+                                customeractionlist.delete()
                     else:
                         old_p_amount = purchase.amount
                         purchase.amount = amounts[i]
@@ -500,7 +501,8 @@ class BulkPurchaseAPIView(APIView):
                                 product_price = purchase_prices[i]
                             )
                         else:
-                            customeractionlist.delete()
+                            if customeractionlist.id is not None:
+                                customeractionlist.delete()
 
             else:
                 purchaselist = PurchaseList.objects.create(currency=currency)
@@ -548,7 +550,8 @@ class BulkPurchaseAPIView(APIView):
                             product_price = purchase_prices[i]
                         )
                     else:
-                        customeractionlist.delete()
+                        if customeractionlist.id is not None:
+                            customeractionlist.delete()
 
             response_data = {
                 "message": f"{len(products)} məhsul alışı icra edildi."
@@ -960,6 +963,7 @@ class PaymentCreateAPIView(CreateAPIView):
             total_c_debt = total_c_sale - total_c_payments - total_c_purchases + total_c_supplierpayments
             dt = payment_data["datetime"].split("T")[0]
             dt_data = dt.split("-")
+
             CustomerAction.objects.create(
                 customer = customer,
                 date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))),
