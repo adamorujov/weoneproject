@@ -668,6 +668,7 @@ class SaleListUpdateAPIView(UpdateAPIView):
                             product = sale.product,
                             customer = sale.customer,
                             date = dt,
+                            sold_product_number = sale.amount,
                             remaining_product_number = sale.product.amount
                         )
                         CustomerAction.objects.create(
