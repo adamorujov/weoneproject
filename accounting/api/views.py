@@ -450,13 +450,12 @@ class BulkPurchaseAPIView(APIView):
                                 incoming_product_number = amounts[i],
                                 remaining_product_number = stock.amount
                             )
-
                             CustomerAction.objects.create(
                                 customeractionlist = customeractionlist,
                                 customer = supplier,
                                 product = product,
                                 date = date,
-                                product_price = purchase_prices[i]
+                                product_price = purchase_prices[i],
                             )
                         else:
                             if customeractionlist.id is not None:
@@ -875,9 +874,20 @@ class BulkSaleAPIView(APIView):
                                 product.stock.amount = product.amount
                                 product.stock.save()
 
-                            if customeractionlist.id is not None:
-                                customeractionlist.delete()
-
+                            ProductAction.objects.create(
+                                product = product,
+                                customer = customer,
+                                date = datetimes[i].date(), 
+                                sold_product_number = amounts[i],
+                                remaining_product_number = product.amount
+                            )
+                            CustomerAction.objects.create(
+                                customeractionlist = customeractionlist,
+                                customer = customer,
+                                product = product,
+                                date = datetimes[i].date(), 
+                                product_price = prices[i] * amounts[i]
+                            )
                     
                     print("Saved value:", sale.datetime, sale.datetime.tzinfo)
             else:
