@@ -332,9 +332,26 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             purchase.product.amount = 0
                             purchase.product.save()
 
-                        if customeractionlist.id is not None:
+                        # if customeractionlist.id is not None:
 
-                            customeractionlist.delete() 
+                        #     customeractionlist.delete() 
+
+                        ProductAction.objects.create(
+                            product = purchase.product,
+                            date = purchase.date,
+                            incoming_product_number = purchase.amount,
+                            remaining_product_number = purchase.product.amount,
+                            action = "Anbardan silindi"
+                        )
+
+                        CustomerAction.objects.create(
+                            customeractionlist = customeractionlist,
+                            customer = purchase.supplier,
+                            product = purchase.product,
+                            date = purchase.date,
+                            product_price = purchase.price * (purchase.amount - old_pr_amount),
+                            action = "Məhsul alışı ləğv edildi"
+                        )
 
                     elif purchase.status == 'G' and p_status == 'A':
                         old_pr_amount = purchase.product.amount
@@ -351,7 +368,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         ProductAction.objects.create(
                             product = purchase.product,
                             date = purchase.date,
-                            incoming_product_number = purchase.amount - old_pr_amount,
+                            incoming_product_number = purchase.amount,
                             remaining_product_number = purchase.product.amount,
                             action = "Anbara əlavə edildi"
                         )
@@ -364,6 +381,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             product_price = purchase.price * (purchase.amount - old_pr_amount),
                             action = "Məhsul alışı icra edildi"
                         )
+                        print(purchase.amount, old_pr_amount)
             if date:
                 purchases.update(date=date)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -391,7 +409,7 @@ class PurchaseListDestroyAPIView(DestroyAPIView):
                         product = purchase.product,
                         date = timezone.now(),
                         remaining_product_number = purchase.product.stock.amount,
-                        action = "Anbardan məhsul silindi"
+                        action = "Anbardan silindi"
                     )
                     CustomerAction.objects.create(
                         customeractionlist = customeractionlist,
@@ -411,7 +429,7 @@ class PurchaseListDestroyAPIView(DestroyAPIView):
                         product = purchase.product,
                         date = timezone.now(),
                         remaining_product_number = 0,
-                        action = "Anbardan məhsul silindi"
+                        action = "Anbardan silindi"
                     )
                     CustomerAction.objects.create(
                         customeractionlist = customeractionlist,

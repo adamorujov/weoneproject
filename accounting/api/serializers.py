@@ -14,11 +14,19 @@ class PurchaseListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PurchaseList
-        fields = "__all__"
+        fields = "__all__"    
 
     def _get_total(self, obj, attr_name):
         purchases = obj.purchaselist_purchases.all()
-        return sum(getattr(purchase.product, attr_name, 0) * purchase.amount for purchase in purchases if purchase.product)
+        total = 0
+
+        for purchase in purchases:
+            product = purchase.product
+            if product:
+                value = getattr(product, attr_name, 0) or 0
+                total += value * purchase.amount
+
+        return total
 
     def get_supplier(self, obj):
         if obj.purchaselist_purchases.exists():
