@@ -367,7 +367,6 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         ProductAction.objects.create(
                             product = purchase.product,
                             date = purchase.date,
-                            incoming_product_number = purchase.amount,
                             remaining_product_number = purchase.product.amount,
                             action = "Anbara əlavə edildi"
                         )
