@@ -883,18 +883,66 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 if hasattr(instance.product, "stock"):
                     instance.product.stock.amount = instance.product.stock.amount - instance.amount
                     instance.product.stock.save()
+                customeractionlist = CustomerActionList.objects.create()
+                ProductAction.objects.create(
+                    product = instance.product,
+                    customer = instance.customer,
+                    date = instance.datetime.date(), 
+                    sold_product_number = instance.amount,
+                    remaining_product_number = product.amount,
+                    action = "Məhsul satıldı"
+                )
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = instance.customer,
+                    product = instance.product,
+                    date = instance.datetimes.date(), 
+                    product_price = instance.price * instance.amount,
+                    action = "Məhsul satışı icra edildi"
+                )
             elif previous_instance_status == "S" and instance.status == "G":
                 instance.product.amount = instance.product.amount + instance.amount
                 instance.product.save()
                 if hasattr(instance.product, "stock"):
                     instance.product.stock.amount = instance.product.stock.amount + instance.amount
                     instance.product.stock.save()
+                ProductAction.objects.create(
+                    product = instance.product,
+                    customer = instance.customer,
+                    date = instance.datetime.date(), 
+                    remaining_product_number = product.amount,
+                    action = "Anbara əlavə edildi"
+                )
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = instance.customer,
+                    product = instance.product,
+                    date = instance.datetimes.date(), 
+                    product_price = instance.price * instance.amount,
+                    action = "Məhsul satışı ləğv edildi"
+                )
             elif previous_instance_status == "S" and instance.status == "S":
                 instance.product.amount = instance.product.amount + previous_instance_amount - instance.amount
                 instance.product.save()
                 if hasattr(instance.product, "stock"):
                     instance.product.stock.amount = instance.product.stock.amount + previous_instance_amount - instance.amount
                     instance.product.stock.save()
+                ProductAction.objects.create(
+                    product = instance.product,
+                    customer = instance.customer,
+                    date = instance.datetime.date(), 
+                    sold_product_number = instance.amount - previous_instance_amount,
+                    remaining_product_number = product.amount,
+                    action = "Məhsul satıldı"
+                )
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = instance.customer,
+                    product = instance.product,
+                    date = instance.datetimes.date(), 
+                    product_price = instance.price * instance.amount,
+                    action = "Məhsul satışı icra edildi"
+                )
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
