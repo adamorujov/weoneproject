@@ -598,7 +598,7 @@ class ShortSaleListAPIView(ListAPIView):
     serializer_class = ShortSaleSerializer
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ["customer__username", "customer__first_name", "customer__last_name", "product__name"]
+    search_fields = ["customer__username", "customer__first_name", "customer__last_name", "product__name", "product__store__name"]
 
 class SaleListAPIView(ListAPIView):
     queryset = Sale.objects.all()

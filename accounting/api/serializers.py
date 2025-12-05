@@ -135,7 +135,7 @@ class ShortSaleSerializer(serializers.ModelSerializer):
 
     def get_sale(self, obj):
         customer = obj.customer.first_name + " " + obj.customer.last_name if obj.customer.first_name and obj.customer.last_name else obj.customer.username
-        return customer + " - " + obj.product.name
+        return customer + " - " + obj.product.name + " - " + obj.product.store
 
 class SaleSerializer(serializers.ModelSerializer):
     seller = CustomUserSerializer()
