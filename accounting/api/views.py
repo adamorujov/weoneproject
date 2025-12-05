@@ -889,7 +889,7 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     customer = instance.customer,
                     date = instance.datetime.date(), 
                     sold_product_number = instance.amount,
-                    remaining_product_number = product.amount,
+                    remaining_product_number = instance.product.amount,
                     action = "Məhsul satıldı"
                 )
                 CustomerAction.objects.create(
@@ -910,7 +910,7 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     product = instance.product,
                     customer = instance.customer,
                     date = instance.datetime.date(), 
-                    remaining_product_number = product.amount,
+                    remaining_product_number = instance.product.amount,
                     action = "Anbara əlavə edildi"
                 )
                 CustomerAction.objects.create(
@@ -932,7 +932,7 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     customer = instance.customer,
                     date = instance.datetime.date(), 
                     sold_product_number = instance.amount - previous_instance_amount,
-                    remaining_product_number = product.amount,
+                    remaining_product_number = instance.product.amount,
                     action = "Məhsul satıldı"
                 )
                 CustomerAction.objects.create(
