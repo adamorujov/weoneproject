@@ -789,6 +789,35 @@ class SaleListDestroyAPIView(DestroyAPIView):
     serializer_class = SaleListDestroySerializer
     lookup_field = "id"
 
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        sales = instance.salelist_sales.filter(status='S')
+        customeractionlist = CustomerActionList.objects.create()
+
+        for sale in sales:
+            if hasattr(sale.product, "stock"):
+                sale.product.stock.amount = sale.product.stock.amount + sale.amount
+                sale.product.stock.save()
+                sale.product.amount = sale.product.stock.amount
+                sale.product.save()
+
+                ProductAction.objects.create(
+                    product = sale.product,
+                    date = timezone.now(),
+                    remaining_product_number = sale.product.stock.amount,
+                    action = "Anbara əlavə edildi"
+                )
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = sale.customer,
+                    product = sale.product,
+                    date = timezone.now(),
+                    product_price = sale.price,
+                    action = "Məhsul satışı ləğv edildi"
+                )
+
+        return super().delete(request, *args, **kwargs)
+
 class SaleCreateAPIView(CreateAPIView):
     queryset = Sale.objects.all()
     serializer_class = SaleCreateSerializer
