@@ -349,12 +349,11 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             customer = purchase.supplier,
                             product = purchase.product,
                             date = purchase.date,
-                            product_price = purchase.price * (purchase.amount - old_pr_amount),
+                            product_price = purchase.price * purchase.amount,
                             action = "Məhsul alışı ləğv edildi"
                         )
 
                     elif purchase.status == 'G' and p_status == 'A':
-                        old_pr_amount = purchase.product.amount
                         purchase.status = 'A'
                         purchase.save()
                         stock, created = Stock.objects.get_or_create(
@@ -378,7 +377,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             customer = purchase.supplier,
                             product = purchase.product,
                             date = purchase.date,
-                            product_price = purchase.price * (purchase.amount - old_pr_amount),
+                            product_price = purchase.price * purchase.amount,
                             action = "Məhsul alışı icra edildi"
                         )
                         print(purchase.amount, old_pr_amount)
