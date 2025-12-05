@@ -230,8 +230,9 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 ProductAction.objects.create(
                     product = instance.product,
                     date = instance.date,
-                    incoming_product_number = instance.amount,
-                    remaining_product_number = stock.amount
+                    incoming_product_number = instance.amount - previous_instance_amount,
+                    remaining_product_number = stock.amount,
+                    action = "Anbara əlavə edildi"
                 )
             instance.product.amount = instance.product.stock.amount
             instance.product.save()
@@ -263,7 +264,8 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 ProductAction.objects.create(
                     product = instance.product,
                     date = instance.date,
-                    remaining_product_number = instance.product.stock.amount
+                    remaining_product_number = instance.product.stock.amount,
+                    action = "Anbardan silindi"
                 )
             else:
                 instance.product.stock.delete()
@@ -272,7 +274,8 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 ProductAction.objects.create(
                     product = instance.product,
                     date = instance.date,
-                    remaining_product_number = 0
+                    remaining_product_number = 0,
+                    action = "Anbardan silindi"
                 )
         return super().delete(request, *args, **kwargs)
 
@@ -515,7 +518,6 @@ class BulkPurchaseAPIView(APIView):
                                 customeractionlist.delete()
                     else:
                         old_p_amount = purchase.amount
-                        old_pr_amount = product.amount
                         purchase.amount = amounts[i]
                         purchase.date = date
                         purchase.status = p_status
@@ -630,6 +632,9 @@ class AddToStockAPIView(APIView):
         if serializer.is_valid():
             item_ids = serializer.validated_data["item_ids"]
             items = Purchase.objects.filter(id__in=item_ids)
+            
+            customeractionlist = CustomerActionList.objects.create()
+
             for item in items:
                 stock, created = Stock.objects.get_or_create(
                     product = item.product
@@ -640,6 +645,24 @@ class AddToStockAPIView(APIView):
                 item.save()
                 item.product.amount = stock.amount
                 item.product.save()
+
+                ProductAction.objects.create(
+                    product = item.product,
+                    date = item.date,
+                    incoming_product_number = item.amount,
+                    remaining_product_number = stock.amount,
+                    action = "Anbara əlavə edildi"
+                )
+
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = item.supplier,
+                    product = item.product,
+                    date = item.date,
+                    product_price = item.price,
+                    action = "Məhsul alışı icra edildi"
+                )
+                
             response_data = {
                 "message": f"{len(items)} məhsul anbara əlavə edildi."
             }
@@ -875,14 +898,16 @@ class BulkSaleAPIView(APIView):
                                 customer = customer,
                                 date = datetimes[i].date(), 
                                 sold_product_number = amounts[i],
-                                remaining_product_number = product.amount
+                                remaining_product_number = product.amount,
+                                action = "Məhsul satıldı"
                             )
                             CustomerAction.objects.create(
                                 customeractionlist = customeractionlist,
                                 customer = customer,
                                 product = product,
                                 date = datetimes[i].date(), 
-                                product_price = prices[i] * amounts[i]
+                                product_price = prices[i] * amounts[i],
+                                action = "Məhsul satışı icra edildi"
                             )
                         else:
                             if customeractionlist.id is not None:
@@ -905,6 +930,22 @@ class BulkSaleAPIView(APIView):
                             if customeractionlist.id is not None:
                                 customeractionlist.delete()
 
+                            ProductAction.objects.create(
+                                product = product,
+                                customer = customer,
+                                date = datetimes[i].date(),
+                                remaining_product_number = product.amount,
+                                action = "Anbara əlavə edildi"
+                            )
+                            CustomerAction.objects.create(
+                                customeractionlist = customeractionlist,
+                                customer = customer,
+                                product = product,
+                                date = datetimes[i].date(), 
+                                product_price = prices[i] * amounts[i],
+                                action = "Məhsul satışı ləğv edildi"
+                            )
+
                         elif old_sale_status == "G" and sale.status == "S":
                             product.amount = product.amount - sale.amount
                             product.save()
@@ -917,14 +958,16 @@ class BulkSaleAPIView(APIView):
                                 customer = customer,
                                 date = datetimes[i].date(), 
                                 sold_product_number = amounts[i],
-                                remaining_product_number = product.amount
+                                remaining_product_number = product.amount,
+                                action = "Məhsul satıldı"
                             )
                             CustomerAction.objects.create(
                                 customeractionlist = customeractionlist,
                                 customer = customer,
                                 product = product,
                                 date = datetimes[i].date(), 
-                                product_price = prices[i] * amounts[i]
+                                product_price = prices[i] * amounts[i],
+                                action = "Məhsul satışı icra edildi"
                             )
                         elif old_sale_status == "S" and sale.status == "S":
                             product.amount = product.amount + old_sale_amount - sale.amount
@@ -938,14 +981,16 @@ class BulkSaleAPIView(APIView):
                                 customer = customer,
                                 date = datetimes[i].date(), 
                                 sold_product_number = amounts[i],
-                                remaining_product_number = product.amount
+                                remaining_product_number = product.amount,
+                                action = "Məhsul satıldı"
                             )
                             CustomerAction.objects.create(
                                 customeractionlist = customeractionlist,
                                 customer = customer,
                                 product = product,
                                 date = datetimes[i].date(), 
-                                product_price = prices[i] * amounts[i]
+                                product_price = prices[i] * amounts[i],
+                                action = "Məhsul satışı icra edildi"
                             )
                     
                     print("Saved value:", sale.datetime, sale.datetime.tzinfo)
@@ -974,14 +1019,16 @@ class BulkSaleAPIView(APIView):
                             customer = customer,
                             date = datetimes[i].date(), 
                             sold_product_number = amounts[i],
-                            remaining_product_number = product.amount
+                            remaining_product_number = product.amount,
+                            action = "Məhsul satıldı"
                         )
                         CustomerAction.objects.create(
                             customeractionlist = customeractionlist,
                             customer = customer,
                             product = product,
                             date = datetimes[i].date(), 
-                            product_price = prices[i] * amounts[i]
+                            product_price = prices[i] * amounts[i],
+                            action = "Məhsul satışı icra edildi"
                         )
                     else:
                         if customeractionlist.id is not None:
