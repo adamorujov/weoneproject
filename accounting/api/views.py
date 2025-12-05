@@ -417,7 +417,7 @@ class PurchaseListDestroyAPIView(DestroyAPIView):
                         customer = purchase.supplier,
                         product = purchase.product,
                         date = timezone.now(),
-                        product_price = purchase.price,
+                        product_price = purchase.price * purchase.amount,
                         action = "Məhsul alışı ləğv edildi"
                     )
 
@@ -437,7 +437,7 @@ class PurchaseListDestroyAPIView(DestroyAPIView):
                         customer = purchase.supplier,
                         product = purchase.product,
                         date = timezone.now(),
-                        product_price = purchase.price,
+                        product_price = purchase.price * purchase.amount,
                         action = "Məhsul alışı ləğv edildi"
                     )
 
@@ -510,7 +510,7 @@ class BulkPurchaseAPIView(APIView):
                                 customer = supplier,
                                 product = product,
                                 date = date,
-                                product_price = purchase_prices[i],
+                                product_price = purchase_prices[i] * amounts[i],
                                 action = "Məhsul alışı icra edildi"
                             )
                         else:
@@ -554,7 +554,7 @@ class BulkPurchaseAPIView(APIView):
                                 customer = supplier,
                                 product = product,
                                 date = date,
-                                product_price = purchase_prices[i],
+                                product_price = purchase_prices[i] * (amounts[i] - old_p_amount),
                                 action = "Məhsul alışı icra edildi"
                             )
                         else:
@@ -605,7 +605,7 @@ class BulkPurchaseAPIView(APIView):
                             customer = supplier,
                             product = product,
                             date = date,
-                            product_price = purchase_prices[i],
+                            product_price = purchase_prices[i] * amounts[i],
                             action = "Məhsul alışı icra edildi"
                         )
                     else:
