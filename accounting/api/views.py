@@ -308,7 +308,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
             p_status = serializer.validated_data.get("status")
             date = serializer.validated_data.get("date")
             purchases = instance.purchaselist_purchases.all()
-            customeractionlist = CustomerActionList.objects.create(action_type="A")
+            customeractionlist = CustomerActionList.objects.create()
             if supplier_id:
                 supplier = get_object_or_404(CustomUser, id=supplier_id)
                 for purchase in purchases:
@@ -337,6 +337,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             customeractionlist.delete() 
 
                     elif purchase.status == 'G' and p_status == 'A':
+                        old_pr_amount = purchase.product.amount
                         purchase.status = 'A'
                         purchase.save()
                         stock, created = Stock.objects.get_or_create(
@@ -350,8 +351,9 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         ProductAction.objects.create(
                             product = purchase.product,
                             date = purchase.date,
-                            incoming_product_number = purchase.amount,
-                            remaining_product_number = purchase.product.amount
+                            incoming_product_number = purchase.amount - old_pr_amount,
+                            remaining_product_number = purchase.product.amount,
+                            action = "Anbara əlavə edildi"
                         )
 
                         CustomerAction.objects.create(
@@ -359,7 +361,8 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             customer = purchase.supplier,
                             product = purchase.product,
                             date = purchase.date,
-                            product_price = purchase.price * purchase.amount
+                            product_price = purchase.price * (purchase.amount - old_pr_amount),
+                            action = "Məhsul alışı icra edildi"
                         )
             if date:
                 purchases.update(date=date)
@@ -374,6 +377,7 @@ class PurchaseListDestroyAPIView(DestroyAPIView):
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
         purchases = instance.purchaselist_purchases.filter(status='A')
+        customeractionlist = CustomerActionList.objects.create()
 
         for purchase in purchases:
             if hasattr(purchase.product, "stock"):
@@ -382,10 +386,41 @@ class PurchaseListDestroyAPIView(DestroyAPIView):
                     purchase.product.stock.save()
                     purchase.product.amount = purchase.product.stock.amount
                     purchase.product.save()
+
+                    ProductAction.objects.create(
+                        product = purchase.product,
+                        date = timezone.now(),
+                        remaining_product_number = purchase.product.stock.amount,
+                        action = "Anbardan məhsul silindi"
+                    )
+                    CustomerAction.objects.create(
+                        customeractionlist = customeractionlist,
+                        customer = purchase.supplier,
+                        product = purchase.product,
+                        date = timezone.now(),
+                        product_price = purchase.price,
+                        action = "Məhsul alışı ləğv edildi"
+                    )
+
                 else:
                     purchase.product.stock.delete()
                     purchase.product.amount = 0
                     purchase.product.save()
+
+                    ProductAction.objects.create(
+                        product = purchase.product,
+                        date = timezone.now(),
+                        remaining_product_number = 0,
+                        action = "Anbardan məhsul silindi"
+                    )
+                    CustomerAction.objects.create(
+                        customeractionlist = customeractionlist,
+                        customer = purchase.supplier,
+                        product = purchase.product,
+                        date = timezone.now(),
+                        product_price = purchase.price,
+                        action = "Məhsul alışı ləğv edildi"
+                    )
 
         return super().delete(request, *args, **kwargs)
 
@@ -406,7 +441,7 @@ class BulkPurchaseAPIView(APIView):
             discount_prices = serializer.validated_data.get("discount_prices")
 
             supplier = get_object_or_404(CustomUser, id=supplier_id)
-            customeractionlist = CustomerActionList.objects.create(action_type="A")
+            customeractionlist = CustomerActionList.objects.create()
 
             if purchaselist_id:
                 purchaselist = PurchaseList.objects.get(id=purchaselist_id)
@@ -448,7 +483,8 @@ class BulkPurchaseAPIView(APIView):
                                 product = product,
                                 date = date,
                                 incoming_product_number = amounts[i],
-                                remaining_product_number = stock.amount
+                                remaining_product_number = stock.amount,
+                                action = "Anbara əlavə edildi"
                             )
                             CustomerAction.objects.create(
                                 customeractionlist = customeractionlist,
@@ -456,12 +492,14 @@ class BulkPurchaseAPIView(APIView):
                                 product = product,
                                 date = date,
                                 product_price = purchase_prices[i],
+                                action = "Məhsul alışı icra edildi"
                             )
                         else:
                             if customeractionlist.id is not None:
                                 customeractionlist.delete()
                     else:
                         old_p_amount = purchase.amount
+                        old_pr_amount = product.amount
                         purchase.amount = amounts[i]
                         purchase.date = date
                         purchase.status = p_status
@@ -488,8 +526,9 @@ class BulkPurchaseAPIView(APIView):
                             ProductAction.objects.create(
                                 product = product,
                                 date = date,
-                                incoming_product_number = amounts[i],
-                                remaining_product_number = stock.amount
+                                incoming_product_number = amounts[i] - old_pr_amount,
+                                remaining_product_number = stock.amount,
+                                action = "Anbara əlavə edildi"
                             )
 
                             CustomerAction.objects.create(
@@ -497,7 +536,8 @@ class BulkPurchaseAPIView(APIView):
                                 customer = supplier,
                                 product = product,
                                 date = date,
-                                product_price = purchase_prices[i]
+                                product_price = purchase_prices[i],
+                                action = "Məhsul alışı icra edildi"
                             )
                         else:
                             if customeractionlist.id is not None:
@@ -538,7 +578,8 @@ class BulkPurchaseAPIView(APIView):
                             product = product,
                             date = date,
                             incoming_product_number = amounts[i],
-                            remaining_product_number = stock.amount
+                            remaining_product_number = stock.amount,
+                            action = "Anbara əlavə edildi"
                         )
 
                         CustomerAction.objects.create(
@@ -546,7 +587,8 @@ class BulkPurchaseAPIView(APIView):
                             customer = supplier,
                             product = product,
                             date = date,
-                            product_price = purchase_prices[i]
+                            product_price = purchase_prices[i],
+                            action = "Məhsul alışı icra edildi"
                         )
                     else:
                         if customeractionlist.id is not None:

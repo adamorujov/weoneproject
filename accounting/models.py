@@ -102,6 +102,8 @@ class ProductAction(models.Model):
     remaining_product_number = models.IntegerField("Qalan məhsul sayı", blank=True, null=True)
     return_product_number = models.IntegerField("Qaytarılan məhsul sayı", blank=True, null=True)
 
+    action = models.CharField("Hərəkət", max_length=250, default="-")
+
     class Meta:
         ordering = ("-id",)
         verbose_name = "Məhsul hərəkəti"
@@ -111,14 +113,15 @@ class ProductAction(models.Model):
         return self.product.name
     
 class CustomerActionList(models.Model):
-    ACTION_TYPES = (
-        ("A", "Alış"),
-        ("S", "Satış"),
-        ("MO", "Müştəriyə ödəniş"),
-        ("BO", "Bizə ödəniş"),
-        ("H", "-")
-    )
-    action_type = models.CharField(max_length=2, choices=ACTION_TYPES, default="H")
+    # ACTION_TYPES = (
+    #     ("A", "Alış"),
+    #     ("S", "Satış"),
+    #     ("MO", "Müştəriyə ödəniş"),
+    #     ("BO", "Bizə ödəniş"),
+    #     ("H", "-")
+    # )
+    # action_type = models.CharField(max_length=2, choices=ACTION_TYPES, default="H")
+    action = models.CharField("Hərəkət", max_length=250, default="-")
     class Meta:
         ordering = ("-id",)
         verbose_name = "Müştəri hərəkət siyahısı"
@@ -137,6 +140,8 @@ class CustomerAction(models.Model):
     total_amount = models.FloatField("Ümumi gəlir", blank=True, null=True)
     remaining_amount = models.FloatField("Qalan məbləğ", blank=True, null=True)
     return_amount = models.FloatField("Qaytarılan məbləğ", blank=True, null=True)
+
+    action = models.CharField("Hərəkət", max_length=250, default="-")
 
     class Meta:
         ordering = ("-id",)
