@@ -730,8 +730,24 @@ class SaleListUpdateAPIView(UpdateAPIView):
                         stock.save()
                         sale.product.amount = stock.amount
 
-                        if customeractionlist.id is None:
-                            customeractionlist.delete()
+                        # if customeractionlist.id is None:
+                        #     customeractionlist.delete()
+
+                        ProductAction.objects.create(
+                            product = sale.product,
+                            customer = sale.customer,
+                            date = dt,
+                            remaining_product_number = sale.product.amount,
+                            action = "Anbara əlavə edildi"
+                        )
+                        CustomerAction.objects.create(
+                            customeractionlist = customeractionlist,
+                            customer = sale.customer,
+                            product = sale.product,
+                            date = dt,
+                            product_price = sale.price * sale.amount,
+                            action = "Məhsul satışı ləğv edildi"
+                        )
                     elif sale.status == "G" and s_status == "S":
                         stock, created = Stock.objects.get_or_create(
                             product = sale.product
@@ -750,14 +766,16 @@ class SaleListUpdateAPIView(UpdateAPIView):
                             customer = sale.customer,
                             date = dt,
                             sold_product_number = sale.amount,
-                            remaining_product_number = sale.product.amount
+                            remaining_product_number = sale.product.amount,
+                            action = "Məhsul satıldı"
                         )
                         CustomerAction.objects.create(
                             customeractionlist = customeractionlist,
                             customer = sale.customer,
                             product = sale.product,
                             date = dt,
-                            product_price = sale.price * sale.amount
+                            product_price = sale.price * sale.amount,
+                            action = "Məhsul satışı icra edildi"
                         )
                     sale.product.save()
             if dt:
