@@ -206,7 +206,8 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     product = instance.product,
                     date = instance.date,
                     incoming_product_number = instance.amount,
-                    remaining_product_number = stock.amount
+                    remaining_product_number = stock.amount,
+                    action = "Anbara əlavə edildi"
                 )
             elif previous_instance_status == "A" and instance.status == "G":
                 stock = Stock.objects.get(
@@ -217,8 +218,8 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 ProductAction.objects.create(
                     product = instance.product,
                     date = instance.date,
-                    incoming_product_number = instance.amount,
-                    remaining_product_number = stock.amount
+                    remaining_product_number = stock.amount,
+                    action = "Anbardan silindi"
                 )
             elif previous_instance_status == "A" and instance.status == "A":
                 stock = Stock.objects.get(
@@ -541,7 +542,7 @@ class BulkPurchaseAPIView(APIView):
                             ProductAction.objects.create(
                                 product = product,
                                 date = date,
-                                incoming_product_number = amounts[i] - old_pr_amount,
+                                incoming_product_number = amounts[i] - old_p_amount,
                                 remaining_product_number = stock.amount,
                                 action = "Anbara əlavə edildi"
                             )
