@@ -339,7 +339,6 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         ProductAction.objects.create(
                             product = purchase.product,
                             date = purchase.date,
-                            incoming_product_number = purchase.amount,
                             remaining_product_number = purchase.product.amount,
                             action = "Anbardan silindi"
                         )
@@ -367,6 +366,7 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                         ProductAction.objects.create(
                             product = purchase.product,
                             date = purchase.date,
+                            incoming_product_number = purchase.amount,
                             remaining_product_number = purchase.product.amount,
                             action = "Anbara əlavə edildi"
                         )
@@ -379,7 +379,6 @@ class PurchaseListUpdateAPIView(UpdateAPIView):
                             product_price = purchase.price * purchase.amount,
                             action = "Məhsul alışı icra edildi"
                         )
-                        print(purchase.amount, old_pr_amount)
             if date:
                 purchases.update(date=date)
             return Response(serializer.data, status=status.HTTP_200_OK)
