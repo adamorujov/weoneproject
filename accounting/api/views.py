@@ -710,7 +710,7 @@ class SaleListUpdateAPIView(UpdateAPIView):
             customer_id = serializer.validated_data.get("customer_id")
             s_status = serializer.validated_data.get("status")
             dt = serializer.validated_data.get("dt")
-            customeractionlist = CustomerActionList.objects.create(action_type="S")
+            customeractionlist = CustomerActionList.objects.create()
 
             sales = instance.salelist_sales.all()
             if customer_id:
