@@ -866,7 +866,7 @@ class BulkSaleAPIView(APIView):
 
             seller = request.user
             customer = CustomUser.objects.get(id=customer_id)
-            customeractionlist = CustomerActionList.objects.create(action_type="S")
+            customeractionlist = CustomerActionList.objects.create()
 
             if salelist_id:
                 salelist = SaleList.objects.get(id=salelist_id)
@@ -1033,7 +1033,6 @@ class BulkSaleAPIView(APIView):
                     else:
                         if customeractionlist.id is not None:
                             customeractionlist.delete()
-                    print("Saved value:", sale.datetime, sale.datetime.tzinfo)
 
             
             response_data = {
