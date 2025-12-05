@@ -877,13 +877,14 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             previous_instance_status = instance.status
             serializer.save()
 
+            customeractionlist = CustomerActionList.objects.create()
+
             if previous_instance_status == "G" and instance.status == "S":
                 instance.product.amount = instance.product.amount - instance.amount
                 instance.product.save()
                 if hasattr(instance.product, "stock"):
                     instance.product.stock.amount = instance.product.stock.amount - instance.amount
                     instance.product.stock.save()
-                customeractionlist = CustomerActionList.objects.create()
                 ProductAction.objects.create(
                     product = instance.product,
                     customer = instance.customer,
