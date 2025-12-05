@@ -897,7 +897,7 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     customeractionlist = customeractionlist,
                     customer = instance.customer,
                     product = instance.product,
-                    date = instance.datetimes.date(), 
+                    date = instance.datetime.date(), 
                     product_price = instance.price * instance.amount,
                     action = "Məhsul satışı icra edildi"
                 )
@@ -918,7 +918,7 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     customeractionlist = customeractionlist,
                     customer = instance.customer,
                     product = instance.product,
-                    date = instance.datetimes.date(), 
+                    date = instance.datetime.date(), 
                     product_price = instance.price * instance.amount,
                     action = "Məhsul satışı ləğv edildi"
                 )
@@ -940,7 +940,7 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     customeractionlist = customeractionlist,
                     customer = instance.customer,
                     product = instance.product,
-                    date = instance.datetimes.date(), 
+                    date = instance.datetime.date(), 
                     product_price = instance.price * instance.amount,
                     action = "Məhsul satışı icra edildi"
                 )
