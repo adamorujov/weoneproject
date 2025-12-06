@@ -275,7 +275,7 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
     payment_amount = serializers.SerializerMethodField()
     total_amount = serializers.SerializerMethodField()
     remaining_amount = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = CustomerActionList
         fields = "__all__"
@@ -299,7 +299,7 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
     def get_total_amount(self, obj):
         return sum(action.total_amount for action in obj.c_customer_actions.all() if action.total_amount is not None)
     
-    def get_total_remaining_amount(self, obj):
+    def get_remaining_amount(self, obj):
         return sum(action.remaining_amount for action in obj.c_customer_actions.all() if action.total_amount is not None)
     
     def get_action(self, obj):
