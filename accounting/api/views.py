@@ -1498,7 +1498,7 @@ class ReturnBackRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 customer = instance.sale.customer,
                 product = instance.sale.product,
                 date = request.data.get("date"),
-                product_price = instance.sale.price * instance.sale.amount,
+                product_price = instance.sale.price * instance.amount,
                 return_amount = instance.sale.price * instance.amount,
                 action = "Geri qaytarma icra olundu"
             )
@@ -1530,7 +1530,7 @@ class ReturnBackRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             customer = instance.sale.customer,
             product = instance.sale.product,
             date = timezone.now().date(),
-            product_price = instance.sale.price * instance.sale.amount,
+            product_price = instance.sale.price * instance.amount,
             return_amount = instance.sale.price * instance.amount,
             action = "Geri qaytarma ləğv edildi"
         )
