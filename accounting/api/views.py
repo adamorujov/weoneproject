@@ -1129,7 +1129,7 @@ class BulkSaleAPIView(APIView):
                                 customer = customer,
                                 product = product,
                                 date = datetimes[i].date(), 
-                                product_price = prices[i] * amounts[i],
+                                product_price = prices[i] * (amounts[i] - old_sale_amount),
                                 action = "Məhsul satışı icra edildi"
                             )
                     
