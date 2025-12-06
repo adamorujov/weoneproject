@@ -1824,8 +1824,135 @@ class SupplierPaymentListAPIView(ListAPIView):
 class SupplierPaymentCreateAPIView(CreateAPIView):
     queryset = SupplierPayment.objects.all()
     serializer_class = SupplierPaymentCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        payment_data = {
+            "supplier": request.data.get("supplier"),
+            "currency": request.data.get("currency"),
+            "datetime": request.data.get("datetime"),
+            "amount": request.data.get("amount")
+        }
+        serializer = self.get_serializer(data=payment_data)
+        if serializer.is_valid():
+            serializer.save()
+            customer = CustomUser.objects.get(id=payment_data["supplier"])
+            # customer_debt = sum([sale.price * sale.amount for sale in customer.customer_sales.all()])
+            c_purchases = Purchase.objects.filter(supplier=customer, status="A", purchaselist__currency="M")
+            c_sales = Sale.objects.filter(customer=customer, status="S")
+            c_payments = Payment.objects.filter(customer=customer)
+            c_supplierpayments = SupplierPayment.objects.filter(supplier=customer)
+
+            total_c_sale = sum(sale.price * sale.amount for sale in c_sales)
+            total_c_payments = sum(payment.amount for payment in c_payments)
+            total_c_purchases = sum(purchase.price * purchase.amount for purchase in c_purchases)
+            total_c_supplierpayments = sum(supplierpayment.amount for supplierpayment in c_supplierpayments)
+
+            total_c_debt = total_c_sale - total_c_payments - total_c_purchases + total_c_supplierpayments
+            dt = payment_data["datetime"].split("T")[0]
+            dt_data = dt.split("-")
+
+            customeractionlist = CustomerActionList.objects.create()
+
+            CustomerAction.objects.create(
+                customeractionlist = customeractionlist,
+                customer = customer,
+                date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))),
+                payment_amount = payment_data["amount"],
+                remaining_amount = total_c_debt,
+                action = "Kassadan çıxış"
+            )
+
+            response_data = {
+                "message": "Ödəniş əlavə olundu."
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class SupplierPaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = SupplierPayment.objects.all()
     serializer_class = SupplierPaymentCreateSerializer
     lookup_field = "id"
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            old_customer = instance.supplier
+            old_amount = instance.amount
+            serializer.save()
+            customer = serializer.validated_data.get("supplier")
+            amount = serializer.validated_data.get("amount")
+
+            dt = serializer.validated_data["datetime"].date()
+
+            c_purchases = Purchase.objects.filter(supplier=customer, status="A", purchaselist__currency="M")
+            c_sales = Sale.objects.filter(customer=customer, status="S")
+            c_payments = Payment.objects.filter(customer=customer)
+            c_supplierpayments = SupplierPayment.objects.filter(supplier=customer)
+
+            total_c_sale = sum(sale.price * sale.amount for sale in c_sales)
+            total_c_payments = sum(payment.amount for payment in c_payments)
+            total_c_purchases = sum(purchase.price * purchase.amount for purchase in c_purchases)
+            total_c_supplierpayments = sum(supplierpayment.amount for supplierpayment in c_supplierpayments)
+
+            total_c_debt = total_c_sale - total_c_payments - total_c_purchases + total_c_supplierpayments
+
+            if customer != old_customer:
+                customeractionlist = CustomerActionList.objects.create()
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = old_customer,
+                    date = dt,
+                    payment_amount = old_amount,
+                    remaining_amount = total_c_debt,
+                    action = "Kassa çıxışı ləğv edildi"
+                )
+                customeractionlist = CustomerActionList.objects.create()
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = customer,
+                    date = dt,
+                    payment_amount = amount,
+                    remaining_amount = total_c_debt,
+                    action = "Kassadan çıxış"
+                )
+            else:
+                customeractionlist = CustomerActionList.objects.create()
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = customer,
+                    date = dt,
+                    payment_amount = amount - old_amount,
+                    remaining_amount = total_c_debt,
+                    action = "Kassadan çıxış"
+                )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        customeractionlist = CustomerActionList.objects.create()
+
+        customer = instance.supplier
+
+        c_purchases = Purchase.objects.filter(supplier=customer, status="A", purchaselist__currency="M")
+        c_sales = Sale.objects.filter(customer=customer, status="S")
+        c_payments = Payment.objects.filter(customer=customer)
+        c_supplierpayments = SupplierPayment.objects.filter(supplier=customer)
+
+        total_c_sale = sum(sale.price * sale.amount for sale in c_sales)
+        total_c_payments = sum(payment.amount for payment in c_payments)
+        total_c_purchases = sum(purchase.price * purchase.amount for purchase in c_purchases)
+        total_c_supplierpayments = sum(supplierpayment.amount for supplierpayment in c_supplierpayments)
+
+        total_c_debt = total_c_sale - total_c_payments - total_c_purchases + total_c_supplierpayments
+        
+        CustomerAction.objects.create(
+            customeractionlist = customeractionlist,
+            customer = customer,
+            date = timezone.now(),
+            payment_amount = instance.amount,
+            remaining_amount = total_c_debt + instance.amount,
+            action = "Kassadan çıxış ləğv edildi"
+        )
+        return super().delete(request, *args, **kwargs)
