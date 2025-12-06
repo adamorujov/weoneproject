@@ -272,7 +272,7 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
     customer = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
     product_price = serializers.SerializerMethodField()
-    payment_price = serializers.SerializerMethodField()
+    payment_amount = serializers.SerializerMethodField()
     
     class Meta:
         model = CustomerActionList
