@@ -703,7 +703,7 @@ class AddToStockAPIView(APIView):
                     customer = item.supplier,
                     product = item.product,
                     date = item.date,
-                    product_price = item.price,
+                    product_price = item.price * item.amount,
                     action = "Məhsul alışı icra edildi"
                 )
                 
@@ -856,7 +856,7 @@ class SaleListDestroyAPIView(DestroyAPIView):
                     customer = sale.customer,
                     product = sale.product,
                     date = timezone.now(),
-                    product_price = sale.price,
+                    product_price = sale.price * sale.amount,
                     action = "Məhsul satışı ləğv edildi"
                 )
 
