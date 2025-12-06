@@ -113,15 +113,6 @@ class ProductAction(models.Model):
         return self.product.name
     
 class CustomerActionList(models.Model):
-    # ACTION_TYPES = (
-    #     ("A", "Alış"),
-    #     ("S", "Satış"),
-    #     ("MO", "Müştəriyə ödəniş"),
-    #     ("BO", "Bizə ödəniş"),
-    #     ("H", "-")
-    # )
-    # action_type = models.CharField(max_length=2, choices=ACTION_TYPES, default="H")
-    action = models.CharField("Hərəkət", max_length=250, default="-")
     class Meta:
         ordering = ("-id",)
         verbose_name = "Müştəri hərəkət siyahısı"

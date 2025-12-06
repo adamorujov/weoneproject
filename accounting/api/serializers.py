@@ -273,6 +273,8 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
     date = serializers.SerializerMethodField()
     product_price = serializers.SerializerMethodField()
     payment_amount = serializers.SerializerMethodField()
+    total_amount = serializers.SerializerMethodField()
+    remaining_amount = serializers.SerializerMethodField()
     
     class Meta:
         model = CustomerActionList
@@ -293,6 +295,17 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
     
     def get_payment_amount(self, obj):
         return sum([action.payment_amount for action in obj.c_customer_actions.all() if action.product_price is None])
+    
+    def get_total_amount(self, obj):
+        return sum(action.total_amount for action in obj.c_customer_actions.all() if action.total_amount is not None)
+    
+    def get_total_remaining_amount(self, obj):
+        return sum(action.remaining_amount for action in obj.c_customer_actions.all() if action.total_amount is not None)
+    
+    def get_action(self, obj):
+        return sum(action.action for action in obj.c_customer_actions.all() if action.total_amount is not None)
+    
+    
 
 class BulkPurchaseSerializer(serializers.Serializer):
     purchaselist = serializers.IntegerField(required=False)

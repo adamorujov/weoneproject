@@ -1353,7 +1353,7 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             customer = customer,
             date = timezone.now(),
             payment_amount = instance.amount,
-            total_amount = previous_total_amount + float(amount-instance.amount),
+            total_amount = previous_total_amount - float(instance.amount),
             remaining_amount = total_c_debt,
             action = "Kassaya girişi ləğv edildi"
         )
