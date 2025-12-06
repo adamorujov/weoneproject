@@ -1007,7 +1007,7 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             )
             CustomerAction.objects.create(
                 customeractionlist = customeractionlist,
-                customer = instance.supplier,
+                customer = instance.customer,
                 product = instance.product,
                 date = instance.datetime.date(),
                 product_price = instance.price * instance.amount,
