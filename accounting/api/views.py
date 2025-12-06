@@ -1431,7 +1431,7 @@ class ReturnBackCreateAPIView(CreateAPIView):
                 product = sale.product,
                 customer = sale.customer,
                 date = request.data.get("date"),
-                return_product_number = amount,
+                return_product_number = float(amount),
                 action = "Geri qaytarıldı"
             )
             CustomerAction.objects.create(
@@ -1439,7 +1439,7 @@ class ReturnBackCreateAPIView(CreateAPIView):
                 product = sale.product,
                 date = request.data.get("date"),
                 product_price = sale.price * sale.amount,
-                return_amount = sale.price * amount,
+                return_amount = sale.price * float(amount),
                 action = "Geri qaytarma icra olundu"
             )
             response_data = {
@@ -1493,7 +1493,7 @@ class ReturnBackRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 product = instance.sale.product,
                 date = request.data.get("date"),
                 product_price = instance.sale.price * instance.sale.amount,
-                return_amount = instance.sale.price * amount,
+                return_amount = instance.sale.price * instance.amount,
                 action = "Geri qaytarma icra olundu"
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
