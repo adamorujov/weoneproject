@@ -1858,6 +1858,7 @@ class SupplierPaymentCreateAPIView(CreateAPIView):
                 customer = customer,
                 date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))),
                 payment_amount = payment_data["amount"],
+                total_amount = 0,
                 remaining_amount = total_c_debt,
                 action = "Kassadan çıxış"
             )
@@ -1904,6 +1905,7 @@ class SupplierPaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     customer = old_customer,
                     date = dt,
                     payment_amount = old_amount,
+                    total_amount = 0,
                     remaining_amount = total_c_debt,
                     action = "Kassa çıxışı ləğv edildi"
                 )
@@ -1913,6 +1915,7 @@ class SupplierPaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     customer = customer,
                     date = dt,
                     payment_amount = amount,
+                    total_amount = 0,
                     remaining_amount = total_c_debt,
                     action = "Kassadan çıxış"
                 )
@@ -1923,6 +1926,7 @@ class SupplierPaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     customer = customer,
                     date = dt,
                     payment_amount = amount - old_amount,
+                    total_amount = 0,
                     remaining_amount = total_c_debt,
                     action = "Kassadan çıxış"
                 )
@@ -1952,6 +1956,7 @@ class SupplierPaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             customer = customer,
             date = timezone.now(),
             payment_amount = instance.amount,
+            total_amount = 0,
             remaining_amount = total_c_debt + instance.amount,
             action = "Kassadan çıxış ləğv edildi"
         )
