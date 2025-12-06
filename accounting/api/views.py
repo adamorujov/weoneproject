@@ -1279,7 +1279,7 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
             dt = serializer.validated_data["datetime"].date()
 
-            previous_amounts = [action.payment_amount if action.payment_amount else 0 for action in customer.customer_actions.all()]
+            previous_amounts = [action.payment_amount if action.payment_amount else 0 for action in customer.customer_actions.filter(action="Kassaya giriş")]
             previous_total_amount = 0 if not previous_amounts else sum(previous_amounts, start=0)
             c_purchases = Purchase.objects.filter(supplier=customer, status="A", purchaselist__currency="M")
             c_sales = Sale.objects.filter(customer=customer, status="S")
