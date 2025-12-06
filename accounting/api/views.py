@@ -1435,7 +1435,9 @@ class ReturnBackCreateAPIView(CreateAPIView):
                 remaining_product_number = sale.product.amount,
                 action = "Geri qaytarıldı"
             )
+            customeractionlist = CustomerActionList.objects.create()
             CustomerAction.objects.create(
+                customeractionlist = customeractionlist,
                 customer = sale.customer,
                 product = sale.product,
                 date = request.data.get("date"),
@@ -1490,7 +1492,9 @@ class ReturnBackRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 remaining_product_number = instance.sale.product.amount,
                 action = "Geri qaytarıldı"
             )
+            customeractionlist = CustomerActionList.objects.create()
             CustomerAction.objects.create(
+                customeractionlist = customeractionlist,
                 customer = instance.sale.customer,
                 product = instance.sale.product,
                 date = request.data.get("date"),
@@ -1500,6 +1504,37 @@ class ReturnBackRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.sale.amount = instance.sale.amount + instance.amount
+        instance.sale.save()
+        instance.sale.product.amount = instance.sale.product.amount - instance.amount
+        instance.sale.product.save()
+
+        if hasattr(instance.sale.product, "stock"):
+            instance.sale.product.stock.amount = instance.sale.product.stock.amount - instance.amount
+            instance.sale.product.stock.save()
+
+        ProductAction.objects.create(
+            product = instance.sale.product,
+            customer = instance.sale.customer,
+            date = timezone.now().date(),
+            return_product_number = instance.amount,
+            remaining_product_number = instance.sale.product.amount,
+            action = "Geri qaytarma ləğv edildi"
+        )
+        customeractionlist = CustomerActionList.objects.create()
+        CustomerAction.objects.create(
+            customeractionlist = customeractionlist,
+            customer = instance.sale.customer,
+            product = instance.sale.product,
+            date = request.data.get("date"),
+            product_price = instance.sale.price * instance.sale.amount,
+            return_amount = instance.sale.price * instance.amount,
+            action = "Geri qaytarma ləğv edildi"
+        )
+        return super().delete(request, *args, **kwargs)
 
 
 class ExpenseListAPIView(ListAPIView):
