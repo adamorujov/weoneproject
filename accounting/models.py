@@ -119,7 +119,8 @@ class CustomerActionList(models.Model):
         verbose_name_plural = "Müştəri hərəkət siyahıları"
 
     def __str__(self):
-        return str(self.id)
+        customer = self.c_customer_actions.first().customer.username if self.c_customer_actions.exists() else " "
+        return str(self.id) + customer
     
 class CustomerAction(models.Model):
     customeractionlist = models.ForeignKey(CustomerActionList, verbose_name="Siyahı", on_delete=models.CASCADE, related_name="c_customer_actions", blank=True, null=True)
