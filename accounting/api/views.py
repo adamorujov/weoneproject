@@ -1357,7 +1357,7 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             date = timezone.now(),
             payment_amount = instance.amount,
             total_amount = previous_total_amount - float(instance.amount),
-            remaining_amount = total_c_debt,
+            remaining_amount = total_c_debt + instance.amount,
             action = "Kassa girişi ləğv edildi"
         )
         return super().delete(request, *args, **kwargs)
