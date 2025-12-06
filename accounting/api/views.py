@@ -1271,6 +1271,9 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
+            old_customer = instance.customer
+            old_amount = instance.amount
+            serializer.save()
             customer = serializer.validated_data.get("customer")
             amount = serializer.validated_data.get("amount")
             customeractionlist = CustomerActionList.objects.create()
@@ -1294,9 +1297,9 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             if customer != instance.customer:
                 CustomerAction.objects.create(
                     customeractionlist = customeractionlist,
-                    customer = instance.customer,
+                    customer = old_customer,
                     date = dt,
-                    payment_amount = instance.amount,
+                    payment_amount = old_amount,
                     total_amount = previous_total_amount + float(amount),
                     remaining_amount = total_c_debt,
                     action = "Kassaya girişi ləğv edildi"
@@ -1316,8 +1319,8 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     customeractionlist = customeractionlist,
                     customer = customer,
                     date = dt,
-                    payment_amount = amount - instance.amount,
-                    total_amount = previous_total_amount + float(amount-instance.amount),
+                    payment_amount = amount - old_amount,
+                    total_amount = previous_total_amount + float(amount-old_amount),
                     remaining_amount = total_c_debt,
                     action = "Kassaya giriş"
                 )
