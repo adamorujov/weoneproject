@@ -1294,7 +1294,7 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
             total_c_debt = total_c_sale - total_c_payments - total_c_purchases + total_c_supplierpayments
 
-            if customer != instance.customer:
+            if customer != old_customer:
                 CustomerAction.objects.create(
                     customeractionlist = customeractionlist,
                     customer = old_customer,
