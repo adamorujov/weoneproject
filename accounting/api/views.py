@@ -1431,14 +1431,16 @@ class ReturnBackCreateAPIView(CreateAPIView):
                 product = sale.product,
                 customer = sale.customer,
                 date = request.data.get("date"),
-                return_product_number = amount
+                return_product_number = amount,
+                action = "Geri qaytarıldı"
             )
             CustomerAction.objects.create(
                 customer = sale.customer,
                 product = sale.product,
                 date = request.data.get("date"),
                 product_price = sale.price * sale.amount,
-                return_amount = sale.price
+                return_amount = sale.price * amount,
+                action = "Geri qaytarma icra olundu"
             )
             response_data = {
                 "message": f"{amount} ədəd '{sale.product.name}' məhsulu geri qaytarıldı."
@@ -1478,6 +1480,22 @@ class ReturnBackRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 if hasattr(instance.sale.product, "stock"):
                     instance.sale.product.stock.amount = instance.sale.product.stock.amount - previous_instance_amount + instance.amount
                     instance.sale.product.stock.save()
+
+            ProductAction.objects.create(
+                product = instance.sale.product,
+                customer = instance.sale.customer,
+                date = request.data.get("date"),
+                return_product_number = instance.amount - previous_instance_amount,
+                action = "Geri qaytarıldı"
+            )
+            CustomerAction.objects.create(
+                customer = instance.sale.customer,
+                product = instance.sale.product,
+                date = request.data.get("date"),
+                product_price = instance.sale.price * instance.sale.amount,
+                return_amount = instance.sale.price * amount,
+                action = "Geri qaytarma icra olundu"
+            )
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1950,6 +1968,8 @@ class SupplierPaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         total_c_supplierpayments = sum(supplierpayment.amount for supplierpayment in c_supplierpayments)
 
         total_c_debt = total_c_sale - total_c_payments - total_c_purchases + total_c_supplierpayments
+
+
         
         CustomerAction.objects.create(
             customeractionlist = customeractionlist,
