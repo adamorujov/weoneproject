@@ -1487,7 +1487,7 @@ class ReturnBackRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 customer = instance.sale.customer,
                 date = request.data.get("date"),
                 return_product_number = instance.amount - previous_instance_amount,
-                remaining_product_number = instance.sale.product.number,
+                remaining_product_number = instance.sale.product.amount,
                 action = "Geri qaytarıldı"
             )
             CustomerAction.objects.create(
