@@ -194,6 +194,7 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             instance.product.save()
             # instance.product.amount = instance.product.amount - previous_instance_amount + instance.amount
             # instance.product.save()
+            customeractionlist = CustomerActionList.objects.create()
 
             if previous_instance_status == "G" and instance.status == "A":
                 stock, created = Stock.objects.get_or_create(
@@ -202,12 +203,21 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
 
                 stock.amount = stock.amount + instance.amount
                 stock.save()
+
                 ProductAction.objects.create(
                     product = instance.product,
                     date = instance.date,
                     incoming_product_number = instance.amount,
                     remaining_product_number = stock.amount,
                     action = "Anbara əlavə edildi"
+                )
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = instance.supplier,
+                    product = instance.product,
+                    date = instance.date,
+                    product_price = instance.price * instance.amount,
+                    action = "Məhsul alışı icra edildi"
                 )
             elif previous_instance_status == "A" and instance.status == "G":
                 stock = Stock.objects.get(
@@ -220,6 +230,14 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     date = instance.date,
                     remaining_product_number = stock.amount,
                     action = "Anbardan silindi"
+                )
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = instance.supplier,
+                    product = instance.product,
+                    date = instance.date,
+                    product_price = instance.price * instance.amount,
+                    action = "Məhsul alışı ləğv edildi"
                 )
             elif previous_instance_status == "A" and instance.status == "A":
                 stock = Stock.objects.get(
@@ -234,6 +252,15 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     remaining_product_number = stock.amount,
                     action = "Anbara əlavə edildi"
                 )
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = instance.supplier,
+                    product = instance.product,
+                    date = instance.date,
+                    product_price = instance.price * (instance.amount - previous_instance_amount),
+                    action = "Məhsul alışı əlavə edildi"
+                )
+                
             instance.product.amount = instance.product.stock.amount
             instance.product.save()
             # pr_serializer = ProductUpdateSerializer(instance.product, data=product_data, partial=True)
@@ -257,6 +284,7 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         if instance.status == 'A':
             instance.product.stock.amount = instance.product.stock.amount - instance.amount
+            customeractionlist = CustomerActionList.objects.create()
             if instance.product.stock.amount > 0:
                 instance.product.stock.save()
                 instance.product.amount = instance.product.stock.amount
@@ -267,6 +295,14 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     remaining_product_number = instance.product.stock.amount,
                     action = "Anbardan silindi"
                 )
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = instance.supplier,
+                    product = instance.product,
+                    date = instance.date,
+                    product_price = instance.price * instance.amount,
+                    action = "Məhsul alışı ləğv edildi"
+                )
             else:
                 instance.product.stock.delete()
                 instance.product.amount = 0
@@ -276,6 +312,14 @@ class PurchaseRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     date = instance.date,
                     remaining_product_number = 0,
                     action = "Anbardan silindi"
+                )
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = instance.supplier,
+                    product = instance.product,
+                    date = instance.date,
+                    product_price = instance.price * instance.amount,
+                    action = "Məhsul alışı ləğv edildi"
                 )
         return super().delete(request, *args, **kwargs)
 
