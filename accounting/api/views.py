@@ -1001,7 +1001,7 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             instance.product.save()
             ProductAction.objects.create(
                 product = instance.product,
-                date = instance.datetime.date,
+                date = instance.datetime.date(),
                 remaining_product_number = instance.product.stock.amount,
                 action = "Anbara əlavə edildi"
             )
@@ -1009,7 +1009,7 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 customeractionlist = customeractionlist,
                 customer = instance.supplier,
                 product = instance.product,
-                date = instance.datetime.date,
+                date = instance.datetime.date(),
                 product_price = instance.price * instance.amount,
                 action = "Məhsul satışı ləğv edildi"
             )
