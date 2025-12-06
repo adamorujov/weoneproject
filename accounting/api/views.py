@@ -1276,7 +1276,6 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             serializer.save()
             customer = serializer.validated_data.get("customer")
             amount = serializer.validated_data.get("amount")
-            customeractionlist = CustomerActionList.objects.create()
 
             dt = serializer.validated_data["datetime"].date()
 
@@ -1295,6 +1294,7 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
             total_c_debt = total_c_sale - total_c_payments - total_c_purchases + total_c_supplierpayments
 
             if customer != old_customer:
+                customeractionlist = CustomerActionList.objects.create()
                 CustomerAction.objects.create(
                     customeractionlist = customeractionlist,
                     customer = old_customer,
@@ -1304,7 +1304,7 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     remaining_amount = total_c_debt,
                     action = "Kassa girişi ləğv edildi"
                 )
-
+                customeractionlist = CustomerActionList.objects.create()
                 CustomerAction.objects.create(
                     customeractionlist = customeractionlist,
                     customer = customer,
@@ -1315,6 +1315,7 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                     action = "Kassaya giriş"
                 )
             else:
+                customeractionlist = CustomerActionList.objects.create()
                 CustomerAction.objects.create(
                     customeractionlist = customeractionlist,
                     customer = customer,
@@ -1361,6 +1362,7 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 
 
 class ProductActionListAPIView(ListAPIView):
+
     def get_queryset(self):
         product_id = self.kwargs.get("id")
         product = get_object_or_404(Product, id=product_id)
