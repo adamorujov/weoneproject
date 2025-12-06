@@ -990,6 +990,31 @@ class SaleRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 )
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.status == 'S':
+            instance.product.stock.amount = instance.product.stock.amount + instance.amount
+            customeractionlist = CustomerActionList.objects.create()
+            instance.product.stock.save()
+            instance.product.amount = instance.product.stock.amount
+            instance.product.save()
+            ProductAction.objects.create(
+                product = instance.product,
+                date = instance.datetime.date,
+                remaining_product_number = instance.product.stock.amount,
+                action = "Anbara əlavə edildi"
+            )
+            CustomerAction.objects.create(
+                customeractionlist = customeractionlist,
+                customer = instance.supplier,
+                product = instance.product,
+                date = instance.datetime.date,
+                product_price = instance.price * instance.amount,
+                action = "Məhsul satışı ləğv edildi"
+            )
+            
+        return super().delete(request, *args, **kwargs)
 
     
 class BulkSaleAPIView(APIView):
