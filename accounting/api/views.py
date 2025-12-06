@@ -1267,6 +1267,63 @@ class PaymentRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = PaymentCreateSerializer
     lookup_field = "id"
 
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            customer = serializer.validated_data.get("customer")
+            amount = serializer.validated_data.get("amount")
+            customeractionlist = CustomerActionList.objects.create()
+
+            dt = serializer.validated_data["datetime"].date()
+
+            previous_amounts = [action.payment_amount if action.payment_amount else 0 for action in customer.customer_actions.all()]
+            previous_total_amount = 0 if not previous_amounts else sum(previous_amounts, start=0)
+            c_purchases = Purchase.objects.filter(supplier=customer, status="A", purchaselist__currency="M")
+            c_sales = Sale.objects.filter(customer=customer, status="S")
+            c_payments = Payment.objects.filter(customer=customer)
+            c_supplierpayments = SupplierPayment.objects.filter(supplier=customer)
+
+            total_c_sale = sum(sale.price * sale.amount for sale in c_sales)
+            total_c_payments = sum(payment.amount for payment in c_payments)
+            total_c_purchases = sum(purchase.price * purchase.amount for purchase in c_purchases)
+            total_c_supplierpayments = sum(supplierpayment.amount for supplierpayment in c_supplierpayments)
+
+            total_c_debt = total_c_sale - total_c_payments - total_c_purchases + total_c_supplierpayments
+
+            if customer != instance.customer:
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = instance.customer,
+                    date = dt,
+                    payment_amount = instance.amount,
+                    total_amount = previous_total_amount + float(amount),
+                    remaining_amount = total_c_debt,
+                    action = "Kassaya girişi ləğv edildi"
+                )
+
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = customer,
+                    date = dt,
+                    payment_amount = amount,
+                    total_amount = previous_total_amount + float(amount),
+                    remaining_amount = total_c_debt,
+                    action = "Kassaya giriş"
+                )
+            else:
+                CustomerAction.objects.create(
+                    customeractionlist = customeractionlist,
+                    customer = customer,
+                    date = dt,
+                    payment_amount = amount - instance.amount,
+                    total_amount = previous_total_amount + float(amount-instance.amount),
+                    remaining_amount = total_c_debt,
+                    action = "Kassaya giriş"
+                )
+
+                
+
 class ProductActionListAPIView(ListAPIView):
     def get_queryset(self):
         product_id = self.kwargs.get("id")
