@@ -288,7 +288,7 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
         return None
     
     def get_product_price(self, obj):
-        return sum([action.product_price for action in obj.c_customer_actions.all()])
+        return sum([action.product_price for action in obj.c_customer_actions.all() if action.product_price is not None])
 
 class BulkPurchaseSerializer(serializers.Serializer):
     purchaselist = serializers.IntegerField(required=False)
