@@ -1244,12 +1244,16 @@ class PaymentCreateAPIView(CreateAPIView):
             dt = payment_data["datetime"].split("T")[0]
             dt_data = dt.split("-")
 
+            customeractionlist = CustomerActionList.objects.create()
+
             CustomerAction.objects.create(
+                customeractionlist = customeractionlist,
                 customer = customer,
                 date = datetime.date(year=int(dt_data[0]), month=int(dt_data[1]), day=int(int(dt_data[2]))),
                 payment_amount = payment_data["amount"],
                 total_amount = previous_total_amount + float(payment_data["amount"]),
-                remaining_amount = total_c_debt
+                remaining_amount = total_c_debt,
+                action = "Kassaya giriş"
             )
 
             response_data = {
@@ -1279,15 +1283,15 @@ class CustomerActionListAPIView(APIView):
         customeractionlists = CustomerActionList.objects.filter(
             c_customer_actions__in=customer.customer_actions.all()
         ).distinct()
-        customeractions = CustomerAction.objects.filter(
-            customer = customer,
-            customeractionlist = None
-        )
+        # customeractions = CustomerAction.objects.filter(
+        #     customer = customer,
+        #     customeractionlist = None
+        # )
 
         cl_data = CustomerActionListSerializer(customeractionlists, many=True).data
-        c_data = CustomerActionSerializer(customeractions, many=True).data
+        # c_data = CustomerActionSerializer(customeractions, many=True).data
 
-        response_data = cl_data + c_data
+        response_data = cl_data
 
         return Response(response_data, status=status.HTTP_200_OK)
     
@@ -1335,7 +1339,7 @@ class ReturnBackCreateAPIView(CreateAPIView):
                 customer = sale.customer,
                 product = sale.product,
                 date = request.data.get("date"),
-                product_price = sale.price,
+                product_price = sale.price * sale.amount,
                 return_amount = sale.price
             )
             response_data = {
