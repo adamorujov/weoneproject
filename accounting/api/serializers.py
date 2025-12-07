@@ -304,7 +304,7 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
         return sum(action.remaining_amount for action in obj.c_customer_actions.all() if action.total_amount is not None)
     
     def get_action(self, obj):
-        return sum(action.action for action in obj.c_customer_actions.all() if action.total_amount is not None)
+        return obj.c_customer_actions.first().action if obj.c_customer_actions.exists() else ""
     
     
 
