@@ -275,6 +275,7 @@ class CustomerActionListSerializer(serializers.ModelSerializer):
     payment_amount = serializers.SerializerMethodField()
     total_amount = serializers.SerializerMethodField()
     remaining_amount = serializers.SerializerMethodField()
+    action = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomerActionList
