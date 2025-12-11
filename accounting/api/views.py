@@ -328,7 +328,7 @@ class PurchaseListAPIView(ListAPIView):
     serializer_class = PurchaseSerializer
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ["product__name", "product__articles__name", "product__brand__name", "product__store__name", "product__category__name"]
+    search_fields = ["product__name", "product__degree", "product__articles__name", "product__brand__name", "product__store__name", "product__category__name"]
 
 class PurchaseListListAPIView(ListAPIView):
     queryset = PurchaseList.objects.all()
