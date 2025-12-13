@@ -172,8 +172,10 @@ class SaleListRetrieveSerializer(serializers.ModelSerializer):
     def get_old_debt(self, obj):
         customer = self.get_customer(obj)
         old_sales = Sale.objects.filter(customer=customer, status="S", salelist__id__lt=obj.id)
+        purchases = Purchase.objects.filter(supplier=customer, status="A")
         total_old_price = sum([sale.price * sale.amount for sale in old_sales])
-        total_old_debt = total_old_price - self.get_total_paid_amount(obj)
+        total_purchase_price = sum([purchase.price * purchase.amount for purchase in purchases])
+        total_old_debt = total_old_price - self.get_total_paid_amount(obj) - total_purchase_price + self.get_total_supplier_paid_amount(obj)
         return total_old_debt if total_old_debt > 0 else 0
 
     def get_new_debt(self, obj):
