@@ -718,12 +718,54 @@ class StockRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = StockUpdateSerializer
     lookup_field = "id"
 
+# class ShortSaleListAPIView(ListAPIView):
+#     queryset = Sale.objects.all()
+#     serializer_class = ShortSaleSerializer
+#     pagination_class = CustomPagination
+#     filter_backends = [filters.SearchFilter]
+#     search_fields = ["customer__username", "customer__first_name", "customer__last_name", "product__name", "product__store__name"]
+
+from django.db.models import Value, CharField, Case, When, F
+from django.db.models.functions import Concat
+
 class ShortSaleListAPIView(ListAPIView):
-    queryset = Sale.objects.all()
     serializer_class = ShortSaleSerializer
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ["customer__username", "customer__first_name", "customer__last_name", "product__name", "product__store__name"]
+
+    search_fields = ["sale_text"]   # <- annotate olunan field
+
+    def get_queryset(self):
+        full_name = Concat(
+            F("customer__first_name"), Value(" "), F("customer__last_name")
+        )
+
+        customer_name = Case(
+            When(
+                customer__first_name__isnull=False,
+                customer__first_name__gt="",
+                customer__last_name__isnull=False,
+                customer__last_name__gt="",
+                then=full_name
+            ),
+            default=F("customer__username"),
+            output_field=CharField()
+        )
+
+        return (
+            Sale.objects
+            .select_related("customer", "product", "product__store")
+            .annotate(
+                sale_text=Concat(
+                    customer_name,
+                    Value(" - "),
+                    F("product__name"),
+                    Value(" - "),
+                    F("product__store__name"),
+                    output_field=CharField()
+                )
+            )
+        )
 
 class SaleListAPIView(ListAPIView):
     queryset = Sale.objects.all()
