@@ -144,13 +144,6 @@ class Article(models.Model):
         verbose_name_plural = "Artikllar"
         ordering = ("-id",)
 
-        constraints = [
-            models.UniqueConstraint(
-                fields=["product", "name"],
-                name="unique_article_per_product"
-            )
-        ]
-
     def __str__(self):
         return self.name
     

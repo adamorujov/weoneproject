@@ -125,6 +125,13 @@ class ArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
         fields = "__all__"
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=Article.objects.all(),
+                fields=["product", "name"],
+                message="Bu product üçün bu artikl artıq mövcuddur."
+            )
+        ]
 
 class ProductAboutSerializer(serializers.ModelSerializer):
     class Meta:
