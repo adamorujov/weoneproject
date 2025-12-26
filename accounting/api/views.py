@@ -330,8 +330,12 @@ class PurchaseListAPIView(ListAPIView):
     filter_backends = [filters.SearchFilter]
     search_fields = ["product__name", "product__degree", "product__articles__name", "product__brand__name", "product__store__name", "product__category__name"]
 
+from django.db.models import Max
 class PurchaseListListAPIView(ListAPIView):
-    queryset = PurchaseList.objects.all()
+    def get_queryset(self):
+        return PurchaseList.objects.annotate(
+                date=Max("purchaselist_purchases__date")
+            ).order_by("-date")
     serializer_class = PurchaseListSerializer
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter, PurchaseDateFilterBackend]
@@ -772,7 +776,10 @@ class SaleListAPIView(ListAPIView):
     serializer_class = SaleSerializer
 
 class SaleListListAPIView(ListAPIView):
-    queryset = SaleList.objects.all()
+    def get_queryset(self):
+        return SaleList.objects.annotate(
+                dt=Max("salelist_sales__datetime")
+            ).order_by("-dt")
     serializer_class = SaleListSerializer
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter, TotalDebtFilterBackend, SaleDateFilterBackend]
