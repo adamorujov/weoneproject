@@ -110,9 +110,9 @@ class Product(models.Model):
         verbose_name = "məhsul"
         verbose_name_plural = "Məhsullar"
         ordering = ("-id",)
-        constraints = [
-            models.UniqueConstraint(fields=['name', 'store'], name='unique_product_per_brand')
-        ]
+        # constraints = [
+        #     models.UniqueConstraint(fields=['name', 'store'], name='unique_product_per_brand')
+        # ]
 
     @property
     def full_name(self):
@@ -144,13 +144,20 @@ class Article(models.Model):
         verbose_name_plural = "Artikllar"
         ordering = ("-id",)
 
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "name"],
+                name="unique_article_per_product"
+            )
+        ]
+
     def __str__(self):
         return self.name
     
-    def save(self, *args, **kwargs):
-        if Article.objects.filter(name=self.name) and (not Product.objects.filter(name=self.product.name).exclude(id=self.product.id).exists() or Product.objects.filter(name=self.product.name, store=self.product.store).exclude(id=self.product.id).exists()):
-            return None
-        return super(Article, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if Article.objects.filter(name=self.name) and (not Product.objects.filter(name=self.product.name).exclude(id=self.product.id).exists() or Product.objects.filter(name=self.product.name, store=self.product.store).exclude(id=self.product.id).exists()):
+    #         return None
+    #     return super(Article, self).save(*args, **kwargs)
 
 class Application(models.Model):
     name = models.CharField("Ad", max_length=50)
