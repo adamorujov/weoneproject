@@ -224,3 +224,62 @@ class ProductArticleSerializer(serializers.Serializer):
     about_ids = serializers.ListField(child=serializers.IntegerField(), allow_empty=True)
     titles = serializers.ListField(child=serializers.CharField(), allow_empty=True)
     contents = serializers.ListField(child=serializers.CharField(), allow_empty=True)
+
+
+class ProductCreateSerializer(serializers.ModelSerializer):
+    articles = serializers.ListField(
+        child=serializers.CharField(),
+        required=False
+    )
+    titles = serializers.ListField(
+        child=serializers.CharField(),
+        required=False
+    )
+    contents = serializers.ListField(
+        child=serializers.CharField(),
+        required=False
+    )
+
+    class Meta:
+        model = Product
+        fields = (
+            "name", "degree", "image",
+            "category", "brand", "store",
+            "articles", "titles", "contents"
+        )
+
+    def validate(self, attrs):
+        articles = attrs.get("articles", [])
+        store = attrs.get("store")
+
+        for article in articles:
+            if Article.objects.filter(name=article, product__store=store).exists():
+                raise serializers.ValidationError(
+                    f"Artikl '{article}' artıq mövcuddur."
+                )
+        return attrs
+
+    def create(self, validated_data):
+        articles = validated_data.pop("articles", [])
+        titles = validated_data.pop("titles", [])
+        contents = validated_data.pop("contents", [])
+
+        with transaction.atomic():
+            product = Product.objects.create(**validated_data)
+
+            Article.objects.bulk_create([
+                Article(name=a, product=product)
+                for a in articles
+            ])
+
+            ProductAbout.objects.bulk_create([
+                ProductAbout(
+                    product=product,
+                    title=titles[i],
+                    content=contents[i]
+                )
+                for i in range(min(len(titles), len(contents)))
+            ])
+
+        return product
+
