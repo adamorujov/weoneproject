@@ -225,6 +225,7 @@ class ProductArticleSerializer(serializers.Serializer):
     titles = serializers.ListField(child=serializers.CharField(), allow_empty=True)
     contents = serializers.ListField(child=serializers.CharField(), allow_empty=True)
 
+from django.db import transaction
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     articles = serializers.ListField(
