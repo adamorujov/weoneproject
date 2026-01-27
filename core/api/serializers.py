@@ -264,6 +264,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         )
 
     def to_internal_value(self, data):
+        data = data.copy()   # ✅ QueryDict → mutable
+
         for field in ("article_names", "titles", "contents"):
             value = data.get(field)
             if isinstance(value, str):
@@ -271,6 +273,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
                     data[field] = json.loads(value.replace("'", '"'))
                 except Exception:
                     data[field] = []
+
         return super().to_internal_value(data)
     
     def validate(self, attrs):
