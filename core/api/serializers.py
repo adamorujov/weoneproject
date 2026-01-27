@@ -157,10 +157,10 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = "__all__"
 
-# class ProductCreateSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Product
-#         fields = ("name", "degree", "image", "category", "brand", "store")
+class ProductCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ("name", "degree", "image", "category", "brand", "store")
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -225,97 +225,97 @@ class ProductArticleSerializer(serializers.Serializer):
     titles = serializers.ListField(child=serializers.CharField(), allow_empty=True)
     contents = serializers.ListField(child=serializers.CharField(), allow_empty=True)
 
-from django.db import transaction
-import json
+# from django.db import transaction
+# import json
 
-def normalize_list(value):
-    if isinstance(value, str):
-        try:
-            return json.loads(value.replace("'", '"'))
-        except Exception:
-            return []
-    return value
+# def normalize_list(value):
+#     if isinstance(value, str):
+#         try:
+#             return json.loads(value.replace("'", '"'))
+#         except Exception:
+#             return []
+#     return value
 
-class ProductCreateSerializer(serializers.ModelSerializer):
-    article_names = serializers.ListField(
-        child=serializers.CharField(),
-        write_only=True,
-        required=False
-    )
-    titles = serializers.ListField(
-        child=serializers.CharField(),
-        write_only=True,
-        required=False
-    )
-    contents = serializers.ListField(
-        child=serializers.CharField(),
-        write_only=True,
-        required=False
-    )
+# class ProductCreateSerializer(serializers.ModelSerializer):
+#     article_names = serializers.ListField(
+#         child=serializers.CharField(),
+#         write_only=True,
+#         required=False
+#     )
+#     titles = serializers.ListField(
+#         child=serializers.CharField(),
+#         write_only=True,
+#         required=False
+#     )
+#     contents = serializers.ListField(
+#         child=serializers.CharField(),
+#         write_only=True,
+#         required=False
+#     )
 
-    class Meta:
-        model = Product
-        fields = (
-            "name", "degree", "image",
-            "category", "brand", "store",
-            "article_names",
-            "titles",
-            "contents",
-        )
+#     class Meta:
+#         model = Product
+#         fields = (
+#             "name", "degree", "image",
+#             "category", "brand", "store",
+#             "article_names",
+#             "titles",
+#             "contents",
+#         )
 
-    def to_internal_value(self, data):
-        data = data.copy()  # 🔥 QueryDict fix
+#     def to_internal_value(self, data):
+#         data = data.copy()  # 🔥 QueryDict fix
 
-        def parse_list(value):
-            if isinstance(value, str):
-                try:
-                    return json.loads(value)
-                except Exception:
-                    return []
-            return value
+#         def parse_list(value):
+#             if isinstance(value, str):
+#                 try:
+#                     return json.loads(value)
+#                 except Exception:
+#                     return []
+#             return value
 
-        for field in ("article_names", "titles", "contents"):
-            if field in data:
-                data[field] = parse_list(data[field])
+#         for field in ("article_names", "titles", "contents"):
+#             if field in data:
+#                 data[field] = parse_list(data[field])
 
-        return super().to_internal_value(data)
+#         return super().to_internal_value(data)
     
-    def validate(self, attrs):
-        store = attrs.get("store")
-        article_names = attrs.get("article_names", [])
+#     def validate(self, attrs):
+#         store = attrs.get("store")
+#         article_names = attrs.get("article_names", [])
 
-        for name in article_names:
-            if Article.objects.filter(
-                name=name,
-                product__store=store
-            ).exists():
-                raise serializers.ValidationError(
-                    f"Artikl '{name}' artıq mövcuddur."
-                )
-        return attrs
+#         for name in article_names:
+#             if Article.objects.filter(
+#                 name=name,
+#                 product__store=store
+#             ).exists():
+#                 raise serializers.ValidationError(
+#                     f"Artikl '{name}' artıq mövcuddur."
+#                 )
+#         return attrs
     
-    def create(self, validated_data):
-        article_names = validated_data.pop("article_names", [])
-        titles = validated_data.pop("titles", [])
-        contents = validated_data.pop("contents", [])
+#     def create(self, validated_data):
+#         article_names = validated_data.pop("article_names", [])
+#         titles = validated_data.pop("titles", [])
+#         contents = validated_data.pop("contents", [])
 
-        with transaction.atomic():
-            product = Product.objects.create(**validated_data)
+#         with transaction.atomic():
+#             product = Product.objects.create(**validated_data)
 
-            Article.objects.bulk_create([
-                Article(name=name, product=product)
-                for name in article_names
-            ])
+#             Article.objects.bulk_create([
+#                 Article(name=name, product=product)
+#                 for name in article_names
+#             ])
 
-            ProductAbout.objects.bulk_create([
-                ProductAbout(
-                    product=product,
-                    title=titles[i],
-                    content=contents[i]
-                )
-                for i in range(min(len(titles), len(contents)))
-            ])
+#             ProductAbout.objects.bulk_create([
+#                 ProductAbout(
+#                     product=product,
+#                     title=titles[i],
+#                     content=contents[i]
+#                 )
+#                 for i in range(min(len(titles), len(contents)))
+#             ])
 
-        return product
+#         return product
 
 

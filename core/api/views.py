@@ -139,72 +139,72 @@ class CategoryProductListAPIView(ListAPIView):
     serializer_class = ProductListSerializer
     pagination_class = CustomPagination
 
-# class ProductCreateAPIView(CreateAPIView):
-#     queryset = Product.objects.all()
-#     serializer_class = ProductCreateSerializer
-
-#     def create(self, request, *args, **kwargs):
-#         product_data = {
-#             "name": request.data.get("name"),
-#             "degree": request.data.get("degree"),
-#             "image": request.data.get("image"),
-#             "category": request.data.get("category"),
-#             "brand": request.data.get("brand"),
-#             "store": request.data.get("store"),
-#         }
-
-#         articles_data = {
-#             "articles": request.data.get("articles")
-#         }
-#         abouts_data = {
-#             "titles": request.data.get("titles"),
-#             "contents": request.data.get("contents")
-#         }
-#         if isinstance(articles_data["articles"], str):
-#             articles = articles_data["articles"].replace('\'', '"')
-#             articles = json.loads(articles)
-#         else:
-#             articles = articles_data["articles"]
-
-#         if isinstance(abouts_data["titles"], str) and isinstance(abouts_data["contents"], str):
-#             titles = abouts_data["titles"].replace('\'', '"')
-#             titles = json.loads(titles)
-#             contents = abouts_data["contents"].replace('\'', '"')
-#             contents = json.loads(contents)
-#         else:
-#             titles = abouts_data["titles"]
-#             contents = abouts_data["contents"]
-
-#         serializer = self.get_serializer(data=product_data)
-
-#         if serializer.is_valid():
-#             product = serializer.save()
-#             response_data = {}
-#             if articles:
-#                 for article_name in articles:
-#                     # if Article.objects.filter(name=article_name, product=product, product__store=product.store).exists():
-#                     #     response_data["errors"] = f"{article_name} artıq mövcuddur."
-#                     if Article.objects.filter(name=article_name).exclude(product__name=product.name).exists():
-#                         response_data["errors"] = f"Artikl '{article_name}' artıq mövcuddur."
-#                     else:
-#                         Article.objects.create(
-#                             name = article_name,
-#                             product = product
-#                         )
-#             if titles and contents:
-#                 for i in range(len(titles)):
-#                     ProductAbout.objects.create(
-#                         product = product,
-#                         title = titles[i],
-#                         content = contents[i]
-#                     )
-#             response_data["message"] = "Məhsul əlavə edildi."
-#             return Response(response_data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class ProductCreateAPIView(CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        product_data = {
+            "name": request.data.get("name"),
+            "degree": request.data.get("degree"),
+            "image": request.data.get("image"),
+            "category": request.data.get("category"),
+            "brand": request.data.get("brand"),
+            "store": request.data.get("store"),
+        }
+
+        articles_data = {
+            "articles": request.data.get("articles")
+        }
+        abouts_data = {
+            "titles": request.data.get("titles"),
+            "contents": request.data.get("contents")
+        }
+        if isinstance(articles_data["articles"], str):
+            articles = articles_data["articles"].replace('\'', '"')
+            articles = json.loads(articles)
+        else:
+            articles = articles_data["articles"]
+
+        if isinstance(abouts_data["titles"], str) and isinstance(abouts_data["contents"], str):
+            titles = abouts_data["titles"].replace('\'', '"')
+            titles = json.loads(titles)
+            contents = abouts_data["contents"].replace('\'', '"')
+            contents = json.loads(contents)
+        else:
+            titles = abouts_data["titles"]
+            contents = abouts_data["contents"]
+
+        serializer = self.get_serializer(data=product_data)
+
+        if serializer.is_valid():
+            product = serializer.save()
+            response_data = {}
+            if articles:
+                for article_name in articles:
+                    # if Article.objects.filter(name=article_name, product=product, product__store=product.store).exists():
+                    #     response_data["errors"] = f"{article_name} artıq mövcuddur."
+                    if Article.objects.filter(name=article_name).exclude(product__name=product.name).exists():
+                        response_data["errors"] = f"Artikl '{article_name}' artıq mövcuddur."
+                    else:
+                        Article.objects.create(
+                            name = article_name,
+                            product = product
+                        )
+            if titles and contents:
+                for i in range(len(titles)):
+                    ProductAbout.objects.create(
+                        product = product,
+                        title = titles[i],
+                        content = contents[i]
+                    )
+            response_data["message"] = "Məhsul əlavə edildi."
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# class ProductCreateAPIView(CreateAPIView):
+#     queryset = Product.objects.all()
+#     serializer_class = ProductCreateSerializer
     
 class ProductRetrieveAPIView(RetrieveAPIView):
     queryset = Product.objects.all()
