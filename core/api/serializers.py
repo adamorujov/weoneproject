@@ -264,15 +264,19 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         )
 
     def to_internal_value(self, data):
-        data = data.copy()   # ✅ QueryDict → mutable
+        data = data.copy()  # 🔥 QueryDict fix
 
-        for field in ("article_names", "titles", "contents"):
-            value = data.get(field)
+        def parse_list(value):
             if isinstance(value, str):
                 try:
-                    data[field] = json.loads(value.replace("'", '"'))
+                    return json.loads(value)
                 except Exception:
-                    data[field] = []
+                    return []
+            return value
+
+        for field in ("article_names", "titles", "contents"):
+            if field in data:
+                data[field] = parse_list(data[field])
 
         return super().to_internal_value(data)
     
@@ -313,3 +317,5 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             ])
 
         return product
+
+
