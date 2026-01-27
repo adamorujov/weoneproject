@@ -226,18 +226,32 @@ class ProductArticleSerializer(serializers.Serializer):
     contents = serializers.ListField(child=serializers.CharField(), allow_empty=True)
 
 from django.db import transaction
+import json
+
+def normalize_list(value):
+    if isinstance(value, str):
+        try:
+            return json.loads(value.replace("'", '"'))
+        except Exception:
+            return []
+    return value
 
 class ProductCreateSerializer(serializers.ModelSerializer):
-    articles = serializers.ListField(
+    article_names = serializers.ListField(
         child=serializers.CharField(),
+        write_only=True,
         required=False
     )
+
     titles = serializers.ListField(
         child=serializers.CharField(),
+        write_only=True,
         required=False
     )
+
     contents = serializers.ListField(
         child=serializers.CharField(),
+        write_only=True,
         required=False
     )
 
@@ -246,31 +260,36 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         fields = (
             "name", "degree", "image",
             "category", "brand", "store",
-            "articles", "titles", "contents"
+            "article_names",
+            "titles",
+            "contents",
         )
 
     def validate(self, attrs):
-        articles = attrs.get("articles", [])
         store = attrs.get("store")
+        article_names = attrs.get("article_names", [])
 
-        for article in articles:
-            if Article.objects.filter(name=article, product__store=store).exists():
+        for name in article_names:
+            if Article.objects.filter(
+                name=name,
+                product__store=store
+            ).exists():
                 raise serializers.ValidationError(
-                    f"Artikl '{article}' artıq mövcuddur."
+                    f"Artikl '{name}' artıq mövcuddur."
                 )
         return attrs
-
+    
     def create(self, validated_data):
-        articles = validated_data.pop("articles", [])
-        titles = validated_data.pop("titles", [])
-        contents = validated_data.pop("contents", [])
+        article_names = normalize_list(validated_data.pop("article_names", []))
+        titles = normalize_list(validated_data.pop("titles", []))
+        contents = normalize_list(validated_data.pop("contents", []))
 
         with transaction.atomic():
             product = Product.objects.create(**validated_data)
 
             Article.objects.bulk_create([
-                Article(name=a, product=product)
-                for a in articles
+                Article(name=name, product=product)
+                for name in article_names
             ])
 
             ProductAbout.objects.bulk_create([
@@ -283,4 +302,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             ])
 
         return product
+
+
+
 
