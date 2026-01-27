@@ -157,10 +157,10 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = "__all__"
 
-class ProductCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ("name", "degree", "image", "category", "brand", "store")
+# class ProductCreateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Product
+#         fields = ("name", "degree", "image", "category", "brand", "store")
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
     class Meta:
