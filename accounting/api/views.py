@@ -766,7 +766,11 @@ class ShortSaleListAPIView(ListAPIView):
                     F("product__name"),
                     Value(" - "),
                     F("product__store__name"),
+                    Value(" ("),
+                    F("datetime"),
+                    Value(")"),
                     output_field=CharField()
+
                 )
             )
         )
