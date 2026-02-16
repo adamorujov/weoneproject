@@ -88,7 +88,8 @@ class OrderAdmin(admin.ModelAdmin):
                         salelist=salelist,
                         product=item.product,
                         amount=item.quantity,
-                        datetime=timezone.now()
+                        datetime=timezone.now(),
+                        price = item.product.price
                     )
                     for item in obj.order_orderitems.all()
                 ]
