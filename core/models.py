@@ -248,11 +248,13 @@ class Order(models.Model):
     user = models.ForeignKey(CustomUser, verbose_name="İstifadəçi", on_delete=models.CASCADE, related_name="orders")
     amount = models.FloatField("Ümumi məbləğ")
     date = models.DateField(auto_now_add=True)
+    add_to_sale = models.BooleanField("Satışa əlavə et", default=False)
 
     class Meta:
         verbose_name = "sifariş"
         verbose_name_plural = "Sifarişlər"
         ordering = ("-id",)
+
 
     def __str__(self):
         return self.user.username

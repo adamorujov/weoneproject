@@ -7,6 +7,9 @@ from core.models import (
     Activity, Service, Mission, BasketItem, Article, Order, OrderItem
 )
 from django.utils.translation import gettext_lazy as _
+from accounting.models import Sale, SaleList
+from django.utils import timezone
+from django.db import transaction
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
@@ -62,3 +65,31 @@ class OrderItemAdmin(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     inlines = [OrderItemAdmin]
+
+    def save_model(self, request, obj, form, change):
+        old_value = False
+
+        if change:  # update zamanı
+            old_obj = type(obj).objects.get(pk=obj.pk)
+            old_value = old_obj.add_to_sale
+
+        super().save_model(request, obj, form, change)
+
+        # yalnız False -> True keçəndə
+        if obj.add_to_sale and not old_value:
+            with transaction.atomic():
+                salelist = SaleList.objects.create()
+
+                sales = [
+                    Sale(
+                        seller=request.user,
+                        customer=obj.user,
+                        salelist=salelist,
+                        product=item.product,
+                        amount=item.quantity,
+                        datetime=timezone.now()
+                    )
+                    for item in obj.order_orderitems.all()
+                ]
+
+                Sale.objects.bulk_create(sales)
