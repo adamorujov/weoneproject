@@ -64,6 +64,7 @@ class OrderItemAdmin(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "add_to_sale")
     inlines = [OrderItemAdmin]
 
     def save_model(self, request, obj, form, change):
