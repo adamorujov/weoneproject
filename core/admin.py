@@ -91,6 +91,17 @@ class OrderAdmin(admin.ModelAdmin):
                         datetime=timezone.now(),
                         price = item.product.price
                     )
+                    if obj.user.status == "S"
+                    else
+                    Sale(
+                        seller=request.user,
+                        customer=obj.user,
+                        salelist=salelist,
+                        product=item.product,
+                        amount=item.quantity,
+                        datetime=timezone.now(),
+                        price = item.product.discount_price
+                    )
                     for item in obj.order_orderitems.all()
                 ]
 
