@@ -2,7 +2,7 @@ from rest_framework import serializers
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Store, Product, ProductAbout, Application, SocialMedia, Advantage,
-    Activity, Service, Mission, BasketItem, Article, Order, OrderItem
+    Activity, Service, Mission, BasketItem, Article, Order, OrderItem, WantedProduct
 )
 from accounting.models import ReturnBack
 from django.contrib.auth.password_validation import validate_password
@@ -224,6 +224,12 @@ class ProductArticleSerializer(serializers.Serializer):
     about_ids = serializers.ListField(child=serializers.IntegerField(), allow_empty=True)
     titles = serializers.ListField(child=serializers.CharField(), allow_empty=True)
     contents = serializers.ListField(child=serializers.CharField(), allow_empty=True)
+
+
+class WantedProductCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WantedProduct
+        fields = "__all__"
 
 # from django.db import transaction
 # import json

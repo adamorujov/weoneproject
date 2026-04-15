@@ -7,13 +7,13 @@ from rest_framework.pagination import PageNumberPagination
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Store, Product, ProductAbout, Application, SocialMedia, Advantage,
-    Activity, Service, Mission, BasketItem, Article, Order, OrderItem
+    Activity, Service, Mission, BasketItem, Article, Order, OrderItem, WantedProduct
 )
 from core.api.serializers import (
     CustomUserCreateSerializer, CustomUserSerializer, CustomUserSerializer, SiteSettingsSerializer, BannerSerializer, ProductCategorySerializer, ProductCreateSerializer,
     ProductUpdateSerializer, ArticleSerializer, BrandSerializer, StoreSerializer, ProductSerializer, ApplicationSerializer, SocialMediaSerializer, AdvantageSerializer,
     ActivitySerializer, ServiceSerializer, MissionSerializer, BasketItemSerializer, BasketItemCreateSerializer, BasketCleanSerializer,
-    OrderCreateSerializer, ProductListSerializer, CustomUserRetrieveSerializer
+    OrderCreateSerializer, ProductListSerializer, CustomUserRetrieveSerializer, WantedProductCreateSerializer
 )
 from django.shortcuts import get_object_or_404
 import json
@@ -468,3 +468,8 @@ class OrderCreateAPIView(CreateAPIView):
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
+
+class WantedProductCreateAPIView(CreateAPIView):
+    queryset = WantedProduct.objects.all()
+    serializer_class = WantedProductCreateSerializer
+    permission_classes = (IsAuthenticated,)

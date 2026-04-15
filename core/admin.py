@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from core.models import (
     CustomUser, SiteSettings, Banner, ProductCategory,
     Brand, Store, Product, ProductAbout, Application, SocialMedia, Advantage,
-    Activity, Service, Mission, BasketItem, Article, Order, OrderItem
+    Activity, Service, Mission, BasketItem, Article, Order, OrderItem, WantedProduct
 )
 from django.utils.translation import gettext_lazy as _
 from accounting.models import Sale, SaleList
@@ -95,3 +95,7 @@ class OrderAdmin(admin.ModelAdmin):
                 ]
 
                 Sale.objects.bulk_create(sales)
+
+@admin.register(WantedProduct)
+class WantedProductAdmin(admin.ModelAdmin):
+    list_display = ("user", "search", "created")

@@ -272,3 +272,19 @@ class OrderItem(models.Model):
     def __str__(self):
         return self.product.name
     
+
+class WantedProduct(models.Model):
+    user = models.ForeignKey(CustomUser, verbose_name="İstifadəçi", on_delete=models.SET_NULL, blank=True, null=True, related_name="wantedproducts")
+    search = models.CharField(max_length=500, verbose_name="Axtarış")
+    created = models.DateTimeField(auto_now_add=True, verbose_name="Axtarılma tarixi və vaxtı")
+
+    class Meta:
+        verbose_name = "axtarılan məhsul"
+        verbose_name_plural = "Axtarılan məhsullar"
+        ordering = ("-id",)
+
+    def __str__(self):
+        return self.user.username
+
+
+    
